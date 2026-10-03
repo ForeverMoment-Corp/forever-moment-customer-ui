@@ -1,35 +1,18 @@
 import { useState } from 'react'
 import { FiPlus, FiMinus } from 'react-icons/fi'
-
-const faqs = [
-  {
-    question: 'How far in advance should I book my decoration?',
-    answer: 'We recommend booking at least 2-3 weeks in advance for regular events and 1-2 months for weddings to ensure vendor availability and proper planning.',
-  },
-  {
-    question: 'Can I customize a package according to my budget?',
-    answer: 'Absolutely! All our packages are flexible. Our team will work with you to customize themes, colors, and add-ons that fit within your budget.',
-  },
-  {
-    question: 'What happens if I need to cancel or reschedule?',
-    answer: 'Free cancellation is available up to 48 hours before the event. Cancellations within 48 hours may incur a 25% convenience fee. Rescheduling is free up to 72 hours prior.',
-  },
-  {
-    question: 'Do you provide vendors outside of major cities?',
-    answer: 'Yes, we have a growing network across 50+ cities in India. Enter your location while browsing to see vendors available in your area.',
-  },
-  {
-    question: 'Is a site visit included before the event?',
-    answer: 'Premium packages include a complimentary site visit and consultation call with our lead stylist to finalize layout and decor placement.',
-  },
-]
+import { useFaqs } from '@/features/faq'
+import RichText from '@/lib/richText'
 
 const FAQ = () => {
+  const { faqs } = useFaqs()
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
   }
+
+  // Nothing to answer yet: render no section at all rather than an empty heading.
+  if (faqs.length === 0) return null
 
   return (
     <section className="section-padding bg-[#FDFAF4]">
@@ -59,7 +42,7 @@ const FAQ = () => {
 
             return (
               <div
-                key={index}
+                key={faq.id}
                 className="bg-white border border-[#EDE0C4] overflow-hidden"
               >
                 <button
@@ -80,15 +63,15 @@ const FAQ = () => {
 
                 <div
                   className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    isOpen ? 'max-h-[200px]' : 'max-h-0'
+                    isOpen ? 'max-h-[600px]' : 'max-h-0'
                   }`}
                 >
-                  <p
-                    style={{ fontFamily: "'Jost', sans-serif" }}
-                    className="px-6 pb-5 text-[0.85rem] text-[#9E8A6A] leading-relaxed"
-                  >
-                    {faq.answer}
-                  </p>
+                  <div style={{ fontFamily: "'Jost', sans-serif" }}>
+                    <RichText
+                      html={faq.answer}
+                      className="px-6 pb-5 text-[0.85rem] text-[#9E8A6A] leading-relaxed"
+                    />
+                  </div>
                 </div>
               </div>
             )

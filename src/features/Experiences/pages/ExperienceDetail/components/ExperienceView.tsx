@@ -14,6 +14,7 @@ import HowItWorks from './HowItWorks';
 import Reviews from './Reviews';
 import CancellationPolicy from './CancellationPolicy';
 import FAQ from './FAQ';
+import { useFaqs } from '@/features/faq';
 import RelatedExperiences from './RelatedExperiences';
 import type { ExperienceSummary } from './RelatedExperiences';
 import MoreAddOns from './MoreAddOns';
@@ -187,15 +188,18 @@ export default function ExperienceDetails({
 
   const stickyTop = useStickyTop(asideRef, [vm?.id, addons]);
 
-  // FAQ gets the API's "what to bring" and terms as extra answers when they exist.
+  // FAQ = this experience's own entries, the global FAQs from the API, then "what to bring"
+  // and terms when they exist. With none of these the section and its nav tab are hidden.
+  const { faqs: globalFaqs } = useFaqs();
   const faqs = useMemo<FaqItem[]>(() => {
     if (!vm) return [];
     return [
       ...vm.faqs,
+      ...globalFaqs.map((f) => ({ q: f.question, a: f.answer })),
       ...(vm.whatToBring ? [{ q: 'What should I bring or arrange?', a: vm.whatToBring }] : []),
       ...(vm.termsConditions ? [{ q: 'Terms and conditions', a: vm.termsConditions }] : []),
     ];
-  }, [vm]);
+  }, [vm, globalFaqs]);
 
   const sections = useMemo<SectionNavItem[]>(() => {
     if (!vm) return [];

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, ChevronRight, Clock, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, Clock, Loader2, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import { EMAIL, HOURS, OCCASIONS, OFFICE, PHONE, whatsappLink } from '@/features/help/contact';
+import { getAccessToken, submitSupportQuery } from '@/features/support';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -19,6 +20,7 @@ export interface ContactViewProps {
 
 interface FormState {
   name: string;
+  email: string;
   phone: string;
   city: string;
   occasion: string;
@@ -26,12 +28,32 @@ interface FormState {
   message: string;
 }
 
-const EMPTY: FormState = { name: '', phone: '', city: '', occasion: '', date: '', message: '' };
+/**
+ * Turn whatever the guest typed into a number we can store (backend column is 20 chars).
+ * Indian mobiles may come as "98765 43210", "098765-43210" or "+91 98765 43210"; they all
+ * become the 10 digits. Other countries need a leading "+" and 8–15 digits (E.164).
+ * Returns '' when the input is not a usable number.
+ */
+const normalizePhone =(raw: string): string => {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  const indian = digits.length === 12 && digits.startsWith('91') ? digits.slice(2)
+    : digits.length === 11 && digits.startsWith('0') ? digits.slice(1)
+    : digits;
+  if (/^[6-9]\d{9}$/.test(indian) && (!trimmed.startsWith('+') || digits.startsWith('91'))) return indian;
+  if (trimmed.startsWith('+') && digits.length >= 8 && digits.length <= 15) return `+${digits}`;
+  return '';
+};
+
+const EMPTY: FormState = { name: '', email: '', phone: '', city: '', occasion: '', date: '', message: '' };
 
 export default function ContactView({ locations, getLocations }: ContactViewProps) {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [touched, setTouched] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
+  /** Reference the backend gave the submitted query; set once it is saved. */
+  const [referenceId, setReferenceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (getLocations && (!locations || locations.length === 0)) getLocations();
@@ -45,44 +67,98 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    setSent(false);
+    setError('');
   };
 
   const errors = {
     name: form.name.trim().length < 2 ? 'Tell us your name' : '',
-    phone: /^[6-9]\d{9}$/.test(form.phone) ? '' : 'Enter a 10-digit mobile number',
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Enter an email we can reply to',
+    phone: normalizePhone(form.phone) ? '' : 'Enter a 10-digit mobile number, or include the country code (e.g. +31 6 1234 5678)',
     message: form.message.trim().length < 10 ? 'A line or two about what you need' : '',
   };
-  const isValid = !errors.name && !errors.phone && !errors.message;
+  const isValid = !errors.name && !errors.email && !errors.phone && !errors.message;
 
-  /** There is no enquiry endpoint yet, so the form hands the details to WhatsApp or email. */
+  /**
+   * A blocked submit must never look like a dead button: field errors can sit off-screen,
+   * so jump to the first invalid field and say why nothing was sent.
+   */
+  const focusFirstInvalid = () => {
+    const order: (keyof typeof errors)[] = ['name', 'phone', 'email', 'message'];
+    const first = order.find((k) => errors[k]);
+    if (!first) return;
+    const el = document.getElementById(`contact-${first}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el?.focus({ preventScroll: true });
+    setError('Please fix the highlighted fields before sending.');
+  };
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  /** The API has no fields for city, occasion or date, so they ride along in subject and message. */
+  const apiSubject = () => (form.occasion ? `Enquiry · ${form.occasion}` : 'General enquiry');
+  const apiMessage = () => {
+    const details = [
+      ...(form.city ? [`City: ${form.city}`] : []),
+      ...(form.occasion ? [`Occasion: ${form.occasion}`] : []),
+      ...(form.date ? [`Date: ${formatDate(form.date)}`] : []),
+    ];
+    return details.length ? `${form.message.trim()}\n\n${details.join('\n')}` : form.message.trim();
+  };
+
+  /** WhatsApp stays as an instant alternative to the form. */
   const summary = () =>
     [
       'Hi Forever Moment, I would like to enquire.',
       '',
       `Name: ${form.name.trim()}`,
-      `Phone: ${form.phone}`,
+      `Phone: ${normalizePhone(form.phone) || form.phone.trim()}`,
       ...(form.city ? [`City: ${form.city}`] : []),
       ...(form.occasion ? [`Occasion: ${form.occasion}`] : []),
-      ...(form.date
-        ? [`Date: ${new Date(form.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`]
-        : []),
+      ...(form.date ? [`Date: ${formatDate(form.date)}`] : []),
       '',
       form.message.trim(),
     ].join('\n');
 
-  const submit = (channel: 'whatsapp' | 'email') => {
+  const submit = async () => {
     setTouched(true);
-    if (!isValid) return;
-    const text = summary();
-    if (channel === 'whatsapp') {
-      window.open(whatsappLink(text), '_blank', 'noopener');
-    } else {
-      window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(
-        `Enquiry from ${form.name.trim()}${form.occasion ? ` · ${form.occasion}` : ''}`,
-      )}&body=${encodeURIComponent(text)}`;
+    if (sending) return;
+    if (!isValid) {
+      focusFirstInvalid();
+      return;
     }
-    setSent(true);
+    setSending(true);
+    setError('');
+    try {
+      const saved = await submitSupportQuery({
+        name: form.name,
+        email: form.email,
+        phone: normalizePhone(form.phone),
+        subject: apiSubject(),
+        message: apiMessage(),
+      });
+      setReferenceId(saved?.referenceId || '');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send your message. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const openWhatsApp = () => {
+    setTouched(true);
+    if (!isValid) {
+      focusFirstInvalid();
+      return;
+    }
+    window.open(whatsappLink(summary()), '_blank', 'noopener');
+  };
+
+  const startOver = () => {
+    setForm(EMPTY);
+    setTouched(false);
+    setError('');
+    setReferenceId(null);
   };
 
   const fieldClass = (invalid: boolean) =>
@@ -133,8 +209,46 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
         <div className="mt-5 grid gap-6 lg:grid-cols-12">
           {/* Form */}
           <div className="min-w-0 lg:col-span-7">
+            {referenceId !== null ? (
+              <div role="status" className="rounded-2xl border border-[var(--border-light)] bg-white p-6 text-center sm:p-8">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3EA] text-[#3F7A3F]">
+                  <CheckCircle2 size={24} />
+                </span>
+                <p style={{ fontFamily: SERIF }} className="mt-3 text-[1.5rem] font-semibold leading-tight text-[var(--charcoal)]">
+                  Thank you, we have your message
+                </p>
+                <p style={{ fontFamily: SANS }} className="mx-auto mt-1.5 max-w-md text-[0.88rem] leading-relaxed text-[var(--mid)]">
+                  Our team will get back to you on {form.email.trim() || 'your email'} or {normalizePhone(form.phone) || form.phone}, usually within a few hours.
+                </p>
+                {referenceId && (
+                  <p style={{ fontFamily: SANS }} className="mx-auto mt-4 inline-flex flex-col rounded-xl bg-[var(--cream)] px-5 py-3 text-[0.78rem] text-[var(--mid)]">
+                    Your reference
+                    <span className="mt-0.5 text-[1.05rem] font-semibold tracking-[0.06em] text-[var(--charcoal)]">{referenceId}</span>
+                  </p>
+                )}
+                <div className="mt-5 flex flex-wrap justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={startOver}
+                    style={{ fontFamily: SANS }}
+                    className="inline-flex h-11 items-center rounded-xl border border-[var(--border-light)] bg-white px-5 text-[0.86rem] font-medium text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)]"
+                  >
+                    Send another message
+                  </button>
+                  {getAccessToken() && (
+                    <Link
+                      to="/support"
+                      style={{ fontFamily: SANS }}
+                      className="inline-flex h-11 items-center rounded-xl bg-[var(--burgundy)] px-5 text-[0.86rem] font-semibold text-white transition-colors hover:bg-[var(--burgundy-dark)]"
+                    >
+                      View my queries
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ) : (
             <form
-              onSubmit={(ev) => { ev.preventDefault(); submit('whatsapp'); }}
+              onSubmit={(ev) => { ev.preventDefault(); void submit(); }}
               noValidate
               className="rounded-2xl border border-[var(--border-light)] bg-white p-5 sm:p-6"
             >
@@ -160,18 +274,38 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
                   <Label htmlFor="contact-phone">Mobile number</Label>
                   <input
                     id="contact-phone"
-                    inputMode="numeric"
-                    maxLength={10}
+                    type="tel"
+                    inputMode="tel"
+                    maxLength={20}
                     value={form.phone}
-                    onChange={(ev) => set('phone', ev.target.value.replace(/\D/g, ''))}
-                    placeholder="9876543210"
-                    autoComplete="tel-national"
+                    onChange={(ev) => set('phone', ev.target.value.replace(/[^\d+\s()-]/g, ''))}
+                    placeholder="98765 43210"
+                    autoComplete="tel"
                     aria-invalid={touched && !!errors.phone}
                     style={{ fontFamily: SANS }}
                     className={fieldClass(touched && !!errors.phone)}
                   />
                   {touched && errors.phone && (
                     <p style={{ fontFamily: SANS }} className="mt-1 text-[0.76rem] text-[var(--rose)]">{errors.phone}</p>
+                  )}
+                </div>
+
+                <div className="sm:col-span-2">
+                  <Label htmlFor="contact-email">Email</Label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    inputMode="email"
+                    value={form.email}
+                    onChange={(ev) => set('email', ev.target.value)}
+                    placeholder="priya@example.com"
+                    autoComplete="email"
+                    aria-invalid={touched && !!errors.email}
+                    style={{ fontFamily: SANS }}
+                    className={fieldClass(touched && !!errors.email)}
+                  />
+                  {touched && errors.email && (
+                    <p style={{ fontFamily: SANS }} className="mt-1 text-[0.76rem] text-[var(--rose)]">{errors.email}</p>
                   )}
                 </div>
 
@@ -235,34 +369,39 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <button
-                  type="submit"
-                  style={{ fontFamily: SANS, background: 'linear-gradient(135deg, var(--burgundy), var(--burgundy-dark))' }}
-                  className="inline-flex h-12 items-center gap-2 rounded-xl px-6 text-[0.92rem] font-semibold text-white shadow-[0_12px_28px_-10px_rgba(124,45,59,0.6)] transition-transform duration-200 hover:-translate-y-0.5"
-                >
-                  <MessageCircle size={17} /> Send on WhatsApp
-                </button>
-                <button
-                  type="button"
-                  onClick={() => submit('email')}
-                  style={{ fontFamily: SANS }}
-                  className="inline-flex h-12 items-center gap-2 rounded-xl border border-[var(--border-light)] bg-white px-5 text-[0.88rem] font-medium text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)]"
-                >
-                  <Send size={15} /> Send as email
-                </button>
-              </div>
-
-              {sent && (
-                <p style={{ fontFamily: SANS }} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#EAF3EA] px-3.5 py-2.5 text-[0.82rem] font-medium text-[#3F7A3F]">
-                  <CheckCircle2 size={15} /> Your message is ready to send. Finish it in the window that just opened.
+              {error && (
+                <p role="alert" style={{ fontFamily: SANS }} className="mt-4 flex items-start gap-2 rounded-xl bg-[var(--rose-light)] px-3.5 py-2.5 text-[0.82rem] font-medium text-[var(--burgundy)]">
+                  <AlertCircle size={15} className="mt-0.5 shrink-0" /> {error}
                 </p>
               )}
 
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  aria-busy={sending}
+                  style={{ fontFamily: SANS, background: 'linear-gradient(135deg, var(--burgundy), var(--burgundy-dark))' }}
+                  className="inline-flex h-12 items-center gap-2 rounded-xl px-6 text-[0.92rem] font-semibold text-white shadow-[0_12px_28px_-10px_rgba(124,45,59,0.6)] transition-transform duration-200 hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-80 disabled:hover:translate-y-0"
+                >
+                  {sending ? <Loader2 size={17} className="animate-spin" /> : <Send size={16} />}
+                  {sending ? 'Sending…' : 'Send message'}
+                </button>
+                <button
+                  type="button"
+                  onClick={openWhatsApp}
+                  disabled={sending}
+                  style={{ fontFamily: SANS }}
+                  className="inline-flex h-12 items-center gap-2 rounded-xl border border-[var(--border-light)] bg-white px-5 text-[0.88rem] font-medium text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)]"
+                >
+                  <MessageCircle size={16} className="text-[#25D366]" /> Chat on WhatsApp instead
+                </button>
+              </div>
+
               <p style={{ fontFamily: SANS }} className="mt-3 text-[0.76rem] leading-relaxed text-[var(--mid)]">
-                We use your number only to answer this enquiry.
+                We use your email and number only to answer this enquiry.
               </p>
             </form>
+            )}
           </div>
 
           {/* Details */}

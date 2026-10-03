@@ -17,3 +17,13 @@ export const OCCASIONS = [
     'Corporate event',
     'Something else',
 ];
+
+/**
+ * Social profiles shown in the footer. Leave a URL empty to hide that icon,
+ * so the footer never links to a placeholder.
+ */
+export const SOCIAL_LINKS: { id: 'instagram' | 'facebook' | 'youtube'; label: string; url: string }[] = [
+    { id: 'instagram', label: 'Instagram', url: '' },
+    { id: 'facebook', label: 'Facebook', url: '' },
+    { id: 'youtube', label: 'YouTube', url: '' },
+];

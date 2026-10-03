@@ -35,3 +35,6 @@ config/theme.json
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code
+CLAUDE.md

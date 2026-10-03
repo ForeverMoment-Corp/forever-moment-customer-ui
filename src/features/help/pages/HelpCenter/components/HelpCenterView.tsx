@@ -1,68 +1,34 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  CalendarDays,
-  ChevronRight,
-  Mail,
-  MessageCircle,
-  Phone,
-  Plus,
-  RotateCcw,
-  Search,
-  Sparkles,
-  Truck,
-  Wallet,
-  X,
-} from 'lucide-react';
+import { ChevronRight, Mail, MessageCircle, Phone, Plus, Search, Send, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { HELP_TOPICS, type HelpArticle, type HelpTopic } from '@/features/help/data';
+import { useFaqs } from '@/features/faq';
+import RichText from '@/lib/richText';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
-
-const ICONS = {
-  calendar: CalendarDays,
-  truck: Truck,
-  refund: RotateCcw,
-  sparkles: Sparkles,
-  wallet: Wallet,
-} as const;
 
 const WHATSAPP = 'https://wa.me/919876543210?text=Hi! I have a query about Forever Moment.';
 const PHONE = '+91 65223651230';
 const EMAIL = 'support@forevermoment.com';
 
-interface Match extends HelpArticle {
-  topicId: string;
-  topicLabel: string;
-}
-
-const flatten = (topics: HelpTopic[]): Match[] =>
-  topics.flatMap((t) => t.articles.map((a) => ({ ...a, topicId: t.id, topicLabel: t.label })));
+/** Answers may be CMS HTML; strip tags so search matches the visible words only. */
+const plain = (html: string) => html.replace(/<[^>]*>/g, ' ');
 
 export default function HelpCenterView() {
+  const { faqs, loading } = useFaqs();
   const [query, setQuery] = useState('');
-  const [topicId, setTopicId] = useState<string | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<number | null>(null);
 
   const term = query.trim().toLowerCase();
 
-  // Searching looks across every topic; the chips only narrow when nothing is typed.
-  const results = useMemo(() => {
-    const all = flatten(HELP_TOPICS);
-    if (term) return all.filter((a) => `${a.q} ${a.a}`.toLowerCase().includes(term));
-    return topicId ? all.filter((a) => a.topicId === topicId) : all;
-  }, [term, topicId]);
+  const results = useMemo(
+    () => (term ? faqs.filter((f) => `${f.question} ${plain(f.answer)}`.toLowerCase().includes(term)) : faqs),
+    [faqs, term],
+  );
 
-  const activeTopic = HELP_TOPICS.find((t) => t.id === topicId) ?? null;
-
-  // A flat list of every question is hard to scan, so group it by topic unless the
-  // reader has already narrowed to one topic or typed a search.
-  const groups = useMemo(() => {
-    if (activeTopic) return [{ topic: activeTopic, items: results }];
-    const byTopic = HELP_TOPICS.map((t) => ({ topic: t, items: results.filter((a) => a.topicId === t.id) })).filter((g) => g.items.length > 0);
-    return byTopic;
-  }, [results, activeTopic]);
+  // With no FAQs published the page drops the search and list and keeps only the contact card.
+  const hasFaqs = faqs.length > 0;
 
   const contacts = [
     { icon: MessageCircle, label: 'WhatsApp', value: 'Usually replies in minutes', href: WHATSAPP, external: true, tone: 'text-[#25D366]' },
@@ -93,6 +59,7 @@ export default function HelpCenterView() {
             How can we <em className="italic text-[var(--burgundy)]">help</em>?
           </h1>
 
+          {hasFaqs && (
           <div className="mt-4 flex h-12 max-w-xl items-center gap-2.5 rounded-full border border-[var(--border-light)] bg-white pl-4 pr-1.5 transition-colors focus-within:border-[var(--charcoal)]">
             <Search size={17} className="shrink-0 text-[var(--gold)]" />
             <input
@@ -119,55 +86,17 @@ export default function HelpCenterView() {
               </button>
             )}
           </div>
+          )}
         </div>
-
-        {/* Topics */}
-        {!term && (
-          <div className="scrollbar-hide -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <button
-              type="button"
-              onClick={() => { setTopicId(null); setOpen(null); }}
-              aria-pressed={topicId == null}
-              style={{ fontFamily: SANS }}
-              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[0.8rem] transition-colors ${
-                topicId == null
-                  ? 'border-[var(--charcoal)] bg-[var(--charcoal)] text-white'
-                  : 'border-[var(--border-light)] bg-white text-[var(--charcoal)] hover:border-[var(--charcoal)]'
-              }`}
-            >
-              All topics
-            </button>
-            {HELP_TOPICS.map((t) => {
-              const Icon = ICONS[t.icon];
-              const active = topicId === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => { setTopicId(active ? null : t.id); setOpen(null); }}
-                  aria-pressed={active}
-                  style={{ fontFamily: SANS }}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[0.8rem] transition-colors ${
-                    active
-                      ? 'border-[var(--charcoal)] bg-[var(--charcoal)] text-white'
-                      : 'border-[var(--border-light)] bg-white text-[var(--charcoal)] hover:border-[var(--charcoal)]'
-                  }`}
-                >
-                  <Icon size={13} className={active ? 'text-white/80' : 'text-[var(--gold)]'} />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         <div className="mt-5 grid gap-6 lg:grid-cols-12">
           {/* Articles */}
+          {hasFaqs && (
           <div className="min-w-0 lg:col-span-8">
             <p style={{ fontFamily: SANS }} className="mb-2 text-[0.8rem] text-[var(--mid)]">
               {term
                 ? `${results.length} ${results.length === 1 ? 'result' : 'results'} for “${query.trim()}”`
-                : activeTopic?.blurb ?? 'Everything people ask us most often'}
+                : 'Everything people ask us most often'}
             </p>
 
             {results.length === 0 ? (
@@ -189,35 +118,20 @@ export default function HelpCenterView() {
                 </a>
               </div>
             ) : (
-              <div className="space-y-4">
-                {(term ? [{ topic: null, items: results }] : groups).map(({ topic, items }) => (
-                  <section key={topic?.id ?? 'results'}>
-                    {topic && !activeTopic && (
-                      <h2 style={{ fontFamily: SANS }} className="mb-1.5 flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#A8853F]">
-                        {(() => { const Icon = ICONS[topic.icon]; return <Icon size={13} />; })()}
-                        {topic.label}
-                      </h2>
-                    )}
-                    <div className="overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white">
-                {items.map((a, i) => {
-                  const key = `${a.topicId}-${i}`;
-                  const isOpen = open === key;
+              <div className="overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white">
+                {results.map((f) => {
+                  const isOpen = open === f.id;
                   return (
-                    <div key={key} className="border-b border-[var(--border-light)] last:border-b-0">
+                    <div key={f.id} className="border-b border-[var(--border-light)] last:border-b-0">
                       <button
                         type="button"
-                        onClick={() => setOpen(isOpen ? null : key)}
+                        onClick={() => setOpen(isOpen ? null : f.id)}
                         aria-expanded={isOpen}
                         style={{ fontFamily: SANS }}
                         className="group flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left sm:px-5"
                       >
-                        <span className="min-w-0">
-                          {term && (
-                            <span className="mb-0.5 block text-[0.62rem] uppercase tracking-[0.14em] text-[#A8853F]">{a.topicLabel}</span>
-                          )}
-                          <span className={`block text-[0.94rem] font-medium leading-snug transition-colors ${isOpen ? 'text-[var(--burgundy)]' : 'text-[var(--charcoal)] group-hover:text-[var(--burgundy)]'}`}>
-                            {a.q}
-                          </span>
+                        <span className={`min-w-0 text-[0.94rem] font-medium leading-snug transition-colors ${isOpen ? 'text-[var(--burgundy)]' : 'text-[var(--charcoal)] group-hover:text-[var(--burgundy)]'}`}>
+                          {f.question}
                         </span>
                         <span
                           className={`flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border transition-all duration-300 ${
@@ -236,24 +150,25 @@ export default function HelpCenterView() {
                             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                             className="overflow-hidden"
                           >
-                            <p style={{ fontFamily: SANS }} className="px-4 pb-4 pr-12 text-[0.88rem] leading-relaxed text-[#4A3F35] sm:px-5">
-                              {a.a}
-                            </p>
+                            <div style={{ fontFamily: SANS }}>
+                              <RichText
+                                html={f.answer}
+                                className="px-4 pb-4 pr-12 text-[0.88rem] leading-relaxed text-[#4A3F35] sm:px-5"
+                              />
+                            </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
                   );
                 })}
-                    </div>
-                  </section>
-                ))}
               </div>
             )}
           </div>
+          )}
 
           {/* Contact */}
-          <aside className="min-w-0 lg:col-span-4">
+          <aside className={`min-w-0 ${hasFaqs || loading ? 'lg:col-span-4 lg:col-start-9' : 'lg:col-span-6'}`}>
             <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5 lg:sticky lg:top-[120px]">
               <p style={{ fontFamily: SERIF }} className="text-[1.3rem] font-semibold leading-tight text-[var(--charcoal)]">
                 Still stuck?
@@ -262,7 +177,15 @@ export default function HelpCenterView() {
                 Our team answers seven days a week, 9 AM to 9 PM.
               </p>
 
-              <ul className="mt-4 grid gap-2">
+              <Link
+                to="/contact"
+                style={{ fontFamily: SANS }}
+                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--burgundy)] text-[0.86rem] font-semibold text-white transition-colors hover:bg-[var(--burgundy-dark)]"
+              >
+                <Send size={15} /> Send us a message
+              </Link>
+
+              <ul className="mt-3 grid gap-2">
                 {contacts.map(({ icon: Icon, label, value, href, external, tone }) => (
                   <li key={label}>
                     <a
@@ -285,6 +208,9 @@ export default function HelpCenterView() {
                 <p style={{ fontFamily: SANS }} className="text-[0.76rem] leading-relaxed text-[var(--mid)]">
                   Already booked? Keep your booking reference handy. It is in the confirmation we sent on WhatsApp.
                 </p>
+                <Link to="/support" style={{ fontFamily: SANS }} className="mt-1.5 inline-block text-[0.78rem] font-medium text-[var(--burgundy)] underline underline-offset-4">
+                  Track my queries
+                </Link>
               </div>
             </div>
           </aside>

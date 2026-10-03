@@ -19,13 +19,6 @@ export { slugify };
 const titleCase = (s: string) =>
   s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 
-const DEFAULT_FAQS: FaqItem[] = [
-  { q: 'When will the decorator arrive?', a: 'Our team arrives about 2 hours before your selected time slot so everything is ready when you are.' },
-  { q: 'Can I customise the colours or theme?', a: 'Yes. Mention your preferences while booking or contact support after booking and we will adjust the setup where possible.' },
-  { q: 'Is a cake included in this package?', a: 'Cake is not part of the base package, but you can add a cake table or order a cake from the add-ons.' },
-  { q: 'What if my venue is hard to access?', a: 'Please share venue details after booking. Setup time may vary slightly for venues without lift access.' },
-];
-
 // Reviews are not served by the API yet; these summary numbers stand in until they are.
 const PLACEHOLDER_RATING = 4.8;
 const PLACEHOLDER_REVIEW_COUNT = 124;
@@ -116,10 +109,11 @@ export function normalizeExperience(raw: any): ExperienceVM {
   const locationOptions = mapLocations(raw?.locations);
   const locations = Array.from(new Set(locationOptions.map((l) => l.name)));
 
-  const faqs: FaqItem[] =
-    Array.isArray(raw?.faqs) && raw.faqs.length > 0
-      ? raw.faqs.map((f: any) => ({ q: f.q ?? f.question ?? '', a: f.a ?? f.answer ?? '' })).filter((f: FaqItem) => f.q)
-      : DEFAULT_FAQS;
+  // Experience-specific FAQs, if the payload ever carries them. The global list from
+  // /public/faqs is merged in by the view; there is no hardcoded fallback.
+  const faqs: FaqItem[] = (Array.isArray(raw?.faqs) ? raw.faqs : [])
+    .map((f: any) => ({ q: f?.q ?? f?.question ?? '', a: f?.a ?? f?.answer ?? '' }))
+    .filter((f: FaqItem) => f.q && f.a);
 
   return {
     id: raw?.id,

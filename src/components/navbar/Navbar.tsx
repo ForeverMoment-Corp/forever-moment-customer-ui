@@ -9,6 +9,7 @@ import {
   LogIn,
   MapPin,
   Menu,
+  MessageSquare,
   Package,
   Phone,
   Search,
@@ -43,6 +44,7 @@ const guestMenuItems = [
   { icon: Package, label: "My Bookings", to: "/dashboard" },
   { icon: User, label: "My Account", to: "/dashboard" },
   { icon: Phone, label: "Contact Us", to: "/contact" },
+  { icon: MessageSquare, label: "My Queries", to: "/support" },
   { icon: CircleHelp, label: "FAQs", to: "/faqs" },
 ];
 
