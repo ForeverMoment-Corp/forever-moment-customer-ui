@@ -102,7 +102,7 @@ export default function PremiumHeroSlider({
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(135deg, rgba(124,45,59,0.88) 0%, rgba(90,30,41,0.7) 40%, rgba(44,36,32,0.5) 100%)",
+                "linear-gradient(135deg, color-mix(in srgb, var(--burgundy) 88%, transparent) 0%, color-mix(in srgb, var(--burgundy-dark) 70%, transparent) 40%, color-mix(in srgb, var(--charcoal) 50%, transparent) 100%)",
             }}
           />
 
@@ -112,7 +112,7 @@ export default function PremiumHeroSlider({
             style={{
               width: 700,
               height: 200,
-              background: "radial-gradient(ellipse, rgba(201,169,110,0.25), transparent 70%)",
+              background: "radial-gradient(ellipse, color-mix(in srgb, var(--gold) 25%, transparent), transparent 70%)",
             }}
           />
 
@@ -224,7 +224,7 @@ export default function PremiumHeroSlider({
                 <button
                   className="px-6 py-3.5 whitespace-nowrap font-medium border-none cursor-pointer rounded-r-full"
                   style={{
-                    background: "linear-gradient(135deg, var(--burgundy), #a83a4a)",
+                    background: "linear-gradient(135deg, var(--burgundy), var(--wine))",
                     color: "white",
                     fontFamily: "'Jost', sans-serif",
                     fontSize: "0.88rem",

@@ -5,7 +5,7 @@ const categories = [
   { label: 'Birthday', emoji: '🎂', bg: 'from-[#FCE4EC] to-[#F8BBD0]', to: '/shop?category=Birthday', badge: null },
   { label: 'Anniversary', emoji: '💍', bg: 'from-[#F3E5F5] to-[#E1BEE7]', to: '/shop?category=Anniversary', badge: null },
   { label: 'Flowers', emoji: '🌸', bg: 'from-[#E8F5E9] to-[#C8E6C9]', to: '/shop?category=Flowers', badge: null },
-  { label: 'Experiences', emoji: '✨', bg: 'from-[#1A1208] to-[#2D1F0E]', to: '/experiences', badge: 'New' },
+  { label: 'Experiences', emoji: '✨', bg: 'from-ink to-ink-soft', to: '/experiences', badge: 'New' },
   { label: 'Personalised', emoji: '🎨', bg: 'from-[#E3F2FD] to-[#BBDEFB]', to: '/shop?category=Personalised', badge: null },
   { label: 'Plants', emoji: '🌿', bg: 'from-[#F1F8E9] to-[#DCEDC8]', to: '/shop?category=Plants', badge: null },
   { label: 'Decoration', emoji: '🎊', bg: 'from-[#FFF8E1] to-[#FFECB3]', to: '/services', badge: null },
@@ -72,7 +72,7 @@ const QuickCategories = () => {
                       px-2.5
                       py-1
                       rounded-full
-                      bg-[#D9776B]
+                      bg-coral
                       text-white
                       shadow-lg
                       border border-white
@@ -96,11 +96,11 @@ const QuickCategories = () => {
                   lg:text-[14px]
                   font-medium
                   text-center
-                  text-[#1A1208]
+                  text-ink
                   leading-tight
                   max-w-[90px]
                   transition-colors duration-300
-                  group-hover:text-[#C9A84C]
+                  group-hover:text-gold
                 "
               >
                 {cat.label}

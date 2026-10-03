@@ -42,22 +42,22 @@ const CategorySlider = () => {
     <section className="section-padding bg-white">
       <div className="container mx-auto px-6">
         <div className="mb-8">
-          <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#C9A84C] tracking-[0.25em] uppercase mb-2">
+          <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-gold tracking-[0.25em] uppercase mb-2">
             Curated For You
           </p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold">
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-ink font-semibold">
             Tailored For Your Occasion
           </h2>
         </div>
 
-        <div className="flex gap-8 mb-8 border-b border-[#EDE0C4] overflow-x-auto scrollbar-hide">
+        <div className="flex gap-8 mb-8 border-b border-sand overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{ fontFamily: "'Jost', sans-serif" }}
               className={`pb-4 px-1 whitespace-nowrap text-[0.8rem] tracking-[0.15em] uppercase font-medium transition-colors border-b-2 -mb-[1px] ${
-                activeTab === tab ? 'text-[#D9776B] border-[#D9776B]' : 'text-[#9E8A6A] border-transparent hover:text-[#1A1208]'
+                activeTab === tab ? 'text-coral border-coral' : 'text-umber border-transparent hover:text-ink'
               }`}
             >
               {tab}
@@ -68,7 +68,7 @@ const CategorySlider = () => {
         <div className="relative">
           <button
             onClick={() => scroll('left')}
-            className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-[0_4px_16px_rgba(26,18,8,0.1)] items-center justify-center hover:bg-[#C9A84C] hover:text-white transition-colors"
+            className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_10%,_transparent)] items-center justify-center hover:bg-gold hover:text-white transition-colors"
           >
             <FiChevronLeft size={18} />
           </button>
@@ -78,19 +78,19 @@ const CategorySlider = () => {
               <Link
   to={`/services?category=${activeTab}`}
   key={item.id}
-  className="group shrink-0 w-[260px] block bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.25)] hover:-translate-y-2 transition-all duration-300"
+  className="group shrink-0 w-[260px] block bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_16px_40px_color-mix(in_srgb,_var(--gold)_25%,_transparent)] hover:-translate-y-2 transition-all duration-300"
 >
                 <div className="relative h-[200px] overflow-hidden">
                   <SmartImage src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-[#D9776B] hover:text-white transition-colors">
+                  <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-coral hover:text-white transition-colors">
                     <FiHeart size={14} />
                   </button>
                 </div>
                 <div className="p-4">
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.05rem] text-[#1A1208] font-semibold mb-2 leading-snug">
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.05rem] text-ink font-semibold mb-2 leading-snug">
                     {item.title}
                   </h3>
-                  <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.95rem] text-[#C9A84C] font-semibold">
+                  <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.95rem] text-gold font-semibold">
                     {formatPrice(item.price)}
                   </p>
                 </div>
@@ -100,7 +100,7 @@ const CategorySlider = () => {
 
           <button
             onClick={() => scroll('right')}
-            className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-[0_4px_16px_rgba(26,18,8,0.1)] items-center justify-center hover:bg-[#C9A84C] hover:text-white transition-colors"
+            className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_10%,_transparent)] items-center justify-center hover:bg-gold hover:text-white transition-colors"
           >
             <FiChevronRight size={18} />
           </button>

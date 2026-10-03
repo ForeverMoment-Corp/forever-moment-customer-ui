@@ -14,7 +14,7 @@ const CustomerLayout = () => {
   }, [pathname]);
 
   return (
-    <div className='min-h-screen bg-[#FDFAF4] text-[#1A1208] flex flex-col pb-[60px] md:pb-0'>
+    <div className='min-h-screen bg-ivory text-ink flex flex-col pb-[60px] md:pb-0'>
       {/* Navbar manages its own fixed positioning internally */}
       <Navbar />
 

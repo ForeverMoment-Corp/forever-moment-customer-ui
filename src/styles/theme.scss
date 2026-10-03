@@ -8,28 +8,68 @@
    🎨 COLORS
 ================================= */
 
-$primary: #7c2d3b;
-$primary-dark: #b8962e;
-$primary-light: #7c2d3b;
+/*
+ * ──────────────────────────────────────────────────────────────────────────
+ *  THE APP PALETTE — the one place to re-theme Forever Moment.
+ *
+ *  Every colour in the UI resolves to one of these. Components use them as
+ *  Tailwind utilities (`text-gold`, `bg-ink/60`, `border-sand`) or as
+ *  `var(--gold)` in inline styles / SCSS. Change a value here and it applies
+ *  everywhere. Do not hardcode hex/rgba colours in components.
+ *  Tailwind names are registered in `src/index.css` (@theme inline).
+ * ──────────────────────────────────────────────────────────────────────────
+ */
 
-// Accent palette (burgundy / rose)
+// Ink: primary text and dark surfaces (navbar menus, footer, CTA band)
+$ink: #1a1208;
+$ink-soft: #2d1f0e;
+$cocoa: #4a3f35; // body copy on light backgrounds
+$taupe: #5c4a1e; // secondary text, menu items
+$umber: #9e8a6a; // muted text, captions, placeholders
+
+// Gold: brand accent
+$gold: #c9a84c;
+$gold-bright: #e8c97a; // hover state on dark
+$gold-dark: #9a7a2e; // gold text on light
+$gold-deep: #a8853f; // eyebrows, small caps labels
+$gold-pale: #f5e6b8;
+$gold-light: #e8d5a3;
+
+// Surfaces and lines
+$ivory: #fdfaf4; // page / card background
+$cream: #fdf6ee;
+$linen: #f6eedf;
+$parchment: #f3e7cc;
+$wheat: #f1e4c5;
+$sand: #ede0c4; // borders, dividers
+
+// Accents
 $burgundy: #7c2d3b;
 $burgundy-dark: #5a1e29;
+$wine: #a83a4a;
 $rose: #d4837a;
 $rose-light: #f5e6e4;
-$cream: #fdf6ee;
-$gold: #c9a96e;
-$gold-light: #e8d5a3;
+$coral: #d9776b;
 $charcoal: #2c2420;
 $mid: #7a6a5a;
 
-$bg-main: #fdf6ee; // Warm cream background (from reference)
+// Status / third-party
+$sage: #7b9e7b;
+$leaf: #3f7a3f; // success text
+$leaf-light: #eaf3ea; // success background
+$whatsapp: #25d366;
+
+$primary: $burgundy;
+$primary-dark: #b8962e;
+$primary-light: $burgundy;
+
+$bg-main: $cream;
 $bg-white: #ffffff;
 
-$text-main: #2c2420;
-$text-light: #7a6a5a;
+$text-main: $charcoal;
+$text-light: $mid;
 
-$border-light: rgba(201, 169, 110, 0.18);
+$border-light: rgba(201, 168, 76, 0.18);
 
 
 /* ===============================
@@ -84,16 +124,36 @@ $shadow-gold: 0 8px 30px rgba(212, 175, 55, 0.25);
    --primary-dark: #{$primary-dark};
    --primary-light: #{$primary-light};
 
-   // Accent palette
+   // App palette (see the top of this file)
+   --ink: #{$ink};
+   --ink-soft: #{$ink-soft};
+   --cocoa: #{$cocoa};
+   --taupe: #{$taupe};
+   --umber: #{$umber};
+   --gold: #{$gold};
+   --gold-bright: #{$gold-bright};
+   --gold-dark: #{$gold-dark};
+   --gold-deep: #{$gold-deep};
+   --gold-pale: #{$gold-pale};
+   --gold-light: #{$gold-light};
+   --ivory: #{$ivory};
+   --cream: #{$cream};
+   --linen: #{$linen};
+   --parchment: #{$parchment};
+   --wheat: #{$wheat};
+   --sand: #{$sand};
    --burgundy: #{$burgundy};
    --burgundy-dark: #{$burgundy-dark};
+   --wine: #{$wine};
    --rose: #{$rose};
    --rose-light: #{$rose-light};
-   --cream: #{$cream};
-   --gold: #{$gold};
-   --gold-light: #{$gold-light};
+   --coral: #{$coral};
    --charcoal: #{$charcoal};
    --mid: #{$mid};
+   --sage: #{$sage};
+   --leaf: #{$leaf};
+   --leaf-light: #{$leaf-light};
+   --whatsapp: #{$whatsapp};
 
    --bg-main: #{$bg-main};
    --bg-white: #{$bg-white};
@@ -102,15 +162,68 @@ $shadow-gold: 0 8px 30px rgba(212, 175, 55, 0.25);
    --text-main: #{$text-main};
    --text-light: #{$text-light};
 
-   --border-light: #{$border-light};
+   --border-light: color-mix(in srgb, var(--gold) 18%, transparent);
    --radius-md: #{$radius-md};
    --radius-lg: #{$radius-lg};
 
    --shadow-soft: #{$shadow-soft};
    --shadow-gold: #{$shadow-gold};
-   --shadow-burgundy: 0 4px 16px rgba(124, 45, 59, 0.3);
+   --shadow-burgundy: 0 4px 16px color-mix(in srgb, var(--burgundy) 30%, transparent);
 
    --container-width: #{$container-width};
+}
+
+/* ===============================
+   🌸 BLUSH & PLUM THEME  (data-theme="blush")
+   Softer, celebratory palette for a customer audience booking birthdays,
+   anniversaries and baby showers. Same token names as the classic palette,
+   so every component follows; only the values change.
+   Contrast (WCAG): white on accent 5.2:1, muted text on page 4.9:1,
+   accent-dark text on white 6.9:1, body text 16:1.
+================================= */
+
+[data-theme="blush"] {
+   --ink: #2b1422;
+   --ink-soft: #46203a;
+   --cocoa: #4b3842;
+   --taupe: #6b3f56;
+   --umber: #7e6772;
+
+   // "gold" is the accent role; in this theme it is a deep rose.
+   --gold: #b4466b;
+   --gold-bright: #f2a7ba;
+   --gold-dark: #9c3558;
+   --gold-deep: #a63e62;
+   --gold-pale: #fbe1e8;
+   --gold-light: #f1c6d2;
+
+   --ivory: #fff8f7;
+   --cream: #fdf3f2;
+   --linen: #f9ebec;
+   --parchment: #f5e0e4;
+   --wheat: #f2d9de;
+   --sand: #efd8dd;
+
+   --burgundy: #7a1f4b;
+   --burgundy-dark: #5a1537;
+   --wine: #9e2d5c;
+   --rose: #d97a93;
+   --rose-light: #fbe7ed;
+   --coral: #e0607a;
+   --charcoal: #2e1b26;
+   --mid: #76636d;
+
+   --sage: #6f9b87;
+   --leaf: #2e7553;
+   --leaf-light: #e5f3eb;
+
+   --primary: var(--burgundy);
+   --primary-dark: var(--burgundy-dark);
+   --primary-light: var(--burgundy);
+   --bg-main: var(--cream);
+   --text-main: var(--charcoal);
+   --text-light: var(--mid);
+   --shadow-gold: 0 8px 30px color-mix(in srgb, var(--gold) 25%, transparent);
 }
 
 /* ===============================

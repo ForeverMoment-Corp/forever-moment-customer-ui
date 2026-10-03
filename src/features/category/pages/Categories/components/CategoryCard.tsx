@@ -62,7 +62,7 @@ export default function CategoryCard({ category, index, stats }: CategoryCardPro
 
   return (
     <article
-      className="group relative flex flex-col rounded-[26px] border border-[var(--border-light)] bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(124,45,59,0.12)]"
+      className="group relative flex flex-col rounded-[26px] border border-[var(--border-light)] bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_color-mix(in_srgb,_var(--burgundy)_12%,_transparent)]"
       style={{ fontFamily: FONT_SANS }}
     >
       {/* Cover: slider over the whole category gallery */}

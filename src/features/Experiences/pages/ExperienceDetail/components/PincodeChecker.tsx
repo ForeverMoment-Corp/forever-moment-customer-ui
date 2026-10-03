@@ -5,20 +5,29 @@ import { FONT_SANS } from '../normalize';
 // Demo rule until a serviceability endpoint exists.
 const SERVICEABLE = new Set(['110001', '110059']);
 
-export default function PincodeChecker() {
+export type PincodeResult = 'available' | 'unavailable' | null;
+
+interface Props {
+  /** Reports each check (and the reset when the pincode is edited) so the booking recap can show it. */
+  onResult?: (pincode: string, result: PincodeResult) => void;
+}
+
+export default function PincodeChecker({ onResult }: Props) {
   const [pincode, setPincode] = useState('');
-  const [result, setResult] = useState<'available' | 'unavailable' | null>(null);
+  const [result, setResult] = useState<PincodeResult>(null);
 
   const check = () => {
     if (pincode.length !== 6) return;
-    setResult(SERVICEABLE.has(pincode) ? 'available' : 'unavailable');
+    const next = SERVICEABLE.has(pincode) ? 'available' : 'unavailable';
+    setResult(next);
+    onResult?.(pincode, next);
   };
 
   return (
     <div>
       <div
         className={`flex items-center gap-2.5 h-11 rounded-[14px] border bg-white pl-3.5 pr-1.5 transition-colors focus-within:border-[var(--charcoal)] ${
-          result === 'unavailable' ? 'border-[var(--rose)]' : result === 'available' ? 'border-[#3F7A3F]' : 'border-[var(--border-light)]'
+          result === 'unavailable' ? 'border-[var(--rose)]' : result === 'available' ? 'border-leaf' : 'border-[var(--border-light)]'
         }`}
       >
         <MapPin size={16} className="text-[var(--gold)] shrink-0" />
@@ -27,8 +36,10 @@ export default function PincodeChecker() {
           maxLength={6}
           value={pincode}
           onChange={(e) => {
-            setPincode(e.target.value.replace(/\D/g, ''));
+            const value = e.target.value.replace(/\D/g, '');
+            setPincode(value);
             setResult(null);
+            onResult?.(value, null);
           }}
           onKeyDown={(e) => e.key === 'Enter' && check()}
           placeholder="Delivery pincode"
@@ -47,7 +58,7 @@ export default function PincodeChecker() {
         </button>
       </div>
       {result === 'available' && (
-        <p style={{ fontFamily: FONT_SANS }} className="mt-2 flex items-center gap-1.5 text-[0.78rem] font-medium text-[#3F7A3F]">
+        <p style={{ fontFamily: FONT_SANS }} className="mt-2 flex items-center gap-1.5 text-[0.78rem] font-medium text-leaf">
           <Check size={13} strokeWidth={3} /> We deliver to {pincode}.
         </p>
       )}

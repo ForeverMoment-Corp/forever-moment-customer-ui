@@ -39,14 +39,14 @@ const AvailabilityCalendar = ({ selectedDate, onSelectDate }: Props) => {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-[#EDE0C4] p-4">
+    <div className="bg-white rounded-xl border border-sand p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <button onClick={() => changeMonth(-1)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#FDFAF4] transition-colors">
+        <button onClick={() => changeMonth(-1)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-ivory transition-colors">
           <FiChevronLeft size={14} />
         </button>
-        <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.82rem] text-[#1A1208] font-semibold">{monthName}</span>
-        <button onClick={() => changeMonth(1)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#FDFAF4] transition-colors">
+        <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.82rem] text-ink font-semibold">{monthName}</span>
+        <button onClick={() => changeMonth(1)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-ivory transition-colors">
           <FiChevronRight size={14} />
         </button>
       </div>
@@ -54,7 +54,7 @@ const AvailabilityCalendar = ({ selectedDate, onSelectDate }: Props) => {
       {/* Weekday labels */}
       <div className="grid grid-cols-7 mb-2">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-          <div key={i} style={{ fontFamily: "'Jost', sans-serif" }} className="text-center text-[0.65rem] text-[#9E8A6A] font-medium">{d}</div>
+          <div key={i} style={{ fontFamily: "'Jost', sans-serif" }} className="text-center text-[0.65rem] text-umber font-medium">{d}</div>
         ))}
       </div>
 
@@ -78,14 +78,14 @@ const AvailabilityCalendar = ({ selectedDate, onSelectDate }: Props) => {
               disabled={isDisabled}
               style={{ fontFamily: "'Jost', sans-serif" }}
               className={`relative aspect-square rounded-lg text-[0.75rem] flex items-center justify-center transition-colors ${
-                isSelected ? 'bg-[#C9A84C] text-white font-semibold' :
-                isDisabled ? 'text-[#EDE0C4] cursor-not-allowed' :
-                'text-[#1A1208] hover:bg-[#FDFAF4]'
+                isSelected ? 'bg-gold text-white font-semibold' :
+                isDisabled ? 'text-sand cursor-not-allowed' :
+                'text-ink hover:bg-ivory'
               }`}
             >
               {day}
               {isBooked && !isPast && (
-                <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-[#D9776B]" />
+                <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-coral" />
               )}
             </button>
           )
@@ -93,14 +93,14 @@ const AvailabilityCalendar = ({ selectedDate, onSelectDate }: Props) => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-[#EDE0C4]">
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-sand">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#D9776B]" />
-          <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#9E8A6A]">Fully booked</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-coral" />
+          <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-umber">Fully booked</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-[#C9A84C]" />
-          <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#9E8A6A]">Selected</span>
+          <span className="w-3 h-3 rounded bg-gold" />
+          <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-umber">Selected</span>
         </div>
       </div>
     </div>

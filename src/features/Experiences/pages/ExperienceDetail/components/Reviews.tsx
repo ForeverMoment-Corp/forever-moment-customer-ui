@@ -21,10 +21,10 @@ const SAMPLE_REVIEWS: Review[] = [
 const DISTRIBUTION: Array<[number, number]> = [[5, 82], [4, 12], [3, 4], [2, 1], [1, 1]];
 
 const AVATARS = [
-  'linear-gradient(135deg, #7C2D3B, #A83A4A)',
-  'linear-gradient(135deg, #C9A96E, #A8853F)',
-  'linear-gradient(135deg, #D4837A, #B5605A)',
-  'linear-gradient(135deg, #5A1E29, #7C2D3B)',
+  'linear-gradient(135deg, var(--burgundy), var(--wine))',
+  'linear-gradient(135deg, var(--gold), var(--gold-deep))',
+  'linear-gradient(135deg, var(--rose), #B5605A)',
+  'linear-gradient(135deg, var(--burgundy-dark), var(--burgundy))',
 ];
 
 const initials = (name: string) => name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -33,7 +33,7 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
   return (
     <span className="inline-flex gap-0.5" aria-label={`${value} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} size={size} className={i <= Math.round(value) ? 'fill-[var(--gold)] text-[var(--gold)]' : 'fill-[#F6EEDF] text-[var(--gold-light)]'} />
+        <Star key={i} size={size} className={i <= Math.round(value) ? 'fill-[var(--gold)] text-[var(--gold)]' : 'fill-linen text-[var(--gold-light)]'} />
       ))}
     </span>
   );
@@ -54,7 +54,7 @@ export default function Reviews({ rating, reviewCount }: { rating: number; revie
       }
     >
       {/* Summary band */}
-      <div className="rounded-[16px] bg-white border border-[var(--border-light)] p-4 sm:p-5 grid sm:grid-cols-[auto_minmax(0,1fr)_auto] gap-5 sm:gap-6 items-center">
+      <div className="rounded-[20px] bg-white border border-[var(--sand)] p-4 sm:p-5 grid sm:grid-cols-[auto_minmax(0,1fr)_auto] gap-5 sm:gap-6 items-center">
         <div>
           <p style={{ fontFamily: FONT_SERIF }} className="text-[3rem] leading-[0.9] font-semibold text-[var(--charcoal)]">
             {rating}
@@ -71,7 +71,7 @@ export default function Reviews({ rating, reviewCount }: { rating: number; revie
           {DISTRIBUTION.map(([stars, pct]) => (
             <li key={stars} style={{ fontFamily: FONT_SANS }} className="grid grid-cols-[14px_minmax(0,1fr)_36px] gap-2.5 items-center text-[0.74rem] text-[var(--mid)]">
               <span>{stars}</span>
-              <span className="block h-1.5 rounded-full bg-[#F6EEDF] overflow-hidden">
+              <span className="block h-1.5 rounded-full bg-linen overflow-hidden">
                 <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--gold), var(--burgundy))' }} />
               </span>
               <span className="text-right tabular-nums">{pct}%</span>
@@ -91,24 +91,33 @@ export default function Reviews({ rating, reviewCount }: { rating: number; revie
         {SAMPLE_REVIEWS.map((review, i) => (
           <article
             key={review.name}
-            className="snap-start shrink-0 w-[280px] sm:w-[calc(50%-6px)] rounded-[16px] bg-white border border-[var(--border-light)] p-4 flex flex-col gap-2"
+            className="relative flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-[var(--sand)] bg-white p-5 sm:w-[calc(50%-6px)]"
           >
-            <div className="flex items-center gap-3">
-              <span style={{ fontFamily: FONT_SANS, background: AVATARS[i % AVATARS.length] }} className="w-[42px] h-[42px] rounded-full text-white text-[0.72rem] font-semibold flex items-center justify-center shrink-0">
+            {/* Oversized quote mark as the card's signature */}
+            <span aria-hidden style={{ fontFamily: FONT_SERIF }} className="pointer-events-none absolute -top-3 right-3 select-none text-[6rem] leading-none text-[var(--gold-pale)]">
+              &rdquo;
+            </span>
+            <div className="relative flex items-center justify-between gap-2">
+              <Stars value={review.rating} />
+              <span style={{ fontFamily: FONT_SANS }} className="rounded-full bg-[var(--rose-light)] px-2.5 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.1em] text-[var(--burgundy)]">
+                {review.occasion}
+              </span>
+            </div>
+            <p style={{ fontFamily: FONT_SERIF }} className="relative mt-3 flex-1 text-[1.08rem] italic leading-snug text-[var(--charcoal)]">
+              {review.text}
+            </p>
+            <div className="mt-4 flex items-center gap-3 border-t border-dashed border-[var(--sand)] pt-3">
+              <span style={{ fontFamily: FONT_SANS, background: AVATARS[i % AVATARS.length] }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[0.68rem] font-semibold text-white">
                 {initials(review.name)}
               </span>
               <div className="min-w-0">
-                <p style={{ fontFamily: FONT_SANS }} className="text-[0.88rem] font-semibold text-[var(--charcoal)] flex items-center gap-1.5">
+                <p style={{ fontFamily: FONT_SANS }} className="flex items-center gap-1.5 text-[0.84rem] font-semibold text-[var(--charcoal)]">
                   <span className="truncate">{review.name}</span>
-                  <BadgeCheck size={14} className="text-[#3F7A3F] shrink-0" />
+                  <BadgeCheck size={13} className="shrink-0 text-leaf" />
                 </p>
-                <p style={{ fontFamily: FONT_SANS }} className="text-[0.74rem] text-[var(--mid)]">
-                  {review.occasion} · {review.date}
-                </p>
+                <p style={{ fontFamily: FONT_SANS }} className="text-[0.72rem] text-[var(--mid)]">Verified booking · {review.date}</p>
               </div>
             </div>
-            <Stars value={review.rating} />
-            <p style={{ fontFamily: FONT_SANS }} className="text-[0.88rem] leading-relaxed text-[#4A3F35]">{review.text}</p>
           </article>
         ))}
       </div>

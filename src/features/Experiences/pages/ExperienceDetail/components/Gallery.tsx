@@ -29,7 +29,7 @@ function RoundButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`w-11 h-11 rounded-full flex items-center justify-center shadow-[0_6px_20px_rgba(26,18,8,0.18)] backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 bg-white/95 text-[var(--charcoal)] hover:bg-white ${className}`}
+      className={`w-11 h-11 rounded-full flex items-center justify-center shadow-[0_6px_20px_color-mix(in_srgb,_var(--ink)_18%,_transparent)] backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 bg-white/95 text-[var(--charcoal)] hover:bg-white ${className}`}
     >
       {children}
     </button>
@@ -94,7 +94,7 @@ export default function Gallery({ media, name }: GalleryProps) {
       {/* Main image */}
       <div className="order-1 md:order-2 relative flex-1 min-w-0">
         <div
-          className="relative aspect-[4/3] md:aspect-[5/4] rounded-3xl overflow-hidden bg-[var(--rose-light)] shadow-[0_20px_50px_rgba(124,45,59,0.12)]"
+          className="relative aspect-[4/3] md:aspect-[5/4] rounded-3xl overflow-hidden bg-[var(--rose-light)] shadow-[0_20px_50px_color-mix(in_srgb,_var(--burgundy)_12%,_transparent)]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -143,7 +143,7 @@ export default function Gallery({ media, name }: GalleryProps) {
             type="button"
             onClick={() => setViewerOpen(true)}
             style={{ fontFamily: FONT_SANS }}
-            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-[rgba(44,36,32,0.72)] backdrop-blur-md text-white px-4 py-2.5 text-[0.82rem] font-medium hover:bg-[var(--charcoal)] transition"
+            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-[color-mix(in_srgb,_var(--charcoal)_72%,_transparent)] backdrop-blur-md text-white px-4 py-2.5 text-[0.82rem] font-medium hover:bg-[var(--charcoal)] transition"
           >
             <Maximize2 size={15} />
             {index + 1}/{count} · View full
@@ -238,7 +238,7 @@ function Viewer({ media, index, setIndex, onClose, name }: ViewerProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[300] bg-[#1a1208] text-white flex flex-col"
+      className="fixed inset-0 z-[300] bg-ink text-white flex flex-col"
     >
       {/* Floating counter + close */}
       <span

@@ -32,23 +32,23 @@ const GiftsSlider = ({ excludeId, title = '🎁 Add A Gift' }: Props) => {
 
   return (
     <div className="mb-6">
-      <h3 style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#1A1208] font-semibold tracking-[0.15em] uppercase mb-3 whitespace-nowrap">{title}</h3>
+      <h3 style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-ink font-semibold tracking-[0.15em] uppercase mb-3 whitespace-nowrap">{title}</h3>
       <Slider>
         {gifts.map((gift) => {
           const isAdded = addedIds.includes(gift.id)
           return (
-            <div key={gift.id} className="shrink-0 w-[150px] bg-white rounded-xl p-3 shadow-[0_2px_8px_rgba(26,18,8,0.05)]">
+            <div key={gift.id} className="shrink-0 w-[150px] bg-white rounded-xl p-3 shadow-[0_2px_8px_color-mix(in_srgb,_var(--ink)_5%,_transparent)]">
               <Link to={`/shop/${gift.id}`}>
                 <div className="w-full aspect-square rounded-lg overflow-hidden mb-2">
                   <img src={gift.image} alt={gift.title} className="w-full h-full object-cover" />
                 </div>
-                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.72rem] text-[#1A1208] font-medium leading-snug mb-1 truncate">{gift.title}</p>
+                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.72rem] text-ink font-medium leading-snug mb-1 truncate">{gift.title}</p>
               </Link>
               <div className="flex items-center justify-between gap-1">
-                <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.74rem] text-[#C9A84C] font-semibold shrink-0">{formatPrice(gift.price)}</span>
+                <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.74rem] text-gold font-semibold shrink-0">{formatPrice(gift.price)}</span>
                 <button
                   onClick={() => handleToggle(gift)}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors text-[0.8rem] shrink-0 ${isAdded ? 'bg-[#7B9E7B] text-white' : 'bg-[#1A1208] text-white hover:bg-[#C9A84C]'}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors text-[0.8rem] shrink-0 ${isAdded ? 'bg-sage text-white' : 'bg-ink text-white hover:bg-gold'}`}
                 >
                   {isAdded ? <FiCheck size={12} /> : '+'}
                 </button>

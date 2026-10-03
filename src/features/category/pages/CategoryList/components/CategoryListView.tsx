@@ -31,17 +31,17 @@ export default function CategoryListView({ categories }: CategoryListViewProps) 
         <FadeIn>
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
             <div>
-              <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#9E8A6A] tracking-[0.25em] uppercase mb-2">
+              <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase mb-2">
                 Every Occasion
               </p>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold leading-tight">
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-ink font-semibold leading-tight">
                 Browse by <em>Category</em>
               </h2>
             </div>
             <Link 
               to="/categories" 
               style={{ fontFamily: "'Jost', sans-serif" }} 
-              className="text-[#C9A84C] text-[0.85rem] font-medium uppercase tracking-[0.1em] hover:text-[#1A1208] transition-colors flex items-center gap-2 group"
+              className="text-gold text-[0.85rem] font-medium uppercase tracking-[0.1em] hover:text-ink transition-colors flex items-center gap-2 group"
             >
               All Categories 
               <span className="group-hover:translate-x-1 transition-transform">→</span>

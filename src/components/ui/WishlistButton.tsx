@@ -26,7 +26,7 @@ const WishlistButton = ({ item, size = 16, className = '' }: Props) => {
         dispatch(toggleWishlist(item))
       }}
       className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-        isWishlisted ? 'bg-[#D9776B] text-white' : 'bg-white/90 text-[#1A1208] hover:bg-white'
+        isWishlisted ? 'bg-coral text-white' : 'bg-white/90 text-ink hover:bg-white'
       } ${className}`}
     >
       <FiHeart size={size} fill={isWishlisted ? 'white' : 'none'} />

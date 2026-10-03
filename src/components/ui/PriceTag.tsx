@@ -20,13 +20,13 @@ const PriceTag = ({ price, discountPercent = 20, size = 'md' }: Props) => {
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span style={{ fontFamily: "'Jost', sans-serif" }} className={`${sizeClasses[size]} text-[#1A1208] font-bold`}>
+      <span style={{ fontFamily: "'Jost', sans-serif" }} className={`${sizeClasses[size]} text-ink font-bold`}>
         {formatPrice(price)}
       </span>
-      <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.75rem] text-[#9E8A6A] line-through">
+      <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.75rem] text-umber line-through">
         {formatPrice(originalPrice)}
       </span>
-      <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.68rem] text-[#7B9E7B] font-semibold">
+      <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.68rem] text-sage font-semibold">
         {discountPercent}% OFF
       </span>
     </div>

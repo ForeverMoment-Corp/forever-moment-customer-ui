@@ -27,7 +27,7 @@ export default function OrderSummary({ basePrice, originalPrice, addons }: Props
         </div>
       ))}
       {savings > 0 && (
-        <div className="flex justify-between text-[#3F7A3F]">
+        <div className="flex justify-between text-leaf">
           <dt>Launch offer</dt>
           <dd className="tabular-nums">− {formatINR(savings)}</dd>
         </div>

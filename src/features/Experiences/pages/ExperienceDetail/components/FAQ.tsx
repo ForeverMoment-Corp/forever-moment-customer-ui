@@ -45,7 +45,7 @@ export default function FAQ({ items }: { items: FaqItem[] }) {
                   >
                     <RichText
                       html={faq.a}
-                      className="pb-4 pr-12 text-[0.88rem] leading-relaxed text-[#4A3F35]"
+                      className="pb-4 pr-12 text-[0.88rem] leading-relaxed text-cocoa"
                     />
                   </motion.div>
                 )}

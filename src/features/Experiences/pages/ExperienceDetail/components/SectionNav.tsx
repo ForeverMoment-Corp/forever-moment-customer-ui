@@ -9,8 +9,9 @@ export interface SectionNavItem {
 }
 
 /**
- * Sticky tab strip for the content column. The active tab is tracked by an
- * IntersectionObserver and marked with a sliding gold underline.
+ * Sticky chapter bar for the content column: numbered pills that match the chapter numbers on
+ * the sections. The active one is tracked by an IntersectionObserver and marked by a pill that
+ * slides between them.
  */
 export default function SectionNav({ items }: { items: SectionNavItem[] }) {
   const [active, setActive] = useState(items[0]?.id);
@@ -59,48 +60,50 @@ export default function SectionNav({ items }: { items: SectionNavItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <nav
-      aria-label="Page sections"
-      className="sticky top-[64px] md:top-[112px] z-30 -mx-4 px-4 sm:mx-0 sm:px-0 bg-[var(--bg-main)]/95 backdrop-blur-md mt-3"
-    >
+    <nav aria-label="Page sections" className="sticky top-[64px] z-30 -mx-4 mt-4 px-4 py-2 sm:mx-0 sm:px-0 md:top-[112px]">
       <div className="relative">
-      <div ref={stripRef} className="flex gap-0.5 overflow-x-auto scrollbar-hide border-b border-[var(--border-light)]">
-        {items.map((item) => {
-          const isActive = active === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              data-section={item.id}
-              onClick={() => scrollTo(item.id)}
-              aria-current={isActive ? 'true' : undefined}
-              style={{ fontFamily: FONT_SANS }}
-              className={`relative shrink-0 flex items-center gap-1.5 px-3 py-3 text-[0.74rem] uppercase tracking-[0.1em] font-medium transition-colors duration-300 ${
-                isActive ? 'text-[var(--burgundy)]' : 'text-[var(--mid)] hover:text-[var(--charcoal)]'
-              }`}
-            >
-              {item.label}
-              {typeof item.count === 'number' && item.count > 0 && (
-                <span
-                  className={`inline-flex min-w-[1.3rem] h-[1.3rem] items-center justify-center rounded-full px-1.5 text-[0.62rem] font-semibold tracking-normal transition-colors ${
-                    isActive ? 'bg-[var(--burgundy)] text-white' : 'bg-[var(--rose-light)] text-[var(--burgundy)]'
-                  }`}
-                >
-                  {item.count}
+        <div
+          ref={stripRef}
+          className="flex gap-1 overflow-x-auto scrollbar-hide rounded-full border border-[var(--sand)] bg-white/85 p-1 shadow-[0_12px_30px_-18px_color-mix(in_srgb,_var(--ink)_45%,_transparent)] backdrop-blur-md"
+        >
+          {items.map((item, i) => {
+            const isActive = active === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                data-section={item.id}
+                onClick={() => scrollTo(item.id)}
+                aria-current={isActive ? 'true' : undefined}
+                style={{ fontFamily: FONT_SANS }}
+                className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[0.76rem] font-medium transition-colors duration-300 ${
+                  isActive ? 'text-white' : 'text-[var(--mid)] hover:text-[var(--charcoal)]'
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="section-nav-pill"
+                    transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+                    className="absolute inset-0 rounded-full bg-[var(--ink)]"
+                  />
+                )}
+                <span className={`relative text-[0.64rem] tabular-nums ${isActive ? 'text-[var(--gold-bright)]' : 'text-[var(--gold-deep)]'}`}>
+                  {String(i + 1).padStart(2, '0')}
                 </span>
-              )}
-              {isActive && (
-                <motion.span
-                  layoutId="section-nav-underline"
-                  transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-                  className="absolute left-3 right-3 -bottom-px h-[2px] rounded-full bg-[var(--burgundy)]"
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--bg-main)] to-transparent sm:hidden" />
+                <span className="relative">{item.label}</span>
+                {typeof item.count === 'number' && item.count > 0 && (
+                  <span
+                    className={`relative inline-flex h-[1.2rem] min-w-[1.2rem] items-center justify-center rounded-full px-1.5 text-[0.6rem] font-semibold ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-[var(--rose-light)] text-[var(--burgundy)]'
+                    }`}
+                  >
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

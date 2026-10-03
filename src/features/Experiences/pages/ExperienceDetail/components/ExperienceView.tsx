@@ -271,7 +271,8 @@ export default function ExperienceDetails({
 
             <SectionNav items={sections} />
 
-            <div>
+            {/* Sections number themselves as chapters from this counter (see SectionCard) */}
+            <div className="[counter-reset:chapter]">
               <Overview experience={vm} />
               {vm.inclusions.length > 0 && <Inclusion items={vm.inclusions} />}
               <MoreAddOns items={extraAddons} toggleAddon={toggleAddon} onReview={() => scrollToId('booking-card')} />

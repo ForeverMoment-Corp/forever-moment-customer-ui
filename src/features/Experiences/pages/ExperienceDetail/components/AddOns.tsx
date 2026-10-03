@@ -57,7 +57,7 @@ export default function AddOns({ addons, toggleAddon }: Props) {
 
             <span style={{ fontFamily: FONT_SANS }} className="shrink-0 text-right">
               {addon.isFree ? (
-                <span className="rounded-full bg-[#EAF3EA] px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[#3F7A3F]">
+                <span className="rounded-full bg-leaf-light px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-leaf">
                   Free
                 </span>
               ) : (

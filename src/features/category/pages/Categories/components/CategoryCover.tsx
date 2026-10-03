@@ -54,7 +54,7 @@ export default function CategoryCover({ images, name, children }: Props) {
 
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(26,18,8,0.75) 0%, rgba(26,18,8,0.15) 55%, transparent 100%)' }}
+        style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--ink) 75%, transparent) 0%, color-mix(in srgb, var(--ink) 15%, transparent) 55%, transparent 100%)' }}
       />
 
       {children}

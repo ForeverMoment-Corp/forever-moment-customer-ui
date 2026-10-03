@@ -31,7 +31,7 @@ export default function HelpCenterView() {
   const hasFaqs = faqs.length > 0;
 
   const contacts = [
-    { icon: MessageCircle, label: 'WhatsApp', value: 'Usually replies in minutes', href: WHATSAPP, external: true, tone: 'text-[#25D366]' },
+    { icon: MessageCircle, label: 'WhatsApp', value: 'Usually replies in minutes', href: WHATSAPP, external: true, tone: 'text-whatsapp' },
     { icon: Phone, label: 'Call us', value: PHONE, href: `tel:${PHONE.replace(/\s/g, '')}`, external: false, tone: 'text-[var(--burgundy)]' },
     { icon: Mail, label: 'Email', value: EMAIL, href: `mailto:${EMAIL}`, external: false, tone: 'text-[var(--gold)]' },
   ];
@@ -52,7 +52,7 @@ export default function HelpCenterView() {
 
         {/* Header + search */}
         <div className="mt-3 border-b border-[var(--border-light)] pb-5">
-          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-[#A8853F]">
+          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
             We are here to help
           </p>
           <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
@@ -153,7 +153,7 @@ export default function HelpCenterView() {
                             <div style={{ fontFamily: SANS }}>
                               <RichText
                                 html={f.answer}
-                                className="px-4 pb-4 pr-12 text-[0.88rem] leading-relaxed text-[#4A3F35] sm:px-5"
+                                className="px-4 pb-4 pr-12 text-[0.88rem] leading-relaxed text-cocoa sm:px-5"
                               />
                             </div>
                           </motion.div>

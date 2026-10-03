@@ -11,7 +11,7 @@ const ReviewsSection = () => {
   return (
     <div id="reviews-section" className="mt-16">
       <FadeIn>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.8rem] text-[#1A1208] font-semibold mb-6">
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.8rem] text-ink font-semibold mb-6">
           Customer Reviews 📸
         </h2>
       </FadeIn>
@@ -20,26 +20,26 @@ const ReviewsSection = () => {
         {sampleReviews.map((review) => (
           <div
             key={review.id}
-            className="shrink-0 w-[300px] bg-white rounded-2xl p-5 shadow-[0_4px_16px_rgba(26,18,8,0.06)]"
+            className="shrink-0 w-[300px] bg-white rounded-2xl p-5 shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)]"
           >
             {/* User Info */}
             <div className="flex items-center gap-3 mb-3">
               <img src={review.avatar} alt={review.name} className="w-10 h-10 rounded-full object-cover" />
               <div>
-                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.82rem] text-[#1A1208] font-semibold">{review.name}</p>
-                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#9E8A6A]">{review.date}</p>
+                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.82rem] text-ink font-semibold">{review.name}</p>
+                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-umber">{review.date}</p>
               </div>
             </div>
 
             {/* Stars */}
             <div className="flex gap-1 mb-2">
               {[...Array(5)].map((_, i) => (
-                <FiStar key={i} size={12} fill={i < review.rating ? '#D9776B' : 'none'} color={i < review.rating ? '#D9776B' : '#EDE0C4'} />
+                <FiStar key={i} size={12} fill={i < review.rating ? 'var(--coral)' : 'none'} color={i < review.rating ? 'var(--coral)' : 'var(--sand)'} />
               ))}
             </div>
 
             {/* Comment */}
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.8rem] text-[#5C4A1E] leading-relaxed mb-3">
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.8rem] text-taupe leading-relaxed mb-3">
               {review.comment}
             </p>
 

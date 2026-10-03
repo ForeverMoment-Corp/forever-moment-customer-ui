@@ -18,20 +18,20 @@ const Occasions = () => {
 
         <FadeIn>
           <div className="text-center mb-12">
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold mb-2">
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-ink font-semibold mb-2">
               Celebration Occasions
             </h2>
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#9E8A6A] tracking-[0.25em] uppercase">
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase">
               Discover Curated Themes
             </p>
-            <div className="w-10 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
+            <div className="w-10 h-[1px] bg-gold mx-auto mt-4" />
           </div>
         </FadeIn>
 
         <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {occasions.map((item) => (
             <StaggerItem key={item.title}>
-              <Link to={item.to} className="group relative h-[220px] md:h-[280px] rounded-2xl overflow-hidden cursor-pointer shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.25)] hover:-translate-y-2 transition-all duration-300 block">
+              <Link to={item.to} className="group relative h-[220px] md:h-[280px] rounded-2xl overflow-hidden cursor-pointer shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_16px_40px_color-mix(in_srgb,_var(--gold)_25%,_transparent)] hover:-translate-y-2 transition-all duration-300 block">
                 <SmartImage
                   src={item.image}
                   alt={item.title}
@@ -46,10 +46,10 @@ const Occasions = () => {
                     {item.title}
                   </h3>
                   <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[#F5E6B8] text-[0.68rem] tracking-[0.15em] uppercase font-medium">
+                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-gold-pale text-[0.68rem] tracking-[0.15em] uppercase font-medium">
                       View All
                     </span>
-                    <FiArrowRight size={12} color="#F5E6B8" />
+                    <FiArrowRight size={12} color="var(--gold-pale)" />
                   </div>
                 </div>
               </Link>

@@ -96,7 +96,7 @@ const Counter = ({
 
 export default function StatsBar() {
   return (
-    <section className="py-8 md:py-10 bg-[#FDFAF4]">
+    <section className="py-8 md:py-10 bg-ivory">
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => {
@@ -110,12 +110,12 @@ export default function StatsBar() {
                   bg-white
                   rounded-[24px]
                   border
-                  border-[#F1E4C5]
+                  border-wheat
                   p-4
                   sm:p-5
                   text-center
-                  shadow-[0_6px_24px_rgba(26,18,8,0.04)]
-                  hover:shadow-[0_16px_50px_rgba(201,168,76,0.14)]
+                  shadow-[0_6px_24px_color-mix(in_srgb,_var(--ink)_4%,_transparent)]
+                  hover:shadow-[0_16px_50px_color-mix(in_srgb,_var(--gold)_14%,_transparent)]
                   hover:-translate-y-1
                   transition-all
                   duration-300
@@ -127,9 +127,9 @@ export default function StatsBar() {
                     className="
                       w-11 h-11
                       rounded-full
-                      bg-[#FDFAF4]
+                      bg-ivory
                       border
-                      border-[#F3E7CC]
+                      border-parchment
                       flex
                       items-center
                       justify-center
@@ -140,7 +140,7 @@ export default function StatsBar() {
                   >
                     <Icon
                       size={18}
-                      className="text-[#C9A84C]"
+                      className="text-gold"
                     />
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function StatsBar() {
                     text-[1.8rem]
                     sm:text-[2.1rem]
                     lg:text-[2.4rem]
-                    text-[#1A1208]
+                    text-ink
                     font-semibold
                     leading-none
                     mb-2
@@ -178,7 +178,7 @@ export default function StatsBar() {
                     md:text-[12px]
                     uppercase
                     tracking-[0.18em]
-                    text-[#9E8A6A]
+                    text-umber
                     font-medium
                     leading-relaxed
                   "

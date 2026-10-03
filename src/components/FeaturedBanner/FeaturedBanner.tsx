@@ -3,17 +3,17 @@ export default function FeaturedBanner() {
     <div className="section-padding bg-white">
       <div className="max-w-[1380px] mx-auto px-6">
         <div
-          className="rounded-3xl overflow-hidden relative flex items-center shadow-[0_8px_30px_rgba(26,18,8,0.12)]"
+          className="rounded-3xl overflow-hidden relative flex items-center shadow-[0_8px_30px_color-mix(in_srgb,_var(--ink)_12%,_transparent)]"
           style={{
             height: 380,
-            background: `linear-gradient(90deg, rgba(26,18,8,0.92) 0%, rgba(26,18,8,0.7) 60%, transparent 100%),
+            background: `linear-gradient(90deg, color-mix(in srgb, var(--ink) 92%, transparent) 0%, color-mix(in srgb, var(--ink) 70%, transparent) 60%, transparent 100%),
                          url('https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1200&q=80') center/cover no-repeat`,
           }}
         >
           <div className="p-8 sm:p-14 max-w-xl relative z-10">
             <span
               style={{ fontFamily: "'Jost', sans-serif" }}
-              className="inline-block rounded-full px-4 py-1.5 text-[0.7rem] font-medium uppercase tracking-[0.2em] mb-6 border border-[#C9A84C]/30 text-[#C9A84C]"
+              className="inline-block rounded-full px-4 py-1.5 text-[0.7rem] font-medium uppercase tracking-[0.2em] mb-6 border border-gold-bright/30 text-gold"
             >
               Exclusive Package
             </span>
@@ -24,7 +24,7 @@ export default function FeaturedBanner() {
             >
               Plan Your Dream
               <br />
-              <em className="text-[#C9A84C] font-style-italic font-medium">Wedding This Season</em>
+              <em className="text-gold font-style-italic font-medium">Wedding This Season</em>
             </h3>
 
             <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-white/70 text-[0.95rem] mb-8 max-w-md leading-relaxed">
@@ -33,7 +33,7 @@ export default function FeaturedBanner() {
 
             <button
               style={{ fontFamily: "'Jost', sans-serif" }}
-              className="bg-[#C9A84C] hover:bg-[#E8C97A] text-[#1A1208] px-8 py-3.5 rounded-full text-[0.8rem] font-semibold uppercase tracking-[0.1em] transition-colors shadow-[0_4px_20px_rgba(201,168,76,0.3)]"
+              className="bg-gold hover:bg-gold-bright text-ink px-8 py-3.5 rounded-full text-[0.8rem] font-semibold uppercase tracking-[0.1em] transition-colors shadow-[0_4px_20px_color-mix(in_srgb,_var(--gold)_30%,_transparent)]"
             >
               Explore Packages
             </button>

@@ -40,15 +40,15 @@ export default function FeaturedExperienceView({ experiences, loading, getFeatur
   const isLoading = !!loading && list.length === 0;
 
   return (
-    <section className="bg-[#FDFAF4] py-10 md:py-14">
+    <section className="bg-ivory py-10 md:py-14">
       <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
         <FadeIn>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <p style={{ fontFamily: SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-[#9E8A6A]">
+              <p style={{ fontFamily: SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-umber">
                 Handpicked for you
               </p>
-              <h2 style={{ fontFamily: SERIF }} className="text-[1.7rem] font-semibold leading-tight text-[#1A1208] md:text-[2.1rem]">
+              <h2 style={{ fontFamily: SERIF }} className="text-[1.7rem] font-semibold leading-tight text-ink md:text-[2.1rem]">
                 Most <em className="italic text-[var(--burgundy)]">loved</em> experiences
               </h2>
             </div>
@@ -56,7 +56,7 @@ export default function FeaturedExperienceView({ experiences, loading, getFeatur
               <Link
                 to="/featured-experiences"
                 style={{ fontFamily: SANS }}
-                className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-[#C9A84C] transition-colors hover:text-[#1A1208]"
+                className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-gold transition-colors hover:text-ink"
               >
                 View all
                 <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />

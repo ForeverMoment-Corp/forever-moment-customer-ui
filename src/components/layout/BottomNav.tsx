@@ -14,8 +14,8 @@ const BottomNav = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[90] md:hidden bg-white border-t border-[#EDE0C4]"
-      style={{ boxShadow: '0 -4px 20px rgba(26,18,8,0.06)' }}
+      className="fixed bottom-0 left-0 right-0 z-[90] md:hidden bg-white border-t border-sand"
+      style={{ boxShadow: '0 -4px 20px color-mix(in srgb, var(--ink) 6%, transparent)' }}
     >
       <div className="grid grid-cols-5 h-[60px]">
         {navItems.map((item) => {
@@ -29,15 +29,15 @@ const BottomNav = () => {
               to={item.to}
               className="flex flex-col items-center justify-center gap-1 relative"
             >
-              {isActive && <div className="absolute top-0 w-8 h-[2px] bg-[#C9A84C] rounded-full" />}
+              {isActive && <div className="absolute top-0 w-8 h-[2px] bg-gold rounded-full" />}
 
               <div className="relative">
-                <item.icon size={19} color={isActive ? '#C9A84C' : '#9E8A6A'} />
+                <item.icon size={19} color={isActive ? 'var(--gold)' : 'var(--umber)'} />
               </div>
 
               <span
                 style={{ fontFamily: "'Jost', sans-serif" }}
-                className={`text-[0.6rem] ${isActive ? 'text-[#C9A84C] font-semibold' : 'text-[#9E8A6A]'}`}
+                className={`text-[0.6rem] ${isActive ? 'text-gold font-semibold' : 'text-umber'}`}
               >
                 {item.label}
               </span>

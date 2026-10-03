@@ -174,7 +174,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
   );
 
   const contacts = [
-    { icon: MessageCircle, label: 'WhatsApp', value: 'Usually replies in minutes', href: whatsappLink('Hi! I have a query about Forever Moment.'), external: true, tone: 'text-[#25D366]' },
+    { icon: MessageCircle, label: 'WhatsApp', value: 'Usually replies in minutes', href: whatsappLink('Hi! I have a query about Forever Moment.'), external: true, tone: 'text-whatsapp' },
     { icon: Phone, label: 'Call us', value: PHONE, href: `tel:${PHONE.replace(/\s/g, '')}`, external: false, tone: 'text-[var(--burgundy)]' },
     { icon: Mail, label: 'Email', value: EMAIL, href: `mailto:${EMAIL}`, external: false, tone: 'text-[var(--gold)]' },
   ];
@@ -195,7 +195,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
 
         {/* Header */}
         <div className="mt-3 border-b border-[var(--border-light)] pb-5">
-          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-[#A8853F]">
+          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
             Talk to a real person
           </p>
           <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
@@ -211,7 +211,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
           <div className="min-w-0 lg:col-span-7">
             {referenceId !== null ? (
               <div role="status" className="rounded-2xl border border-[var(--border-light)] bg-white p-6 text-center sm:p-8">
-                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF3EA] text-[#3F7A3F]">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-leaf-light text-leaf">
                   <CheckCircle2 size={24} />
                 </span>
                 <p style={{ fontFamily: SERIF }} className="mt-3 text-[1.5rem] font-semibold leading-tight text-[var(--charcoal)]">
@@ -381,7 +381,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
                   disabled={sending}
                   aria-busy={sending}
                   style={{ fontFamily: SANS, background: 'linear-gradient(135deg, var(--burgundy), var(--burgundy-dark))' }}
-                  className="inline-flex h-12 items-center gap-2 rounded-xl px-6 text-[0.92rem] font-semibold text-white shadow-[0_12px_28px_-10px_rgba(124,45,59,0.6)] transition-transform duration-200 hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-80 disabled:hover:translate-y-0"
+                  className="inline-flex h-12 items-center gap-2 rounded-xl px-6 text-[0.92rem] font-semibold text-white shadow-[0_12px_28px_-10px_color-mix(in_srgb,_var(--burgundy)_60%,_transparent)] transition-transform duration-200 hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-80 disabled:hover:translate-y-0"
                 >
                   {sending ? <Loader2 size={17} className="animate-spin" /> : <Send size={16} />}
                   {sending ? 'Sending…' : 'Send message'}
@@ -393,7 +393,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
                   style={{ fontFamily: SANS }}
                   className="inline-flex h-12 items-center gap-2 rounded-xl border border-[var(--border-light)] bg-white px-5 text-[0.88rem] font-medium text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)]"
                 >
-                  <MessageCircle size={16} className="text-[#25D366]" /> Chat on WhatsApp instead
+                  <MessageCircle size={16} className="text-whatsapp" /> Chat on WhatsApp instead
                 </button>
               </div>
 
@@ -448,7 +448,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
 
               {cities.length > 0 && (
                 <div className="mt-4 border-t border-[var(--border-light)] pt-4">
-                  <p style={{ fontFamily: SANS }} className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#A8853F]">
+                  <p style={{ fontFamily: SANS }} className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-gold-deep">
                     Setting up in
                   </p>
                   <ul className="mt-2 flex flex-wrap gap-1.5">

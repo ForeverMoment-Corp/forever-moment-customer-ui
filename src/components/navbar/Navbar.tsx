@@ -27,9 +27,8 @@ import { getLocations, setSelectedLocation } from "@/features/home/store/actions
 import { CUSTOMER_CONFIG } from "@/config/constants";
 
 /* ────────────────────────────────────────────────────────────────
-   Design tokens (new-ux palette)
-   ink #1A1208 · gold #C9A84C · gold-dark #9A7A2E · sand #EDE0C4
-   cream #FDFAF4 · taupe #5C4A1E · muted #9E8A6A · coral #D9776B
+   Colours come from the app palette in src/styles/theme.scss
+   (text-ink, text-gold, text-taupe, bg-ivory, border-sand, bg-coral, …)
 ──────────────────────────────────────────────────────────────── */
 
 const sans = { fontFamily: "'Jost', sans-serif" } as const;
@@ -71,14 +70,14 @@ const IconAction = ({
   active?: boolean;
 }) => {
   const cls = `group flex flex-col items-center gap-1 min-w-[48px] transition-colors ${
-    active ? "text-[#C9A84C]" : "text-[#5C4A1E] hover:text-[#C9A84C]"
+    active ? "text-gold" : "text-taupe hover:text-gold"
   }`;
   const inner = (
     <>
       <span className="relative">
         <Icon size={19} strokeWidth={1.6} />
         {badge ? (
-          <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-[#D9776B] text-white text-[9px] rounded-full flex items-center justify-center font-bold">
+          <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-coral text-white text-[9px] rounded-full flex items-center justify-center font-bold">
             {badge}
           </span>
         ) : null}
@@ -234,12 +233,12 @@ const Navbar = () => {
     <>
       <nav
         className="fixed top-0 left-0 right-0 z-[100] bg-white"
-        style={{ boxShadow: "0 2px 20px rgba(26,18,8,0.08)" }}
+        style={{ boxShadow: "0 2px 20px color-mix(in srgb, var(--ink) 8%, transparent)" }}
         onMouseEnter={clearTimers}
         onMouseLeave={scheduleClose}
       >
         {/* ═══════════════════ TOP BAR ═══════════════════ */}
-        <div className="border-b border-[#EDE0C4]">
+        <div className="border-b border-sand">
           <div
             className="container mx-auto px-6 flex items-center gap-4 lg:gap-6"
             style={{ height: TOP_BAR_H }}
@@ -253,13 +252,13 @@ const Navbar = () => {
               />
               <span className="hidden sm:flex flex-col leading-none">
                 <span
-                  className="text-[#1A1208]"
+                  className="text-ink"
                   style={{ ...serif, fontSize: "1.3rem", fontWeight: 600, letterSpacing: "0.01em" }}
                 >
                   {CUSTOMER_CONFIG.name}
                 </span>
                 <span
-                  className="uppercase text-[#9E8A6A] mt-1"
+                  className="uppercase text-umber mt-1"
                   style={{ ...sans, fontSize: "0.56rem", letterSpacing: "0.22em" }}
                 >
                   Celebrate Every Moment
@@ -276,22 +275,22 @@ const Navbar = () => {
                 aria-expanded={cityOpen}
                 className={`flex items-center gap-2 rounded-full pl-1.5 pr-3 py-1 border transition-colors ${
                   cityOpen
-                    ? "border-[#C9A84C] bg-[#FDFAF4]"
-                    : "border-[#EDE0C4] hover:border-[#C9A84C] hover:bg-[#FDFAF4]"
+                    ? "border-gold bg-ivory"
+                    : "border-sand hover:border-gold hover:bg-ivory"
                 }`}
               >
-                <span className="w-7 h-7 rounded-full bg-[#FDFAF4] border border-[#EDE0C4] flex items-center justify-center text-[#C9A84C]">
+                <span className="w-7 h-7 rounded-full bg-ivory border border-sand flex items-center justify-center text-gold">
                   <MapPin size={13} strokeWidth={1.75} />
                 </span>
                 <span className="flex flex-col items-start leading-none">
                   <span
-                    className="uppercase text-[#9E8A6A]"
+                    className="uppercase text-umber"
                     style={{ ...sans, fontSize: "0.52rem", letterSpacing: "0.16em" }}
                   >
                     Celebrating in
                   </span>
                   <span
-                    className="text-[#1A1208] capitalize mt-[3px] max-w-[120px] truncate"
+                    className="text-ink capitalize mt-[3px] max-w-[120px] truncate"
                     style={{ ...sans, fontSize: "0.78rem", fontWeight: 500 }}
                   >
                     {selectedLocation}
@@ -299,24 +298,24 @@ const Navbar = () => {
                 </span>
                 <ChevronDown
                   size={13}
-                  className={`text-[#9E8A6A] transition-transform ${cityOpen ? "rotate-180" : ""}`}
+                  className={`text-umber transition-transform ${cityOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
               {cityOpen && (
                 <div
                   role="listbox"
-                  className="absolute top-[calc(100%+10px)] left-0 w-[200px] bg-white rounded-2xl border border-[#EDE0C4] z-20 overflow-hidden py-1.5"
-                  style={{ boxShadow: "0 16px 40px rgba(26,18,8,0.14)" }}
+                  className="absolute top-[calc(100%+10px)] left-0 w-[200px] bg-white rounded-2xl border border-sand z-20 overflow-hidden py-1.5"
+                  style={{ boxShadow: "0 16px 40px color-mix(in srgb, var(--ink) 14%, transparent)" }}
                 >
                   <p
-                    className="px-4 pt-2 pb-1.5 uppercase text-[#9E8A6A]"
+                    className="px-4 pt-2 pb-1.5 uppercase text-umber"
                     style={{ ...sans, fontSize: "0.55rem", letterSpacing: "0.2em" }}
                   >
                     Choose your city
                   </p>
                   {activeLocations.length === 0 && (
-                    <p className="px-4 py-2 text-[#9E8A6A]" style={{ ...sans, fontSize: "0.75rem" }}>
+                    <p className="px-4 py-2 text-umber" style={{ ...sans, fontSize: "0.75rem" }}>
                       Loading cities…
                     </p>
                   )}
@@ -332,13 +331,13 @@ const Navbar = () => {
                           dispatch(setSelectedLocation(c.name));
                           setCityOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left capitalize transition-colors hover:bg-[#FDFAF4] ${
-                          selected ? "text-[#9A7A2E] font-medium" : "text-[#5C4A1E]"
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left capitalize transition-colors hover:bg-ivory ${
+                          selected ? "text-gold-dark font-medium" : "text-taupe"
                         }`}
                         style={{ ...sans, fontSize: "0.8rem" }}
                       >
                         {c.name}
-                        {selected && <Check size={14} className="text-[#C9A84C]" />}
+                        {selected && <Check size={14} className="text-gold" />}
                       </button>
                     );
                   })}
@@ -350,9 +349,9 @@ const Navbar = () => {
             <div className="hidden md:flex flex-1 justify-center">
               <div
                 role="search"
-                className="w-full max-w-[520px] flex items-center bg-[#FDFAF4] border border-[#EDE0C4] rounded-full pl-4 pr-1.5 h-[42px] gap-3 hover:border-[#C9A84C] transition-colors focus-within:border-[#C9A84C] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(201,168,76,0.12)]"
+                className="w-full max-w-[520px] flex items-center bg-ivory border border-sand rounded-full pl-4 pr-1.5 h-[42px] gap-3 hover:border-gold transition-colors focus-within:border-gold focus-within:bg-white focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,_var(--gold)_12%,_transparent)]"
               >
-                <Search size={16} className="text-[#C9A84C] shrink-0" strokeWidth={1.75} />
+                <Search size={16} className="text-gold shrink-0" strokeWidth={1.75} />
                 <input
                   type="search"
                   aria-label="Search"
@@ -361,7 +360,7 @@ const Navbar = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitSearch()}
                   onFocus={() => setActiveMenu(null)}
-                  className="flex-1 min-w-0 bg-transparent outline-none placeholder-[#9E8A6A] text-[#1A1208] [&::-webkit-search-cancel-button]:hidden"
+                  className="flex-1 min-w-0 bg-transparent outline-none placeholder-umber text-ink [&::-webkit-search-cancel-button]:hidden"
                   style={{ ...sans, fontSize: "0.82rem" }}
                 />
                 {searchQuery && (
@@ -369,7 +368,7 @@ const Navbar = () => {
                     type="button"
                     aria-label="Clear search"
                     onClick={() => setSearchQuery("")}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[#9E8A6A] hover:text-[#1A1208] hover:bg-[#EDE0C4]/60 transition-colors"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-umber hover:text-ink hover:bg-sand/60 transition-colors"
                   >
                     <X size={13} />
                   </button>
@@ -378,7 +377,7 @@ const Navbar = () => {
                   type="button"
                   aria-label="Submit search"
                   onClick={submitSearch}
-                  className="h-[32px] px-4 rounded-full bg-[#1A1208] text-white uppercase tracking-[0.12em] hover:bg-[#C9A84C] transition-colors shrink-0"
+                  className="h-[32px] px-4 rounded-full bg-ink text-white uppercase tracking-[0.12em] hover:bg-gold transition-colors shrink-0"
                   style={{ ...sans, fontSize: "0.6rem", fontWeight: 600 }}
                 >
                   Search
@@ -400,12 +399,12 @@ const Navbar = () => {
 
                 {guestOpen && (
                   <div
-                    className="absolute right-0 top-[calc(100%+14px)] w-[232px] bg-white rounded-2xl border border-[#EDE0C4] z-[200] overflow-hidden"
-                    style={{ boxShadow: "0 16px 48px rgba(26,18,8,0.14)" }}
+                    className="absolute right-0 top-[calc(100%+14px)] w-[232px] bg-white rounded-2xl border border-sand z-[200] overflow-hidden"
+                    style={{ boxShadow: "0 16px 48px color-mix(in srgb, var(--ink) 14%, transparent)" }}
                   >
-                    <div className="absolute -top-1.5 right-5 w-3 h-3 bg-[#1A1208] rotate-45" />
-                    <div className="px-5 pt-5 pb-4 bg-gradient-to-br from-[#1A1208] to-[#2D1F0E]">
-                      <p style={{ ...serif, fontSize: "1.15rem", color: "#C9A84C", fontWeight: 600 }}>
+                    <div className="absolute -top-1.5 right-5 w-3 h-3 bg-ink rotate-45" />
+                    <div className="px-5 pt-5 pb-4 bg-gradient-to-br from-ink to-ink-soft">
+                      <p style={{ ...serif, fontSize: "1.15rem", color: "var(--gold)", fontWeight: 600 }}>
                         Welcome
                       </p>
                       <p
@@ -415,12 +414,12 @@ const Navbar = () => {
                         Login to access your account
                       </p>
                     </div>
-                    <div className="px-4 py-4 flex gap-2 border-b border-[#EDE0C4]">
+                    <div className="px-4 py-4 flex gap-2 border-b border-sand">
                       <Link
                         to="/login"
                         onClick={() => setGuestOpen(false)}
                         style={sans}
-                        className="flex-1 text-center py-2.5 rounded-full border border-[#C9A84C] text-[#9A7A2E] text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-[#C9A84C] hover:text-white transition-all"
+                        className="flex-1 text-center py-2.5 rounded-full border border-gold text-gold-dark text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-gold hover:text-white transition-all"
                       >
                         Login
                       </Link>
@@ -428,7 +427,7 @@ const Navbar = () => {
                         to="/register"
                         onClick={() => setGuestOpen(false)}
                         style={sans}
-                        className="flex-1 text-center py-2.5 rounded-full bg-[#C9A84C] text-white text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-[#1A1208] transition-all"
+                        className="flex-1 text-center py-2.5 rounded-full bg-gold text-white text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-ink transition-all"
                       >
                         Register
                       </Link>
@@ -439,10 +438,10 @@ const Navbar = () => {
                           key={item.label}
                           to={item.to}
                           onClick={() => setGuestOpen(false)}
-                          className="flex items-center gap-3 px-5 py-2.5 text-[#5C4A1E] hover:bg-[#FDFAF4] hover:text-[#9A7A2E] transition-colors"
+                          className="flex items-center gap-3 px-5 py-2.5 text-taupe hover:bg-ivory hover:text-gold-dark transition-colors"
                           style={{ ...sans, fontSize: "0.78rem" }}
                         >
-                          <item.icon size={14} className="text-[#C9A84C]" />
+                          <item.icon size={14} className="text-gold" />
                           {item.label}
                         </Link>
                       ))}
@@ -456,8 +455,8 @@ const Navbar = () => {
 
             {/* MOBILE RIGHT */}
             <div className="flex md:hidden flex-1 items-center justify-end gap-2">
-              <div className="flex flex-1 max-w-[220px] items-center bg-[#FDFAF4] border border-[#EDE0C4] rounded-full px-3 h-[36px] gap-2 focus-within:border-[#C9A84C]">
-                <Search size={14} className="text-[#C9A84C] shrink-0" />
+              <div className="flex flex-1 max-w-[220px] items-center bg-ivory border border-sand rounded-full px-3 h-[36px] gap-2 focus-within:border-gold">
+                <Search size={14} className="text-gold shrink-0" />
                 <input
                   type="search"
                   aria-label="Search"
@@ -465,7 +464,7 @@ const Navbar = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitSearch()}
-                  className="w-full min-w-0 bg-transparent outline-none placeholder-[#9E8A6A] text-[#1A1208] [&::-webkit-search-cancel-button]:hidden"
+                  className="w-full min-w-0 bg-transparent outline-none placeholder-umber text-ink [&::-webkit-search-cancel-button]:hidden"
                   style={{ ...sans, fontSize: "0.75rem" }}
                 />
               </div>
@@ -474,7 +473,7 @@ const Navbar = () => {
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
                 onClick={() => (mobileOpen ? closeMobile() : setMobileOpen(true))}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-[#1A1208] hover:bg-[#FDFAF4] shrink-0"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-ink hover:bg-ivory shrink-0"
               >
                 {mobileOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
@@ -483,7 +482,7 @@ const Navbar = () => {
         </div>
 
         {/* ═══════════════════ CATEGORY BAR ═══════════════════ */}
-        <div className="hidden md:block bg-white border-b border-[#EDE0C4]">
+        <div className="hidden md:block bg-white border-b border-sand">
           <div
             role="menubar"
             aria-label="Categories"
@@ -494,7 +493,7 @@ const Navbar = () => {
               Array.from({ length: 6 }).map((_, i) => (
                 <span
                   key={i}
-                  className="h-[30px] w-[110px] rounded-full bg-[#FDFAF4] border border-[#EDE0C4] animate-pulse shrink-0"
+                  className="h-[30px] w-[110px] rounded-full bg-ivory border border-sand animate-pulse shrink-0"
                 />
               ))}
 
@@ -517,26 +516,26 @@ const Navbar = () => {
                   style={sans}
                   className={`relative flex items-center gap-2 pl-3 pr-3.5 h-[32px] rounded-full whitespace-nowrap text-[0.76rem] font-medium tracking-wide capitalize transition-all shrink-0 border ${
                     isActive
-                      ? "bg-[#FDFAF4] border-[#EDE0C4] text-[#1A1208]"
-                      : "border-transparent text-[#5C4A1E] hover:bg-[#FDFAF4] hover:text-[#1A1208]"
+                      ? "bg-ivory border-sand text-ink"
+                      : "border-transparent text-taupe hover:bg-ivory hover:text-ink"
                   }`}
                 >
                   <CategoryIcon
                     name={cat.name}
                     size={15}
                     strokeWidth={1.75}
-                    className={`transition-colors ${isActive ? "text-[#9A7A2E]" : "text-[#C9A84C]"}`}
+                    className={`transition-colors ${isActive ? "text-gold-dark" : "text-gold"}`}
                   />
                   {cat.name}
                   {hasSubs && (
                     <ChevronDown
                       size={12}
-                      className={`text-[#9E8A6A] transition-transform ${isActive ? "rotate-180" : ""}`}
+                      className={`text-umber transition-transform ${isActive ? "rotate-180" : ""}`}
                     />
                   )}
                   {/* gold indicator under the active pill */}
                   <span
-                    className={`absolute left-4 right-4 -bottom-[9px] h-[2px] rounded-full bg-[#C9A84C] transition-opacity ${
+                    className={`absolute left-4 right-4 -bottom-[9px] h-[2px] rounded-full bg-gold transition-opacity ${
                       isActive ? "opacity-100" : "opacity-0"
                     }`}
                   />
@@ -558,7 +557,7 @@ const Navbar = () => {
       {activeCategory && (
         <div
           aria-hidden
-          className="hidden md:block fixed inset-0 z-[90] bg-[#1A1208]/25 backdrop-blur-[1.5px] transition-opacity"
+          className="hidden md:block fixed inset-0 z-[90] bg-ink/25 backdrop-blur-[1.5px] transition-opacity"
           onMouseEnter={() => setActiveMenu(null)}
           onClick={() => setActiveMenu(null)}
         />
@@ -574,13 +573,13 @@ const Navbar = () => {
         className={`fixed top-0 left-0 h-full w-[85vw] max-w-[340px] bg-white z-[102] md:hidden transition-transform duration-300 ease-in-out flex flex-col ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ boxShadow: "4px 0 30px rgba(26,18,8,0.15)" }}
+        style={{ boxShadow: "4px 0 30px color-mix(in srgb, var(--ink) 15%, transparent)" }}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 h-[64px] shrink-0 bg-gradient-to-r from-[#1A1208] to-[#2D1F0E]">
+        <div className="flex items-center justify-between px-5 h-[64px] shrink-0 bg-gradient-to-r from-ink to-ink-soft">
           <div className="flex items-center gap-2.5">
             <img src={CUSTOMER_CONFIG.logo} alt="" className="w-8 h-8 object-contain rounded-full bg-white/90 p-0.5" />
-            <span style={{ ...serif, fontSize: "1.1rem", color: "#C9A84C", fontWeight: 600 }}>
+            <span style={{ ...serif, fontSize: "1.1rem", color: "var(--gold)", fontWeight: 600 }}>
               {CUSTOMER_CONFIG.name}
             </span>
           </div>
@@ -588,23 +587,23 @@ const Navbar = () => {
             type="button"
             aria-label="Close menu"
             onClick={closeMobile}
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/20 text-white hover:border-[#C9A84C] hover:text-[#C9A84C] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/20 text-white hover:border-gold hover:text-gold transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* City row (mobile) */}
-        <div className="px-5 py-3 border-b border-[#EDE0C4] bg-[#FDFAF4] flex items-center gap-2">
-          <MapPin size={14} className="text-[#C9A84C]" />
-          <span className="uppercase text-[#9E8A6A]" style={{ ...sans, fontSize: "0.55rem", letterSpacing: "0.18em" }}>
+        <div className="px-5 py-3 border-b border-sand bg-ivory flex items-center gap-2">
+          <MapPin size={14} className="text-gold" />
+          <span className="uppercase text-umber" style={{ ...sans, fontSize: "0.55rem", letterSpacing: "0.18em" }}>
             Celebrating in
           </span>
           <select
             aria-label="Choose your city"
             value={selectedLocation}
             onChange={(e) => dispatch(setSelectedLocation(e.target.value))}
-            className="ml-auto bg-transparent text-[#1A1208] capitalize outline-none"
+            className="ml-auto bg-transparent text-ink capitalize outline-none"
             style={{ ...sans, fontSize: "0.8rem", fontWeight: 500 }}
           >
             {activeLocations.map((c) => (
@@ -619,7 +618,7 @@ const Navbar = () => {
           {!mobileCategory ? (
             <div>
               <p
-                className="px-5 pt-4 pb-2 uppercase text-[#9E8A6A]"
+                className="px-5 pt-4 pb-2 uppercase text-umber"
                 style={{ ...sans, fontSize: "0.6rem", letterSpacing: "0.2em" }}
               >
                 Categories
@@ -634,23 +633,23 @@ const Navbar = () => {
                         <button
                           type="button"
                           onClick={() => setActiveMobileCategory(cat.id)}
-                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-[#1A1208] hover:bg-[#FDFAF4] transition-colors"
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left text-ink hover:bg-ivory transition-colors"
                           style={{ ...sans, fontSize: "0.85rem", fontWeight: 500 }}
                         >
-                          <span className="w-9 h-9 rounded-[10px] bg-[#FDFAF4] border border-[#EDE0C4] flex items-center justify-center text-[#C9A84C] shrink-0">
+                          <span className="w-9 h-9 rounded-[10px] bg-ivory border border-sand flex items-center justify-center text-gold shrink-0">
                             <CategoryIcon name={cat.name} size={16} strokeWidth={1.75} />
                           </span>
                           <span className="flex-1 capitalize truncate">{cat.name}</span>
-                          <ChevronRight size={16} className="text-[#9E8A6A]" />
+                          <ChevronRight size={16} className="text-umber" />
                         </button>
                       ) : (
                         <Link
                           to={categoryPath(cat)}
                           onClick={closeMobile}
-                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[#1A1208] hover:bg-[#FDFAF4] transition-colors"
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-ink hover:bg-ivory transition-colors"
                           style={{ ...sans, fontSize: "0.85rem", fontWeight: 500 }}
                         >
-                          <span className="w-9 h-9 rounded-[10px] bg-[#FDFAF4] border border-[#EDE0C4] flex items-center justify-center text-[#C9A84C] shrink-0">
+                          <span className="w-9 h-9 rounded-[10px] bg-ivory border border-sand flex items-center justify-center text-gold shrink-0">
                             <CategoryIcon name={cat.name} size={16} strokeWidth={1.75} />
                           </span>
                           <span className="flex-1 capitalize truncate">{cat.name}</span>
@@ -661,10 +660,10 @@ const Navbar = () => {
                 })}
               </ul>
 
-              <div className="mx-5 border-t border-[#EDE0C4]" />
+              <div className="mx-5 border-t border-sand" />
 
               <p
-                className="px-5 pt-4 pb-2 uppercase text-[#9E8A6A]"
+                className="px-5 pt-4 pb-2 uppercase text-umber"
                 style={{ ...sans, fontSize: "0.6rem", letterSpacing: "0.2em" }}
               >
                 Account
@@ -675,10 +674,10 @@ const Navbar = () => {
                     <Link
                       to={item.to}
                       onClick={closeMobile}
-                      className="flex items-center gap-3 px-5 py-3 hover:bg-[#FDFAF4] hover:text-[#9A7A2E] transition-colors text-[#5C4A1E]"
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
                       style={{ ...sans, fontSize: "0.8rem" }}
                     >
-                      <item.icon size={15} className="text-[#C9A84C]" />
+                      <item.icon size={15} className="text-gold" />
                       {item.label}
                     </Link>
                   </li>
@@ -689,7 +688,7 @@ const Navbar = () => {
                 <Link
                   to="/services"
                   onClick={closeMobile}
-                  className="block bg-[#1A1208] text-white text-center rounded-full py-3.5 text-xs tracking-[0.16em] uppercase font-semibold hover:bg-[#C9A84C] transition-all"
+                  className="block bg-ink text-white text-center rounded-full py-3.5 text-xs tracking-[0.16em] uppercase font-semibold hover:bg-gold transition-all"
                   style={sans}
                 >
                   Book Now
@@ -701,22 +700,22 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => setActiveMobileCategory(null)}
-                className="flex items-center gap-2 px-5 py-3.5 border-b border-[#EDE0C4] w-full hover:bg-[#FDFAF4] transition-colors text-[#5C4A1E]"
+                className="flex items-center gap-2 px-5 py-3.5 border-b border-sand w-full hover:bg-ivory transition-colors text-taupe"
                 style={{ ...sans, fontSize: "0.78rem" }}
               >
                 <ArrowLeft size={14} /> All categories
               </button>
 
-              <div className="px-5 py-4 bg-[#FDFAF4] border-b border-[#EDE0C4] flex items-center gap-3">
-                <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: "linear-gradient(135deg,#C9A84C,#9A7A2E)" }}>
+              <div className="px-5 py-4 bg-ivory border-b border-sand flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: "linear-gradient(135deg,var(--gold),var(--gold-dark))" }}>
                   <CategoryIcon name={mobileCategory.name} size={18} strokeWidth={1.75} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[#1A1208] capitalize leading-tight" style={{ ...serif, fontSize: "1.25rem", fontWeight: 600 }}>
+                  <p className="text-ink capitalize leading-tight" style={{ ...serif, fontSize: "1.25rem", fontWeight: 600 }}>
                     {mobileCategory.name}
                   </p>
                   {mobileCategory.description && (
-                    <p className="text-[#9E8A6A] truncate" style={{ ...sans, fontSize: "0.7rem" }}>
+                    <p className="text-umber truncate" style={{ ...sans, fontSize: "0.7rem" }}>
                       {mobileCategory.description}
                     </p>
                   )}
@@ -732,18 +731,18 @@ const Navbar = () => {
                       <Link
                         to={subCategoryPath(sub)}
                         onClick={closeMobile}
-                        className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-[#FDFAF4] transition-colors text-[#1A1208]"
+                        className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-ivory transition-colors text-ink"
                         style={{ ...sans, fontSize: "0.82rem" }}
                       >
                         <span className="min-w-0">
                           <span className="block truncate">{sub.name}</span>
                           {sub.description && (
-                            <span className="block text-[#9E8A6A] truncate" style={{ fontSize: "0.68rem" }}>
+                            <span className="block text-umber truncate" style={{ fontSize: "0.68rem" }}>
                               {sub.description}
                             </span>
                           )}
                         </span>
-                        <ChevronRight size={14} className="text-[#C9A84C] shrink-0" />
+                        <ChevronRight size={14} className="text-gold shrink-0" />
                       </Link>
                     </li>
                   ))}
@@ -753,7 +752,7 @@ const Navbar = () => {
                 <Link
                   to={categoryPath(mobileCategory)}
                   onClick={closeMobile}
-                  className="block border border-[#C9A84C] text-[#9A7A2E] text-center rounded-full py-3 text-[0.68rem] tracking-[0.16em] uppercase font-semibold hover:bg-[#C9A84C] hover:text-white transition-all capitalize"
+                  className="block border border-gold text-gold-dark text-center rounded-full py-3 text-[0.68rem] tracking-[0.16em] uppercase font-semibold hover:bg-gold hover:text-white transition-all capitalize"
                   style={sans}
                 >
                   View all {mobileCategory.name}

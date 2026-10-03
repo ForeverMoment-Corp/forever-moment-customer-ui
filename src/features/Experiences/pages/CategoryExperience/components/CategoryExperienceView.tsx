@@ -150,7 +150,7 @@ export default function CategoryExperienceView({
         {/* Header + sort */}
         <div className="mt-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-[var(--border-light)] pb-4">
           <div className="min-w-0">
-            <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-[#A8853F]">
+            <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
               Handpicked collection
             </p>
             <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold capitalize leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">

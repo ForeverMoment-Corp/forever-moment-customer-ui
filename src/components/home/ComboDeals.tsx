@@ -25,11 +25,11 @@ const ComboDeals = () => {
   }
 
   return (
-    <section className="section-padding bg-[#1A1208]">
+    <section className="section-padding bg-ink">
       <div className="container mx-auto px-6">
         <FadeIn>
           <div className="text-center mb-10">
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#D9776B] tracking-[0.25em] uppercase mb-2">Bundle & Save</p>
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-coral tracking-[0.25em] uppercase mb-2">Bundle & Save</p>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-white font-semibold">Combo Deals ⚡</h2>
           </div>
         </FadeIn>
@@ -42,11 +42,11 @@ const ComboDeals = () => {
             return (
               <div key={combo.id} className="shrink-0 w-[320px] bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.2)]">
                 <div className="flex items-center justify-between mb-3 gap-2">
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.15rem] text-[#1A1208] font-semibold leading-snug truncate">{combo.title}</h3>
-                  <span style={{ fontFamily: "'Jost', sans-serif" }} className="bg-[#7B9E7B] text-white rounded-full text-[0.6rem] px-2.5 py-1 font-semibold shrink-0 whitespace-nowrap">{combo.badge}</span>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.15rem] text-ink font-semibold leading-snug truncate">{combo.title}</h3>
+                  <span style={{ fontFamily: "'Jost', sans-serif" }} className="bg-sage text-white rounded-full text-[0.6rem] px-2.5 py-1 font-semibold shrink-0 whitespace-nowrap">{combo.badge}</span>
                 </div>
 
-                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.78rem] text-[#9E8A6A] leading-relaxed mb-4 line-clamp-2">{combo.description}</p>
+                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.78rem] text-umber leading-relaxed mb-4 line-clamp-2">{combo.description}</p>
 
                 {/* ============================================
                     Images — object-cover + fixed aspect, ab chipkega nahi
@@ -54,11 +54,11 @@ const ComboDeals = () => {
                 <div className="flex gap-2 mb-4">
                   {combo.items.map((item, i) => (
                     <div key={item.id} className="relative flex-1">
-                      <div className="w-full aspect-square rounded-lg overflow-hidden bg-[#FDFAF4]">
+                      <div className="w-full aspect-square rounded-lg overflow-hidden bg-ivory">
                         <SmartImage src={item.image} alt={item.title} className="w-full h-full object-cover" />
                       </div>
                       {i < combo.items.length - 1 && (
-                        <span className="absolute -right-[9px] top-1/2 -translate-y-1/2 text-[#C9A84C] font-bold text-[0.9rem] z-10">+</span>
+                        <span className="absolute -right-[9px] top-1/2 -translate-y-1/2 text-gold font-bold text-[0.9rem] z-10">+</span>
                       )}
                     </div>
                   ))}
@@ -67,16 +67,16 @@ const ComboDeals = () => {
                 {/* ============================================
                     Price with discount + Add Combo — ek line mein
                 ============================================ */}
-                <div className="flex items-center justify-between pt-3 border-t border-[#EDE0C4] gap-3">
+                <div className="flex items-center justify-between pt-3 border-t border-sand gap-3">
                   <div className="flex items-baseline gap-1.5 flex-wrap">
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.25rem] text-[#1A1208] font-bold">{formatPrice(combo.comboPrice)}</span>
-                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#9E8A6A] line-through">{formatPrice(originalTotal)}</span>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.25rem] text-ink font-bold">{formatPrice(combo.comboPrice)}</span>
+                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber line-through">{formatPrice(originalTotal)}</span>
                   </div>
                   <button
                     onClick={() => handleToggleCombo(combo)}
                     style={{ fontFamily: "'Jost', sans-serif" }}
                     className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[0.65rem] tracking-[0.1em] uppercase font-semibold transition-colors shrink-0 ${
-                      isAdded ? 'bg-[#7B9E7B] text-white' : 'bg-[#C9A84C] text-white hover:bg-[#1A1208]'
+                      isAdded ? 'bg-sage text-white' : 'bg-gold text-white hover:bg-ink'
                     }`}
                   >
                     {isAdded ? <><FiCheck size={12} /> Added</> : 'Add Combo'}

@@ -19,5 +19,19 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Colours belong in the palette (src/styles/theme.scss); use text-gold / var(--gold) instead.
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/#[0-9a-fA-F]{6}\\b/]',
+          message: 'Hardcoded colour. Use a palette token from src/styles/theme.scss (e.g. text-gold, var(--gold)).',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/#[0-9a-fA-F]{6}\\b/]',
+          message: 'Hardcoded colour. Use a palette token from src/styles/theme.scss (e.g. text-gold, var(--gold)).',
+        },
+      ],
+    },
   },
 ]);

@@ -175,7 +175,7 @@ const Hero = () => {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/45" />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,18,8,0.75) 0%, transparent 50%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--ink) 75%, transparent) 0%, transparent 50%)' }} />
         </motion.div>
       </AnimatePresence>
 
@@ -193,9 +193,9 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.15 }}
               className="max-w-[620px]"
             >
-              <div className="inline-flex items-center gap-2 border border-[#C9A84C]/50 rounded-full px-4 py-1.5 mb-5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]" />
-                <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#F5E6B8] tracking-[0.25em]">
+              <div className="inline-flex items-center gap-2 border border-gold-bright/50 rounded-full px-4 py-1.5 mb-5">
+                <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-gold-pale tracking-[0.25em]">
                   {slide.label.toUpperCase()}
                 </span>
               </div>
@@ -205,7 +205,7 @@ const Hero = () => {
                 {slide.accent && (
                   <>
                     {' '}
-                    <span className="italic text-[#F5E6B8]">{slide.accent}</span>
+                    <span className="italic text-gold-pale">{slide.accent}</span>
                   </>
                 )}
               </h1>
@@ -219,7 +219,7 @@ const Hero = () => {
               <Link
                 to={slide.cta.to}
                 style={{ fontFamily: "'Jost', sans-serif" }}
-                className="inline-block bg-[#C9A84C] text-white px-8 py-4 text-[0.78rem] tracking-[0.2em] uppercase font-semibold hover:bg-[#E8C97A] hover:text-[#1A1208] transition-all rounded-full"
+                className="inline-block bg-gold text-white px-8 py-4 text-[0.78rem] tracking-[0.2em] uppercase font-semibold hover:bg-gold-bright hover:text-ink transition-all rounded-full"
               >
                 {slide.cta.label}
               </Link>
@@ -252,7 +252,7 @@ const Hero = () => {
 
           {/* Compact Search Bar */}
           <div className="w-full md:max-w-[420px] bg-white rounded-full p-1.5 flex items-center gap-2 shadow-2xl">
-            <FiSearch size={15} color="#C9A84C" className="ml-3" />
+            <FiSearch size={15} color="var(--gold)" className="ml-3" />
             <input
               type="text"
               placeholder="Search experiences, decor, gifts..."
@@ -260,12 +260,12 @@ const Hero = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               style={{ fontFamily: "'Jost', sans-serif" }}
-              className="flex-1 bg-transparent outline-none text-[0.82rem] text-[#1A1208] placeholder-[#9E8A6A]"
+              className="flex-1 bg-transparent outline-none text-[0.82rem] text-ink placeholder-umber"
             />
             <button
               onClick={handleSearch}
               style={{ fontFamily: "'Jost', sans-serif" }}
-              className="bg-[#C9A84C] text-white rounded-full px-5 py-2.5 text-[0.7rem] tracking-[0.15em] uppercase font-semibold hover:bg-[#1A1208] transition-colors shrink-0"
+              className="bg-gold text-white rounded-full px-5 py-2.5 text-[0.7rem] tracking-[0.15em] uppercase font-semibold hover:bg-ink transition-colors shrink-0"
             >
               Search
             </button>
@@ -277,7 +277,7 @@ const Hero = () => {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`h-[6px] rounded-full transition-all ${i === safeIndex ? 'w-8 bg-[#C9A84C]' : 'w-[6px] bg-white/40 hover:bg-white/60'}`}
+                className={`h-[6px] rounded-full transition-all ${i === safeIndex ? 'w-8 bg-gold' : 'w-[6px] bg-white/40 hover:bg-white/60'}`}
               />
             ))}
           </div>

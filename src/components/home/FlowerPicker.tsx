@@ -31,7 +31,7 @@ const GiftPicker = () => {
   }
 
   return (
-    <section className="py-14 md:py-20 bg-gradient-to-b from-white to-[#FDFAF4] overflow-hidden">
+    <section className="py-14 md:py-20 bg-gradient-to-b from-white to-ivory overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6">
 
         {/* ============================================
@@ -39,15 +39,15 @@ const GiftPicker = () => {
         ============================================ */}
         <div className="flex items-center justify-between gap-4 mb-8 md:mb-10">
           <div className="min-w-0">
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#C9A84C] tracking-[0.25em] uppercase mb-1.5 font-semibold whitespace-nowrap">
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-gold tracking-[0.25em] uppercase mb-1.5 font-semibold whitespace-nowrap">
               Thoughtful Add-Ons
             </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="truncate text-[1.4rem] md:text-[2.2rem] text-[#1A1208] font-semibold leading-tight">
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="truncate text-[1.4rem] md:text-[2.2rem] text-ink font-semibold leading-tight">
               Add A Gift They'll Never Forget 🎁
             </h2>
           </div>
 
-          <Link to="/shop" style={{ fontFamily: "'Jost', sans-serif" }} className="hidden sm:flex items-center gap-2 text-[0.7rem] text-[#C9A84C] hover:text-[#9A7A2E] tracking-[0.15em] uppercase font-semibold transition-colors shrink-0">
+          <Link to="/shop" style={{ fontFamily: "'Jost', sans-serif" }} className="hidden sm:flex items-center gap-2 text-[0.7rem] text-gold hover:text-gold-dark tracking-[0.15em] uppercase font-semibold transition-colors shrink-0">
             View All <FiArrowRight size={13} />
           </Link>
         </div>
@@ -57,30 +57,30 @@ const GiftPicker = () => {
           {gifts.map((gift) => {
             const isAdded = addedIds.includes(gift.id)
             return (
-              <div key={gift.id} className="group relative shrink-0 w-[210px] sm:w-[250px] md:w-[280px] rounded-[28px] overflow-hidden border border-[#F1E4C5] bg-white shadow-[0_10px_30px_rgba(26,18,8,0.08)] hover:shadow-[0_25px_60px_rgba(201,168,76,0.22)] transition-all duration-500 hover:-translate-y-2">
+              <div key={gift.id} className="group relative shrink-0 w-[210px] sm:w-[250px] md:w-[280px] rounded-[28px] overflow-hidden border border-wheat bg-white shadow-[0_10px_30px_color-mix(in_srgb,_var(--ink)_8%,_transparent)] hover:shadow-[0_25px_60px_color-mix(in_srgb,_var(--gold)_22%,_transparent)] transition-all duration-500 hover:-translate-y-2">
 
                 <div className="relative h-[220px] overflow-hidden">
                   <SmartImage src={gift.image} alt={gift.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A1208]/70 via-transparent to-transparent" />
-                  <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[#1A1208] text-[9px] tracking-[0.18em] uppercase font-semibold">
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
+                  <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-ink text-[9px] tracking-[0.18em] uppercase font-semibold">
                     {gift.category}
                   </span>
                 </div>
 
                 <div className="p-5">
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="truncate text-[1.25rem] text-[#1A1208] font-semibold leading-tight mb-3">{gift.title}</h3>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="truncate text-[1.25rem] text-ink font-semibold leading-tight mb-3">{gift.title}</h3>
 
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[10px] uppercase tracking-[0.15em] text-[#9E8A6A]">Starting From</p>
-                      <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.4rem] font-bold text-[#1A1208] whitespace-nowrap">{formatPrice(gift.price)}</p>
+                      <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[10px] uppercase tracking-[0.15em] text-umber">Starting From</p>
+                      <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.4rem] font-bold text-ink whitespace-nowrap">{formatPrice(gift.price)}</p>
                     </div>
 
                     <button
                       onClick={() => handleToggleGift(gift)}
                       style={{ fontFamily: "'Jost', sans-serif" }}
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[11px] uppercase tracking-[0.1em] font-semibold transition-colors shrink-0 ${
-                        isAdded ? 'bg-[#7B9E7B] text-white' : 'bg-[#1A1208] text-white hover:bg-[#C9A84C]'
+                        isAdded ? 'bg-sage text-white' : 'bg-ink text-white hover:bg-gold'
                       }`}
                     >
                       {isAdded ? <><FiCheck size={12} /> Added</> : <><FiPlus size={12} /> Add</>}
@@ -93,7 +93,7 @@ const GiftPicker = () => {
         </div>
 
         <div className="sm:hidden text-center mt-8">
-          <Link to="/shop" style={{ fontFamily: "'Jost', sans-serif" }} className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#C9A84C] text-[#C9A84C] text-[0.7rem] uppercase tracking-[0.15em] font-semibold">
+          <Link to="/shop" style={{ fontFamily: "'Jost', sans-serif" }} className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-gold text-gold text-[0.7rem] uppercase tracking-[0.15em] font-semibold">
             View All Gifts <FiArrowRight size={12} />
           </Link>
         </div>

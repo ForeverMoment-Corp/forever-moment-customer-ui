@@ -92,7 +92,7 @@ export default function MoreAddOns({ items, toggleAddon, onReview }: Props) {
                   </span>
                   <span className="mt-0.5 flex items-baseline gap-1">
                     {addon.isFree ? (
-                      <span className="text-[0.72rem] font-semibold text-[#3F7A3F]">Free</span>
+                      <span className="text-[0.72rem] font-semibold text-leaf">Free</span>
                     ) : (
                       <>
                         <span className="text-[0.78rem] font-semibold text-[var(--charcoal)] tabular-nums">{formatINR(addon.price)}</span>

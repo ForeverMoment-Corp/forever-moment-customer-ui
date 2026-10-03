@@ -23,7 +23,7 @@ const Slider = ({ children }: { children: ReactNode }) => {
     <div className="relative">
       <button
         onClick={() => scroll('left')}
-        className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-[0_4px_16px_rgba(26,18,8,0.12)] items-center justify-center hover:bg-[#C9A84C] hover:text-white transition-colors"
+        className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_12%,_transparent)] items-center justify-center hover:bg-gold hover:text-white transition-colors"
       >
         <FiChevronLeft size={16} />
       </button>
@@ -34,7 +34,7 @@ const Slider = ({ children }: { children: ReactNode }) => {
 
       <button
         onClick={() => scroll('right')}
-        className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-[0_4px_16px_rgba(26,18,8,0.12)] items-center justify-center hover:bg-[#C9A84C] hover:text-white transition-colors"
+        className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_12%,_transparent)] items-center justify-center hover:bg-gold hover:text-white transition-colors"
       >
         <FiChevronRight size={16} />
       </button>

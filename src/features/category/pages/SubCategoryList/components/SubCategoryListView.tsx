@@ -52,17 +52,17 @@ export default function SubCategoryListView({ subCategories, getSubCategories, l
         <FadeIn>
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <p style={{ fontFamily: FONT_SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-[#9E8A6A]">
+              <p style={{ fontFamily: FONT_SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-umber">
                 Shop by collection
               </p>
-              <h2 style={{ fontFamily: FONT_SERIF }} className="text-[1.7rem] font-semibold leading-tight text-[#1A1208] md:text-[2.1rem]">
+              <h2 style={{ fontFamily: FONT_SERIF }} className="text-[1.7rem] font-semibold leading-tight text-ink md:text-[2.1rem]">
                 Find your <em className="italic text-[var(--burgundy)]">occasion</em>
               </h2>
             </div>
             <Link
               to="/subcategories"
               style={{ fontFamily: FONT_SANS }}
-              className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-[#C9A84C] transition-colors hover:text-[#1A1208]"
+              className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-gold transition-colors hover:text-ink"
             >
               View all
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
@@ -77,7 +77,7 @@ export default function SubCategoryListView({ subCategories, getSubCategories, l
               <li key={sub.id}>
                 <Link
                   to={`/subcategory/${sub.id}`}
-                  className="group flex h-full items-center gap-3 rounded-2xl border border-[var(--border-light)] bg-white p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--gold)] hover:shadow-[0_12px_26px_-14px_rgba(124,45,59,0.35)]"
+                  className="group flex h-full items-center gap-3 rounded-2xl border border-[var(--border-light)] bg-white p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--gold)] hover:shadow-[0_12px_26px_-14px_color-mix(in_srgb,_var(--burgundy)_35%,_transparent)]"
                 >
                   <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[var(--rose-light)]">
                     {image ? (

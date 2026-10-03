@@ -39,7 +39,7 @@ export default function CategoryListCard({ category, imageIndex }: CategoryListC
         className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-85"
         style={{
           background:
-            "linear-gradient(to top, rgba(26,18,8,0.9), rgba(26,18,8,0.2))",
+            "linear-gradient(to top, color-mix(in srgb, var(--ink) 90%, transparent), color-mix(in srgb, var(--ink) 20%, transparent))",
         }}
       />
 

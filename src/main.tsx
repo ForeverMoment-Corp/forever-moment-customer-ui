@@ -7,8 +7,11 @@ import './styles/app.scss';
 import { store } from '@/store/store';
 import { router } from './router';
 import { registerImageServiceWorker } from '@/lib/images';
+import { applyTheme } from '@/lib/theme';
 
 registerImageServiceWorker();
+
+applyTheme();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

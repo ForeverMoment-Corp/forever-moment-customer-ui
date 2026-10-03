@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 import FadeIn from '@/components/animations/FadeIn'
 
 const banners = [
-  { title: 'Flat 20% Off', subtitle: 'On all Birthday Decorations', to: '/services?category=Birthday', bg: '#C9A84C', emoji: '🎂' },
-  { title: 'Free Add-On', subtitle: 'Book any Experience this week', to: '/experiences', bg: '#D9776B', emoji: '✨' },
-  { title: 'Combo Savings', subtitle: 'Save up to ₹2,500 on bundles', to: '/#combos', bg: '#7B9E7B', emoji: '🎁' },
+  { title: 'Flat 20% Off', subtitle: 'On all Birthday Decorations', to: '/services?category=Birthday', bg: 'var(--gold)', emoji: '🎂' },
+  { title: 'Free Add-On', subtitle: 'Book any Experience this week', to: '/experiences', bg: 'var(--coral)', emoji: '✨' },
+  { title: 'Combo Savings', subtitle: 'Save up to ₹2,500 on bundles', to: '/#combos', bg: 'var(--sage)', emoji: '🎁' },
 ]
 
 const PromoBanners = () => {

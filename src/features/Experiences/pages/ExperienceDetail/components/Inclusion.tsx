@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import SectionCard from './SectionCard';
+import SectionCard, { ChapterNumber } from './SectionCard';
 import type { ListItem } from '../types';
 import { FONT_SANS, FONT_SERIF } from '../normalize';
 
@@ -10,14 +10,15 @@ export default function Inclusion({ items }: { items: ListItem[] }) {
 
   return (
     <SectionCard id="included" eyebrow="Package details" title="Everything in this package" bare>
-      <div className="relative overflow-hidden rounded-[22px] bg-[var(--charcoal)] text-white p-5 sm:p-6 grid md:grid-cols-[200px_minmax(0,1fr)] gap-5 md:gap-7">
+      <div className="relative overflow-hidden rounded-[24px] bg-[var(--ink)] text-white p-5 sm:p-6 grid md:grid-cols-[200px_minmax(0,1fr)] gap-5 md:gap-7">
         <span
           aria-hidden="true"
           className="pointer-events-none absolute -right-20 -top-20 w-[260px] h-[260px] rounded-full"
-          style={{ background: 'radial-gradient(closest-side, rgba(201,169,110,0.28), transparent)' }}
+          style={{ background: 'radial-gradient(closest-side, color-mix(in srgb, var(--gold) 28%, transparent), transparent)' }}
         />
         <div className="relative">
-          <p style={{ fontFamily: FONT_SANS }} className="text-[0.68rem] uppercase tracking-[0.22em] font-medium text-[var(--gold)]">
+          <ChapterNumber className="!text-[var(--gold-bright)]" />
+          <p style={{ fontFamily: FONT_SANS }} className="mt-2 text-[0.68rem] uppercase tracking-[0.22em] font-medium text-[var(--gold-bright)]">
             Package details
           </p>
           <h2 style={{ fontFamily: FONT_SERIF }} className="mt-1.5 text-[1.55rem] leading-[1.1] font-semibold text-white text-balance">

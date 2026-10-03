@@ -51,7 +51,7 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
   return (
     <Link
       to={experiencePath(e)}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_rgba(124,45,59,0.35)] hover:border-[var(--gold-light)]"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_color-mix(in_srgb,_var(--burgundy)_35%,_transparent)] hover:border-[var(--gold-light)]"
     >
       {/* Photo */}
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--rose-light)]">
@@ -100,7 +100,7 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
         {discount > 0 && (
           <span
             style={{ fontFamily: SANS }}
-            className="absolute bottom-2.5 left-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[0.62rem] font-semibold text-[#3F7A3F]"
+            className="absolute bottom-2.5 left-2.5 rounded-full bg-white/95 px-2 py-0.5 text-[0.62rem] font-semibold text-leaf"
           >
             {discount}% off
           </span>
@@ -109,7 +109,7 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-3.5">
-        <p style={{ fontFamily: SANS }} className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#A8853F]">
+        <p style={{ fontFamily: SANS }} className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-gold-deep">
           {note && <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--burgundy)]" aria-hidden="true" />}
           <span className="truncate">{note || e.subCategoryName || e.categoryName || 'Experience'}</span>
         </p>

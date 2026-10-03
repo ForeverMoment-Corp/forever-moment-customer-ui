@@ -15,24 +15,24 @@ const FAQ = () => {
   if (faqs.length === 0) return null
 
   return (
-    <section className="section-padding bg-[#FDFAF4]">
+    <section className="section-padding bg-ivory">
       <div className="max-w-[1380px] mx-auto px-6">
 
         {/* Heading */}
         <div className="text-center mb-12">
           <h2
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold mb-2"
+            className="text-[2rem] md:text-[2.6rem] text-ink font-semibold mb-2"
           >
             Good to Know
           </h2>
           <p
             style={{ fontFamily: "'Jost', sans-serif" }}
-            className="text-[0.7rem] text-[#9E8A6A] tracking-[0.25em] uppercase"
+            className="text-[0.7rem] text-umber tracking-[0.25em] uppercase"
           >
             Frequently Asked Questions
           </p>
-          <div className="w-10 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
+          <div className="w-10 h-[1px] bg-gold mx-auto mt-4" />
         </div>
 
         {/* FAQ List */}
@@ -43,7 +43,7 @@ const FAQ = () => {
             return (
               <div
                 key={faq.id}
-                className="bg-white border border-[#EDE0C4] overflow-hidden"
+                className="bg-white border border-sand overflow-hidden"
               >
                 <button
                   onClick={() => toggleFAQ(index)}
@@ -51,13 +51,13 @@ const FAQ = () => {
                 >
                   <span
                     style={{ fontFamily: "'Jost', sans-serif" }}
-                    className="text-[0.92rem] text-[#1A1208] font-medium"
+                    className="text-[0.92rem] text-ink font-medium"
                   >
                     {faq.question}
                   </span>
 
-                  <span className="shrink-0 w-7 h-7 rounded-full border border-[#EDE0C4] flex items-center justify-center">
-                    {isOpen ? <FiMinus size={13} color="#C9A84C" /> : <FiPlus size={13} color="#C9A84C" />}
+                  <span className="shrink-0 w-7 h-7 rounded-full border border-sand flex items-center justify-center">
+                    {isOpen ? <FiMinus size={13} color="var(--gold)" /> : <FiPlus size={13} color="var(--gold)" />}
                   </span>
                 </button>
 
@@ -69,7 +69,7 @@ const FAQ = () => {
                   <div style={{ fontFamily: "'Jost', sans-serif" }}>
                     <RichText
                       html={faq.answer}
-                      className="px-6 pb-5 text-[0.85rem] text-[#9E8A6A] leading-relaxed"
+                      className="px-6 pb-5 text-[0.85rem] text-umber leading-relaxed"
                     />
                   </div>
                 </div>

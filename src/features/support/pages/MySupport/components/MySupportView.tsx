@@ -23,10 +23,10 @@ function StatusBadge({ status }: { status: string }) {
     <span
       style={{ fontFamily: SANS }}
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] ${
-        resolved ? 'bg-[#EAF3EA] text-[#3F7A3F]' : 'bg-[#FBF3E2] text-[#9A7A2E]'
+        resolved ? 'bg-leaf-light text-leaf' : 'bg-[#FBF3E2] text-gold-dark'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${resolved ? 'bg-[#3F7A3F]' : 'bg-[var(--gold)]'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${resolved ? 'bg-leaf' : 'bg-[var(--gold)]'}`} />
       {resolved ? 'Resolved' : 'Open'}
     </span>
   );
@@ -40,7 +40,7 @@ function QueryCard({ query }: { query: SupportQuery }) {
     <li className="rounded-2xl border border-[var(--border-light)] bg-white p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p style={{ fontFamily: SANS }} className="text-[0.66rem] uppercase tracking-[0.16em] text-[#A8853F]">
+          <p style={{ fontFamily: SANS }} className="text-[0.66rem] uppercase tracking-[0.16em] text-gold-deep">
             {query.referenceId}
           </p>
           <h2 style={{ fontFamily: SANS }} className="mt-0.5 text-[0.98rem] font-medium leading-snug text-[var(--charcoal)]">
@@ -52,7 +52,7 @@ function QueryCard({ query }: { query: SupportQuery }) {
 
       <p
         style={{ fontFamily: SANS }}
-        className={`mt-2 whitespace-pre-line text-[0.88rem] leading-relaxed text-[#4A3F35] ${long && !expanded ? 'line-clamp-3' : ''}`}
+        className={`mt-2 whitespace-pre-line text-[0.88rem] leading-relaxed text-cocoa ${long && !expanded ? 'line-clamp-3' : ''}`}
       >
         {query.message}
       </p>
@@ -141,7 +141,7 @@ export default function MySupportView() {
 
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border-light)] pb-5">
           <div>
-            <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-[#A8853F]">
+            <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
               Support
             </p>
             <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">

@@ -131,7 +131,7 @@ export default function SubCategoriesView({
         {/* Header */}
         <FadeIn>
           <div className="mt-3">
-            <p style={{ fontFamily: FONT_SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-[#A8853F]">
+            <p style={{ fontFamily: FONT_SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
               Every occasion
             </p>
             <h1 style={{ fontFamily: FONT_SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">

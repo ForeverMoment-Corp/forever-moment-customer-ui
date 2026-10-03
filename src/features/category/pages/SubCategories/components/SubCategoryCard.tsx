@@ -56,7 +56,7 @@ export default function SubCategoryCard({ subCategory, stats }: Props) {
 
   return (
     <article
-      className="group relative flex flex-col overflow-hidden rounded-[22px] border border-[var(--border-light)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_rgba(124,45,59,0.3)]"
+      className="group relative flex flex-col overflow-hidden rounded-[22px] border border-[var(--border-light)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_color-mix(in_srgb,_var(--burgundy)_30%,_transparent)]"
       style={{ fontFamily: FONT_SANS }}
     >
       <CategoryCover images={images} name={subCategory.name}>

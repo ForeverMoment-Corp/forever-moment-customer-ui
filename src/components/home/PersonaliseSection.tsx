@@ -49,17 +49,17 @@ const PersonaliseSection = () => {
         {/* Header */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#C9A84C] tracking-[0.3em] uppercase mb-1 font-semibold">
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-gold tracking-[0.3em] uppercase mb-1 font-semibold">
               Made Just For Them
             </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.8rem] md:text-[2.4rem] text-[#1A1208] font-semibold leading-tight">
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.8rem] md:text-[2.4rem] text-ink font-semibold leading-tight">
               Personalise Your Moments
             </h2>
           </div>
           <Link
             to="/shop?category=Personalised"
             style={{ fontFamily: "'Jost', sans-serif" }}
-            className="hidden sm:flex items-center gap-1.5 text-[0.72rem] text-[#C9A84C] hover:text-[#9A7A2E] tracking-wider uppercase font-semibold transition-colors"
+            className="hidden sm:flex items-center gap-1.5 text-[0.72rem] text-gold hover:text-gold-dark tracking-wider uppercase font-semibold transition-colors"
           >
             View All <FiArrowRight size={13} />
           </Link>
@@ -74,7 +74,7 @@ const PersonaliseSection = () => {
               className="group flex flex-col"
             >
               {/* Image */}
-              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-[0_4px_12px_rgba(26,18,8,0.08)] group-hover:shadow-[0_12px_28px_rgba(26,18,8,0.14)] group-hover:-translate-y-1.5 transition-all duration-400 bg-[#FDFAF4]">
+              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-[0_4px_12px_color-mix(in_srgb,_var(--ink)_8%,_transparent)] group-hover:shadow-[0_12px_28px_color-mix(in_srgb,_var(--ink)_14%,_transparent)] group-hover:-translate-y-1.5 transition-all duration-400 bg-ivory">
                 <SmartImage
                   src={item.image}
                   alt={item.label}
@@ -85,7 +85,7 @@ const PersonaliseSection = () => {
 
                 {/* Tag */}
                 {item.tag && (
-                  <div className="absolute top-2.5 left-2.5 bg-[#D9776B] text-white rounded-full px-2.5 py-1">
+                  <div className="absolute top-2.5 left-2.5 bg-coral text-white rounded-full px-2.5 py-1">
                     <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.55rem] font-bold tracking-wide">
                       {item.tag}
                     </span>
@@ -96,7 +96,7 @@ const PersonaliseSection = () => {
               {/* Label */}
               <p
                 style={{ fontFamily: "'Jost', sans-serif" }}
-                className="text-[0.78rem] text-[#1A1208] font-medium mt-3 text-center group-hover:text-[#C9A84C] transition-colors"
+                className="text-[0.78rem] text-ink font-medium mt-3 text-center group-hover:text-gold transition-colors"
               >
                 {item.label}
               </p>
@@ -105,7 +105,7 @@ const PersonaliseSection = () => {
         </div>
 
         {/* CTA Banner */}
-        <div className="mt-8 bg-gradient-to-r from-[#1A1208] to-[#2D1F0E] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-8 bg-gradient-to-r from-ink to-ink-soft rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.6rem] text-white font-semibold mb-1">
               Can't find what you're looking for?
@@ -117,7 +117,7 @@ const PersonaliseSection = () => {
           <Link
             to="/contact"
             style={{ fontFamily: "'Jost', sans-serif" }}
-            className="shrink-0 bg-[#C9A84C] text-white rounded-full px-7 py-3.5 text-[0.75rem] tracking-[0.15em] uppercase font-semibold hover:bg-[#E8C97A] hover:text-[#1A1208] transition-all flex items-center gap-2"
+            className="shrink-0 bg-gold text-white rounded-full px-7 py-3.5 text-[0.75rem] tracking-[0.15em] uppercase font-semibold hover:bg-gold-bright hover:text-ink transition-all flex items-center gap-2"
           >
             Customise Now <FiArrowRight size={13} />
           </Link>

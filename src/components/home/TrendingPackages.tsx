@@ -17,18 +17,18 @@ const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
 const TrendingPackages = () => {
   return (
-    <section className="section-padding bg-[#FDFAF4]">
+    <section className="section-padding bg-ivory">
       <div className="container mx-auto px-6">
 
         <FadeIn>
           <div className="text-center mb-12">
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold mb-2">
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-ink font-semibold mb-2">
               Trending Packages
             </h2>
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#9E8A6A] tracking-[0.25em] uppercase">
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase">
               Most Loved By Our Clients
             </p>
-            <div className="w-10 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
+            <div className="w-10 h-[1px] bg-gold mx-auto mt-4" />
           </div>
         </FadeIn>
 
@@ -42,7 +42,7 @@ const TrendingPackages = () => {
               ============================================ */}
               <Link
                 to={`/package/${pkg.id}`}
-                className="group block bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.25)] hover:-translate-y-2 transition-all duration-300 h-full"
+                className="group block bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_16px_40px_color-mix(in_srgb,_var(--gold)_25%,_transparent)] hover:-translate-y-2 transition-all duration-300 h-full"
               >
                 <div className="relative h-[220px] overflow-hidden">
                   <SmartImage
@@ -53,7 +53,7 @@ const TrendingPackages = () => {
                   {pkg.badge && (
                     <span
                       style={{ fontFamily: "'Jost', sans-serif" }}
-                      className="absolute top-3 left-3 bg-[#D9776B] text-white text-[0.6rem] px-3 py-1.5 rounded-full tracking-[0.15em] uppercase font-semibold"
+                      className="absolute top-3 left-3 bg-coral text-white text-[0.6rem] px-3 py-1.5 rounded-full tracking-[0.15em] uppercase font-semibold"
                     >
                       {pkg.badge}
                     </span>
@@ -61,19 +61,19 @@ const TrendingPackages = () => {
                 </div>
 
                 <div className="p-5">
-                  <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-[#C9A84C] tracking-[0.2em] uppercase mb-1 font-semibold">
+                  <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.65rem] text-gold tracking-[0.2em] uppercase mb-1 font-semibold">
                     {pkg.subtitle}
                   </p>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.3rem] text-[#1A1208] font-semibold mb-3">
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.3rem] text-ink font-semibold mb-3">
                     {pkg.title}
                   </h3>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-[#EDE0C4]">
-                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[1.05rem] text-[#1A1208] font-semibold">
+                  <div className="flex items-center justify-between pt-3 border-t border-sand">
+                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[1.05rem] text-ink font-semibold">
                       {formatPrice(pkg.price)}
                     </span>
-                    <div className="w-9 h-9 rounded-full bg-[#FDFAF4] flex items-center justify-center group-hover:bg-[#C9A84C] transition-colors duration-300">
-                      <FiArrowRight size={15} className="text-[#C9A84C] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    <div className="w-9 h-9 rounded-full bg-ivory flex items-center justify-center group-hover:bg-gold transition-colors duration-300">
+                      <FiArrowRight size={15} className="text-gold group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </div>
                 </div>
@@ -88,7 +88,7 @@ const TrendingPackages = () => {
             <Link
               to="/services"
               style={{ fontFamily: "'Jost', sans-serif" }}
-              className="inline-block bg-[#1A1208] text-white px-8 py-3.5 rounded-full text-[0.75rem] tracking-[0.2em] uppercase font-medium hover:bg-[#C9A84C] transition-colors"
+              className="inline-block bg-ink text-white px-8 py-3.5 rounded-full text-[0.75rem] tracking-[0.2em] uppercase font-medium hover:bg-gold transition-colors"
             >
               Explore Full Collection
             </Link>

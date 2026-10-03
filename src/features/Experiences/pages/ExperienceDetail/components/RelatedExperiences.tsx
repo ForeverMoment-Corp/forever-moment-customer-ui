@@ -85,7 +85,7 @@ export default function RelatedExperiences({
     <section id="related" className="mt-10 border-t border-[var(--border-light)] pt-8">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p style={{ fontFamily: FONT_SANS }} className="text-[0.64rem] font-medium uppercase tracking-[0.2em] text-[#A8853F]">
+          <p style={{ fontFamily: FONT_SANS }} className="text-[0.64rem] font-medium uppercase tracking-[0.2em] text-gold-deep">
             You may also like
           </p>
           <h2

@@ -2,16 +2,16 @@ import { FiCheckCircle, FiShield, FiZap, FiHeadphones, FiLock } from 'react-icon
 import FadeIn from '@/components/animations/FadeIn'
 
 const trustItems = [
-  { icon: FiCheckCircle, label: 'Verified Setup', color: '#7B9E7B' },
-  { icon: FiShield, label: '100% Money Back', color: '#C9A84C' },
-  { icon: FiZap, label: 'Same Day Available', color: '#D9776B' },
-  { icon: FiHeadphones, label: '24/7 Support', color: '#C9A84C' },
-  { icon: FiLock, label: 'Secure Payment', color: '#7B9E7B' },
+  { icon: FiCheckCircle, label: 'Verified Setup', color: 'var(--sage)' },
+  { icon: FiShield, label: '100% Money Back', color: 'var(--gold)' },
+  { icon: FiZap, label: 'Same Day Available', color: 'var(--coral)' },
+  { icon: FiHeadphones, label: '24/7 Support', color: 'var(--gold)' },
+  { icon: FiLock, label: 'Secure Payment', color: 'var(--sage)' },
 ]
 
 const TrustBar = () => {
   return (
-    <section className="bg-[#1A1208] py-6">
+    <section className="bg-ink py-6">
       <div className="max-w-[1380px] mx-auto px-6">
         <FadeIn>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">

@@ -12,7 +12,7 @@
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--cream, #fdf6ee); }
-::-webkit-scrollbar-thumb { background: var(--gold, #c9a96e); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--gold, #c9a84c); border-radius: 3px; }
 
 /* ─── GLOBAL BODY ─── */
 body {
@@ -26,9 +26,9 @@ body {
 
 /* ─── ANIMATIONS ─── */
 @keyframes goldPulse {
-  0%   { box-shadow: 0 0 0 rgba(201,169,110,0.4); }
-  50%  { box-shadow: 0 0 20px rgba(201,169,110,0.6); }
-  100% { box-shadow: 0 0 0 rgba(201,169,110,0.4); }
+  0%   { box-shadow: 0 0 0 color-mix(in srgb, var(--gold) 40%, transparent); }
+  50%  { box-shadow: 0 0 20px color-mix(in srgb, var(--gold) 60%, transparent); }
+  100% { box-shadow: 0 0 0 color-mix(in srgb, var(--gold) 40%, transparent); }
 }
 .pulse-gold { animation: goldPulse 2.5s infinite; }
 
@@ -66,6 +66,36 @@ body {
 
 /* ─── TAILWIND THEME ─── */
 @theme inline {
+  /* App palette: utilities like text-gold / bg-ink/60. Values live in src/styles/theme.scss. */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-cocoa: var(--cocoa);
+  --color-taupe: var(--taupe);
+  --color-umber: var(--umber);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-dark: var(--gold-dark);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-pale: var(--gold-pale);
+  --color-gold-light: var(--gold-light);
+  --color-ivory: var(--ivory);
+  --color-cream: var(--cream);
+  --color-linen: var(--linen);
+  --color-parchment: var(--parchment);
+  --color-wheat: var(--wheat);
+  --color-sand: var(--sand);
+  --color-burgundy: var(--burgundy);
+  --color-burgundy-dark: var(--burgundy-dark);
+  --color-wine: var(--wine);
+  --color-rose: var(--rose);
+  --color-rose-light: var(--rose-light);
+  --color-coral: var(--coral);
+  --color-charcoal: var(--charcoal);
+  --color-mid: var(--mid);
+  --color-sage: var(--sage);
+  --color-leaf: var(--leaf);
+  --color-leaf-light: var(--leaf-light);
+  --color-whatsapp: var(--whatsapp);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -196,12 +226,12 @@ body {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-all duration-300;
     font-family: 'Jost', sans-serif;
-    background: linear-gradient(135deg, var(--burgundy), #a83a4a);
-    box-shadow: 0 4px 16px rgba(124, 45, 59, 0.3);
+    background: linear-gradient(135deg, var(--burgundy), var(--wine));
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--burgundy) 30%, transparent);
   }
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 22px rgba(124, 45, 59, 0.4);
+    box-shadow: 0 6px 22px color-mix(in srgb, var(--burgundy) 40%, transparent);
   }
   .btn-primary:active { transform: translateY(0); }
 
@@ -209,7 +239,7 @@ body {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 backdrop-blur-md;
     font-family: 'Jost', sans-serif;
     background: rgba(255, 255, 255, 0.15);
-    border: 1.5px solid rgba(201, 169, 110, 0.4);
+    border: 1.5px solid color-mix(in srgb, var(--gold) 40%, transparent);
     color: var(--text-main);
   }
   .btn-secondary:hover {
@@ -222,12 +252,12 @@ body {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-medium text-white transition-all duration-300;
     font-family: 'Jost', sans-serif;
     background: linear-gradient(135deg, var(--gold), #b8914a);
-    box-shadow: 0 3px 12px rgba(201, 169, 110, 0.4);
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--gold) 40%, transparent);
     font-size: 0.82rem;
   }
   .btn-gold:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 18px rgba(201, 169, 110, 0.5);
+    box-shadow: 0 5px 18px color-mix(in srgb, var(--gold) 50%, transparent);
   }
 
   .btn-icon {
@@ -251,19 +281,19 @@ body {
   }
   .input-search:focus-within {
     border-color: var(--gold);
-    box-shadow: 0 0 0 4px rgba(201, 169, 110, 0.1);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 10%, transparent);
   }
 
   /* ── Cards ── */
   .card {
     @apply rounded-2xl overflow-hidden transition-all duration-300;
     background: white;
-    border: 1px solid rgba(201, 169, 110, 0.12);
+    border: 1px solid color-mix(in srgb, var(--gold) 12%, transparent);
     cursor: pointer;
   }
   .card:hover {
     transform: translateY(-7px);
-    box-shadow: 0 20px 50px rgba(124, 45, 59, 0.12);
+    box-shadow: 0 20px 50px color-mix(in srgb, var(--burgundy) 12%, transparent);
   }
 
   /* ── Section Headers ── */
@@ -304,7 +334,7 @@ body {
   .location-pill {
     @apply flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200;
     background: var(--rose-light);
-    border: 1.5px solid rgba(212, 131, 122, 0.25);
+    border: 1.5px solid color-mix(in srgb, var(--rose) 25%, transparent);
     color: var(--burgundy);
     cursor: pointer;
     white-space: nowrap;

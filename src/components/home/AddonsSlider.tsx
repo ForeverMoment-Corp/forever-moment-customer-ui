@@ -207,7 +207,7 @@ const AddonSlider = ({
           <span className="text-[1.4rem]">{category.emoji}</span>
           <h3
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-[1.4rem] text-[#1A1208] font-semibold"
+            className="text-[1.4rem] text-ink font-semibold"
           >
             {category.label}
           </h3>
@@ -215,13 +215,13 @@ const AddonSlider = ({
         <div className="flex gap-2">
           <button
             onClick={() => scroll("left")}
-            className="w-9 h-9 rounded-full bg-white border border-[#EDE0C4] flex items-center justify-center hover:border-[#C9A84C] hover:text-[#C9A84C] transition-colors shadow-sm"
+            className="w-9 h-9 rounded-full bg-white border border-sand flex items-center justify-center hover:border-gold hover:text-gold transition-colors shadow-sm"
           >
             <FiChevronLeft size={16} />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-9 h-9 rounded-full bg-white border border-[#EDE0C4] flex items-center justify-center hover:border-[#C9A84C] hover:text-[#C9A84C] transition-colors shadow-sm"
+            className="w-9 h-9 rounded-full bg-white border border-sand flex items-center justify-center hover:border-gold hover:text-gold transition-colors shadow-sm"
           >
             <FiChevronRight size={16} />
           </button>
@@ -239,7 +239,7 @@ const AddonSlider = ({
             <Link
               to={`/product/${item.id}`}
               key={item.id}
-              className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_12px_30px_rgba(201,168,76,0.2)] hover:-translate-y-1 transition-all duration-300 group block"
+              className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_12px_30px_color-mix(in_srgb,_var(--gold)_20%,_transparent)] hover:-translate-y-1 transition-all duration-300 group block"
             >
               {/* same image div */}
               <div className="h-[140px] overflow-hidden relative">
@@ -253,14 +253,14 @@ const AddonSlider = ({
               <div className="p-3">
                 <p
                   style={{ fontFamily: "'Jost', sans-serif" }}
-                  className="text-[0.75rem] text-[#1A1208] font-medium leading-snug mb-2"
+                  className="text-[0.75rem] text-ink font-medium leading-snug mb-2"
                 >
                   {item.title}
                 </p>
                 <div className="flex items-center justify-between">
                   <span
                     style={{ fontFamily: "'Jost', sans-serif" }}
-                    className="text-[0.85rem] text-[#C9A84C] font-bold"
+                    className="text-[0.85rem] text-gold font-bold"
                   >
                     {formatPrice(item.price)}
                   </span>
@@ -270,7 +270,7 @@ const AddonSlider = ({
                       e.stopPropagation();
                       handleAdd(item);
                     }}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isAdded ? "bg-green-500 text-white" : "bg-[#1A1208] text-white hover:bg-[#C9A84C]"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isAdded ? "bg-green-500 text-white" : "bg-ink text-white hover:bg-gold"}`}
                   >
                     {isAdded ? <FiCheck size={13} /> : <FiPlus size={13} />}
                   </button>
@@ -289,23 +289,23 @@ const AddonSlider = ({
 // ============================================
 const AddonsSlider = () => {
   return (
-    <section className="section-padding bg-[#FDFAF4]">
+    <section className="section-padding bg-ivory">
       <div className="container mx-auto px-6">
         {/* Heading */}
         <div className="text-center mb-12">
           <h2
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold mb-2"
+            className="text-[2rem] md:text-[2.6rem] text-ink font-semibold mb-2"
           >
             Elevate Your Celebration
           </h2>
           <p
             style={{ fontFamily: "'Jost', sans-serif" }}
-            className="text-[0.7rem] text-[#9E8A6A] tracking-[0.25em] uppercase"
+            className="text-[0.7rem] text-umber tracking-[0.25em] uppercase"
           >
             Add-ons, Gifts & Experiences
           </p>
-          <div className="w-10 h-[1px] bg-[#C9A84C] mx-auto mt-4" />
+          <div className="w-10 h-[1px] bg-gold mx-auto mt-4" />
         </div>
 
         {addonCategories.map((cat) => (
