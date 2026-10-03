@@ -1,206 +1,300 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
-import Gallery from "./Gallery";
-import BookingCard from "./BookingCard";
-import Reviews from "./Reviews";
-import Inclusion from "./Inclusion";
-import WhyUs from "./WhyUs";
-import FAQ from "./FAQ";
-import CancellationPolicy from "./CancellationPolicy";
-import RelatedExperiences from "./RelatedExperiences";
-import GiftSlider from "@/features/slider/pages/Slider/components/GiftSlider";
+import Breadcrumbs from './Breadcrumbs';
+import Gallery from './Gallery';
+import Highlights from './Highlights';
+import BookingCard from './BookingCard';
+import SectionNav from './SectionNav';
+import type { SectionNavItem } from './SectionNav';
+import Overview from './Overview';
+import Inclusion from './Inclusion';
+import HowItWorks from './HowItWorks';
+import Reviews from './Reviews';
+import CancellationPolicy from './CancellationPolicy';
+import FAQ from './FAQ';
+import RelatedExperiences from './RelatedExperiences';
+import type { ExperienceSummary } from './RelatedExperiences';
+import MoreAddOns from './MoreAddOns';
+import MobileBookingBar from './MobileBookingBar';
+import DetailSkeleton from './DetailSkeleton';
+import GiftSlider from '@/features/slider/pages/Slider/components/GiftSlider';
+
+import { normalizeExperience, FONT_SANS, FONT_SERIF } from '../normalize';
+import type { AddonCatalogueItem, ExperienceAddon } from '@/features/experiences/store/types';
+import type { AddOn, FaqItem } from '../types';
+import { experiencePath, isNumericId } from '@/features/experiences/utils/slug';
 
 export interface ExperienceViewProps {
-  experience: any;
+  experience: unknown;
   loading: boolean;
   error: string | null;
-  getExperienceDetail: (id: string) => void;
+  /** GET /public/experiences/subcategory/{id} result for the related section. */
+  subCategoryExperiences: ExperienceSummary[];
+  subCategoryKey: string | null;
+  /** GET /public/experiences — fallback pool for the related section. */
+  allExperiences: ExperienceSummary[];
+  /** GET /public/experiences/{id}/addons, keyed by experience id. */
+  experienceAddons: Record<string, ExperienceAddon[]>;
+  addonsLoading: Record<string, boolean>;
+  /** GET /public/addons — offered below the page, minus anything already attached. */
+  addonCatalogue: AddonCatalogueItem[];
+  getExperience: (slugOrId: string) => void;
+  getSubCategoryExperiences: (subCategoryId: string | number) => void;
+  getExperienceAddons: (experienceId: string | number) => void;
+  getAddons: () => void;
+  getData: () => void;
+}
+
+const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+const NAV_HEIGHT_DESKTOP = 118;
+const STICKY_GAP = 16;
+
+/**
+ * Keeps the booking panel pinned while reading. If it is shorter than the viewport it
+ * sticks below the navbar; if taller, it sticks by its bottom edge so "Book now" stays reachable.
+ */
+function useStickyTop(ref: React.RefObject<HTMLElement | null>, deps: unknown[]) {
+  const [top, setTop] = useState(NAV_HEIGHT_DESKTOP + STICKY_GAP);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const fits = el.offsetHeight + NAV_HEIGHT_DESKTOP + STICKY_GAP * 2 <= window.innerHeight;
+      setTop(fits ? NAV_HEIGHT_DESKTOP + STICKY_GAP : window.innerHeight - el.offsetHeight - STICKY_GAP);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return top;
 }
 
 export default function ExperienceDetails({
   experience,
   loading,
   error,
-  getExperienceDetail
+  subCategoryExperiences,
+  subCategoryKey,
+  allExperiences,
+  experienceAddons,
+  addonsLoading,
+  addonCatalogue,
+  getExperience,
+  getSubCategoryExperiences,
+  getExperienceAddons,
+  getAddons,
+  getData,
 }: ExperienceViewProps) {
-  const { id } = useParams<{ id: string }>();
+  const { slugOrId } = useParams<{ slugOrId: string }>();
+  const navigate = useNavigate();
+  const [selectedAddons, setSelectedAddons] = useState<number[]>([]);
+  const asideRef = useRef<HTMLElement>(null);
 
+  const vm = useMemo(() => (experience ? normalizeExperience(experience) : null), [experience]);
+  const matchesParam = (v: { id: number; slug: string | null } | null) =>
+    !!v && !!slugOrId && (String(v.id) === slugOrId || v.slug === slugOrId);
+  const isCurrent = matchesParam(vm);
+
+  // Numeric params resolve through /public/experiences/{id}, anything else through /slug/{slug}.
   useEffect(() => {
-    if (id) {
-      getExperienceDetail(id);
+    if (!slugOrId) return;
+    // After the id -> slug redirect the record is already loaded; skip the duplicate request.
+    if (!matchesParam(vm)) getExperience(slugOrId);
+    setSelectedAddons([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slugOrId, getExperience]);
+
+  // Loaded by numeric id but the record has a slug: swap the URL for the canonical slug one.
+  useEffect(() => {
+    if (isCurrent && vm?.slug && slugOrId && isNumericId(slugOrId)) {
+      navigate(experiencePath({ id: vm.id, slug: vm.slug }), { replace: true });
     }
-  }, [id, getExperienceDetail]);
+  }, [isCurrent, vm?.id, vm?.slug, slugOrId, navigate]);
 
-  const [activeTab, setActiveTab] = useState("inclusion")
+  // Related section: same sub-category from the API, whole catalogue as fallback.
+  useEffect(() => {
+    if (!isCurrent) return;
+    if (vm?.subCategoryId != null && String(vm.subCategoryId) !== subCategoryKey) getSubCategoryExperiences(vm.subCategoryId);
+    if (allExperiences.length === 0) getData();
+    // Add-ons are attached per experience, so fetch them once the record is known.
+    const key = vm ? String(vm.id) : null;
+    if (key && experienceAddons[key] === undefined && !addonsLoading[key]) getExperienceAddons(key);
+    if (addonCatalogue.length === 0) getAddons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCurrent, vm?.subCategoryId]);
 
-  const [addons, setAddons] = useState([
-    { id: 1, name: "Rose Pathway", price: 499, added: false },
-    { id: 2, name: "LED Name Board", price: 699, added: false },
-    { id: 3, name: "Extra Balloons", price: 399, added: false },
-    { id: 4, name: "Cake Table Setup", price: 599, added: false },
-  ]);
+  // The booking panel works from the API list plus whatever the guest has ticked.
+  const addonKey = vm ? String(vm.id) : '';
+  const addons = useMemo<AddOn[]>(
+    () =>
+      (experienceAddons[addonKey] ?? [])
+        .filter((a) => a && a.isActive !== false)
+        .map((a) => {
+          const price = a.isFree ? 0 : Number(a.effectivePrice) || 0;
+          return {
+          id: a.addonId,
+          name: a.name,
+          description: a.description?.trim() || undefined,
+          price,
+          basePrice: Number(a.basePrice) || 0,
+          // A zero price is free to the guest, whatever the flag says.
+          isFree: !!a.isFree || price <= 0,
+          thumbnailUrl: a.thumbnailUrl || a.heroUrl || undefined,
+          added: selectedAddons.includes(a.addonId),
+          };
+        }),
+    [experienceAddons, addonKey, selectedAddons],
+  );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[var(--gold)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[var(--mid)] font-medium">Loading experience details...</p>
-        </div>
-      </div>
-    );
-  }
+  // The rest of the catalogue, excluding anything already attached to this experience.
+  const extraAddons = useMemo<AddOn[]>(() => {
+    const attached = new Set(addons.map((a) => a.id));
+    return (addonCatalogue ?? [])
+      .filter((a) => a && a.isActive !== false && !attached.has(a.id))
+      .map((a) => {
+        const price = a.isFree ? 0 : Number(a.effectivePrice) || Number(a.basePrice) || 0;
+        return {
+          id: a.id,
+          name: a.name,
+          description: a.description?.trim() || undefined,
+          price,
+          basePrice: Number(a.basePrice) || 0,
+          // A zero price is free to the guest, whatever the flag says.
+          isFree: !!a.isFree || price <= 0,
+          thumbnailUrl: a.thumbnailUrl || a.heroUrl || undefined,
+          added: selectedAddons.includes(a.id),
+        };
+      });
+  }, [addonCatalogue, addons, selectedAddons]);
+
+  // Everything ticked, wherever it was ticked, drives the summary and the total.
+  const chosenAddons = useMemo(() => [...addons, ...extraAddons].filter((a) => a.added), [addons, extraAddons]);
+
+  // The panel lists this experience's own add-ons plus any extra the guest picked further
+  // down the page, so everything being charged can be seen and removed in one place.
+  const panelAddons = useMemo(
+    () => [...addons, ...extraAddons.filter((a) => a.added)],
+    [addons, extraAddons],
+  );
+
+  const stickyTop = useStickyTop(asideRef, [vm?.id, addons]);
+
+  // FAQ gets the API's "what to bring" and terms as extra answers when they exist.
+  const faqs = useMemo<FaqItem[]>(() => {
+    if (!vm) return [];
+    return [
+      ...vm.faqs,
+      ...(vm.whatToBring ? [{ q: 'What should I bring or arrange?', a: vm.whatToBring }] : []),
+      ...(vm.termsConditions ? [{ q: 'Terms and conditions', a: vm.termsConditions }] : []),
+    ];
+  }, [vm]);
+
+  const sections = useMemo<SectionNavItem[]>(() => {
+    if (!vm) return [];
+    return [
+      (vm.description.trim() || vm.locations.length > 0) && { id: 'overview', label: 'Overview' },
+      vm.inclusions.length > 0 && { id: 'included', label: "What's included" },
+      extraAddons.length > 0 && { id: 'addons', label: 'Add-ons' },
+      { id: 'how', label: 'How it works' },
+      { id: 'reviews', label: 'Reviews' },
+      vm.cancellationPolicies.length > 0 && { id: 'policy', label: 'Cancellation' },
+      faqs.length > 0 && { id: 'faq', label: 'FAQ' },
+    ].filter(Boolean) as SectionNavItem[];
+  }, [vm, faqs, extraAddons]);
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
-        <div className="text-center text-[var(--burgundy)] bg-[var(--burgundy)]/5 p-8 rounded-2xl border border-[var(--burgundy)]/10">
-          <p className="text-xl font-semibold mb-2">Oops! Something went wrong</p>
-          <p className="opacity-80">{error}</p>
+      <div className="min-h-[70vh] flex items-center justify-center bg-[var(--bg-main)] px-4">
+        <div className="max-w-md text-center bg-white rounded-3xl border border-[var(--border-light)] p-10 shadow-[var(--shadow-soft)]">
+          <p style={{ fontFamily: FONT_SERIF }} className="text-[1.8rem] font-semibold text-[var(--charcoal)]">We couldn't load this experience</p>
+          <p style={{ fontFamily: FONT_SANS }} className="mt-2 text-[0.9rem] text-[var(--mid)]">{error}</p>
+          <Link to="/" style={{ fontFamily: FONT_SANS }} className="mt-6 inline-flex items-center gap-2 text-[var(--burgundy)] font-semibold hover:underline underline-offset-4">
+            <ArrowLeft size={16} /> Back to home
+          </Link>
         </div>
       </div>
     );
   }
 
-  if (!experience) return null;
+  if (loading || !vm || !isCurrent) return <DetailSkeleton />;
 
-  const basePrice = experience.basePrice || 0;
-  const name = experience.name || "Experience Detail";
-  const originalPrice = experience.originalPrice || basePrice * 1.2;
-  const discount = experience.originalPrice ? Math.round(((experience.originalPrice - basePrice) / experience.originalPrice) * 100) : 20;
+  const toggleAddon = (addonId: number) =>
+    setSelectedAddons((prev) => (prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]));
+  const addonsTotal = chosenAddons.reduce((sum, a) => sum + a.price, 0);
+  const totalPrice = vm.basePrice + addonsTotal;
 
-  const toggleAddon = (id: number) => {
-    setAddons(prev =>
-      prev.map(a =>
-        a.id === id ? { ...a, added: !a.added } : a
-      )
-    )
-  }
-
-  const addonsPrice = addons
-    .filter(a => a.added)
-    .reduce((acc, a) => acc + a.price, 0)
-
-  const totalPrice = basePrice + addonsPrice
+  const crumbs = [
+    { label: 'Home', to: '/' },
+    { label: vm.categoryName, to: `/category/${vm.categorySlug}` },
+    ...(vm.subCategoryId ? [{ label: vm.subCategoryName, to: `/subcategory/${vm.subCategoryId}` }] : []),
+    { label: vm.name },
+  ];
 
   return (
+    <div className="bg-[var(--bg-main)] pb-28 lg:pb-16">
+      <div className="max-w-[var(--container-width)] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-5">
+        <Breadcrumbs items={crumbs} />
 
-    <div className="bg-[var(--bg-main)] py-[var(--section-padding-y)]">
+        {/* Gallery top-left, sections below it, booking panel pinned on the right. Phones: gallery -> booking -> sections. */}
+        <div className="mt-3.5 grid lg:grid-cols-12 gap-6 xl:gap-8 items-start">
+          <div className="min-w-0 lg:col-span-7 lg:row-start-1">
+            <Gallery key={vm.id} media={vm.media} name={vm.name} />
+          </div>
 
-      {/* TOP SECTION */}
+          <aside ref={asideRef} style={{ top: stickyTop }} className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 lg:sticky self-start">
+            <BookingCard
+              experience={vm}
+              addons={panelAddons}
+              toggleAddon={toggleAddon}
+              selectedAddons={chosenAddons}
+              totalPrice={totalPrice}
+              onViewReviews={() => scrollToId('reviews')}
+            />
+          </aside>
 
-      <div className="max-w-[var(--container-width)] mx-auto px-4 grid lg:grid-cols-2 gap-10">
+          <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-2">
+            <div className="mb-2">
+              <Highlights />
+            </div>
 
-        <Gallery media={experience.media} />
+            <SectionNav items={sections} />
 
-        <BookingCard
-          name={name}
-          basePrice={basePrice}
-          originalPrice={originalPrice}
-          discount={discount}
-          addons={addons}
-          toggleAddon={toggleAddon}
-          totalPrice={totalPrice}
+            <div>
+              <Overview experience={vm} />
+              {vm.inclusions.length > 0 && <Inclusion items={vm.inclusions} />}
+              <MoreAddOns items={extraAddons} toggleAddon={toggleAddon} onReview={() => scrollToId('booking-card')} />
+              <HowItWorks />
+              <Reviews rating={vm.rating} reviewCount={vm.reviewCount} />
+              {vm.cancellationPolicies.length > 0 && <CancellationPolicy policies={vm.cancellationPolicies} />}
+              {faqs.length > 0 && <FAQ items={faqs} />}
+            </div>
+          </div>
+        </div>
+
+        <RelatedExperiences
+          items={String(vm.subCategoryId) === subCategoryKey ? subCategoryExperiences : []}
+          fallbackItems={allExperiences}
+          currentId={vm.id}
+          categoryId={vm.categoryId}
+          categoryName={vm.categoryName}
+          categorySlug={vm.categorySlug}
+          subCategoryId={vm.subCategoryId}
+          subCategoryName={vm.subCategoryName}
+          loading={allExperiences.length === 0}
         />
-
       </div>
 
+      {/* <GiftSlider /> */}
 
-      {/* DETAILS SECTION */}
-
-      <div className="max-w-[var(--container-width)] mx-auto mt-16 px-4 space-y-10">
-
-
-        {/* TABS */}
-
-        <div className="border-b flex gap-8 overflow-x-auto">
-
-          {experience.inclusions && experience.inclusions.length > 0 && (
-            <button
-              onClick={() => setActiveTab("inclusion")}
-              className={`pb-3 font-medium whitespace-nowrap ${activeTab === "inclusion"
-                ? "text-[var(--primary)] border-b-2 border-[var(--primary)]"
-                : "text-gray-500"
-                }`}
-            >
-              Inclusions
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab("reviews")}
-            className={`pb-3 font-medium whitespace-nowrap ${activeTab === "reviews"
-              ? "text-[var(--primary)] border-b-2 border-[var(--primary)]"
-              : "text-gray-500"
-              }`}
-          >
-            Reviews
-          </button>
-
-          {experience.faqs && experience.faqs.length > 0 && (
-            <button
-              onClick={() => setActiveTab("faq")}
-              className={`pb-3 font-medium whitespace-nowrap ${activeTab === "faq"
-                ? "text-[var(--primary)] border-b-2 border-[var(--primary)]"
-                : "text-gray-500"
-                }`}
-            >
-              FAQ
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab("cancellation")}
-            className={`pb-3 font-medium whitespace-nowrap ${activeTab === "cancellation"
-              ? "text-[var(--primary)] border-b-2 border-[var(--primary)]"
-              : "text-gray-500"
-              }`}
-          >
-            Cancellation Policy
-          </button>
-
-          <button
-            onClick={() => setActiveTab("WhyUs")}
-            className={`pb-3 font-medium whitespace-nowrap ${activeTab === "WhyUs"
-              ? "text-[var(--primary)] border-b-2 border-[var(--primary)]"
-              : "text-gray-500"
-              }`}
-          >
-            WhyUs
-          </button>
-
-        </div>
-
-
-        {/* TAB CONTENT */}
-
-        <div className="min-h-[200px]">
-
-          {activeTab === "inclusion" && <Inclusion items={experience.inclusions} />}
-
-          {activeTab === "reviews" && <Reviews />}
-
-          {activeTab === "faq" && <FAQ items={experience.faqs} />}
-
-          {activeTab === "cancellation" && (
-            <CancellationPolicy policies={experience.cancellationPolicies} />
-          )}
-
-          {activeTab === "WhyUs" && <WhyUs />}
-
-        </div>
-
-
-        {/* RELATED EXPERIENCES */}
-
-        <RelatedExperiences />
-        <GiftSlider />
-
-      </div>
-
+      <MobileBookingBar totalPrice={totalPrice} originalPrice={vm.originalPrice + addonsTotal} discount={vm.discount} onBook={() => scrollToId('booking-card')} />
     </div>
-
-  )
-
+  );
 }

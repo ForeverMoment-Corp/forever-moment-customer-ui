@@ -1,4 +1,5 @@
 import * as types from './action-types';
+import type { PromotionImage } from './types';
 
 export interface HomeState {
     featuredExperiences: any[];
@@ -8,6 +9,9 @@ export interface HomeState {
     locationsLoading: boolean;
     experiencesLoading: boolean;
     error: string | null;
+    /** Promotion images keyed by `key:placement` (see promotionSlot). */
+    promotions: Record<string, PromotionImage[]>;
+    promotionsLoading: Record<string, boolean>;
 }
 
 const initialState: HomeState = {
@@ -18,6 +22,8 @@ const initialState: HomeState = {
     locationsLoading: false,
     experiencesLoading: false,
     error: null,
+    promotions: {},
+    promotionsLoading: {},
 };
 
 export const homeReducer = (state = initialState, action: any): HomeState => {
@@ -54,6 +60,17 @@ export const homeReducer = (state = initialState, action: any): HomeState => {
             return { ...state, loading: false, locationsLoading: false, error: action.payload };
         case types.SET_SELECTED_LOCATION:
             return { ...state, selectedLocation: action.payload };
+
+        case types.GET_PROMOTION_IMAGES:
+            return { ...state, promotionsLoading: { ...state.promotionsLoading, [action.payload.slot]: true } };
+        case types.GET_PROMOTION_IMAGES_SUCCESS:
+            return {
+                ...state,
+                promotions: { ...state.promotions, [action.payload.slot]: action.payload.images ?? [] },
+                promotionsLoading: { ...state.promotionsLoading, [action.payload.slot]: false },
+            };
+        case types.GET_PROMOTION_IMAGES_FAILURE:
+            return { ...state, promotionsLoading: { ...state.promotionsLoading, [action.payload.slot]: false } };
 
         default:
             return state;

@@ -1,3 +1,4 @@
+import SmartImage from '@/components/common/SmartImage';
 const galleryImages = [
   'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=500',
   'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=500',
@@ -27,25 +28,25 @@ const Gallery = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[150px] md:auto-rows-[180px]">
           <div className={`col-span-2 row-span-2 ${wrapClass}`}>
-            <img src={galleryImages[0]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[0]} alt="" className={imgClass} />
           </div>
           <div className={wrapClass}>
-            <img src={galleryImages[1]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[1]} alt="" className={imgClass} />
           </div>
           <div className={wrapClass}>
-            <img src={galleryImages[2]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[2]} alt="" className={imgClass} />
           </div>
           <div className={`row-span-2 ${wrapClass}`}>
-            <img src={galleryImages[3]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[3]} alt="" className={imgClass} />
           </div>
           <div className={wrapClass}>
-            <img src={galleryImages[4]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[4]} alt="" className={imgClass} />
           </div>
           <div className={`col-span-2 ${wrapClass}`}>
-            <img src={galleryImages[5]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[5]} alt="" className={imgClass} />
           </div>
           <div className={wrapClass}>
-            <img src={galleryImages[6]} alt="" className={imgClass} />
+            <SmartImage src={galleryImages[6]} alt="" className={imgClass} />
           </div>
         </div>
 

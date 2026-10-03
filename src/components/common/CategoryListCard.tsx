@@ -1,21 +1,7 @@
 import { Link } from "react-router-dom";
 
-import service1 from "@/assets/images/services/service1.webp";
-import service2 from "@/assets/images/services/service2.webp";
-import service3 from "@/assets/images/services/service3.webp";
-import service4 from "@/assets/images/services/service4.webp";
-import service5 from "@/assets/images/services/service5.webp";
-import service6 from "@/assets/images/services/service6.webp";
-import service7 from "@/assets/images/services/service7.webp";
-import service8 from "@/assets/images/services/service8.webp";
-import service9 from "@/assets/images/services/service9.webp";
-import service10 from "@/assets/images/services/service10.webp";
-
-// Static image pool — cycles through when categories exceed the count
-const imagePool = [
-  service1, service2, service3, service4, service5,
-  service6, service7, service8, service9, service10,
-];
+import SmartImage from '@/components/common/SmartImage';
+import { getCategoryImage, getCategoryImageOrFallback } from "@/features/category/utils/categoryImage";
 
 interface Category {
   id: number;
@@ -25,21 +11,27 @@ interface Category {
 
 interface CategoryListCardProps {
   category: Category;
+  /** Position in the list; picks the stand-in artwork when the API has none. */
   imageIndex: number;
 }
 
 export default function CategoryListCard({ category, imageIndex }: CategoryListCardProps) {
+  // Artwork comes from /public/categories; the static pool only fills gaps.
+  const image = getCategoryImageOrFallback(category, imageIndex);
+  const thumbnail = getCategoryImage(category, 'thumbnail');
+
   return (
     <Link
       to={`/category/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`}
       className="relative rounded-2xl overflow-hidden cursor-pointer group transition-transform duration-300 hover:scale-[1.03]"
       style={{ height: 160 }}
     >
-      {/* Image (static pool, cycled by index) */}
-      <img
-        src={imagePool[imageIndex % imagePool.length]}
+      <SmartImage
+        src={image}
+        placeholderSrc={thumbnail && thumbnail !== image ? thumbnail : undefined}
         alt={category.name}
-        className="w-full h-full object-cover"
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 260px"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
 
       {/* Overlay */}

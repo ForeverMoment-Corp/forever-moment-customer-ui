@@ -1,118 +1,89 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import ExperienceCard from "@/components/common/ExperienceCard";
+import { ArrowRight } from "lucide-react";
+import ExperienceTile from "@/components/common/ExperienceTile";
 import FadeIn from "@/components/animations/FadeIn";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
+import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
+import type { ExperienceListItem } from "@/features/experiences/store/types";
 
 export interface FeaturedExperienceProps {
-  experiences?: any[];
+  /** GET /public/experiences/featured */
+  experiences?: ExperienceListItem[];
   loading?: boolean;
   getFeaturedExperiences?: () => void;
   limit?: number;
 }
 
-export default function FeaturedExperienceView({ 
-  experiences, 
-  loading, 
-  getFeaturedExperiences,
-  limit 
-}: FeaturedExperienceProps) {
+const SANS = "'Jost', sans-serif";
+const SERIF = "'Cormorant Garamond', serif";
+
+export default function FeaturedExperienceView({ experiences, loading, getFeaturedExperiences, limit }: FeaturedExperienceProps) {
   const [liked, setLiked] = useState<number[]>([]);
 
   useEffect(() => {
-    if (getFeaturedExperiences) {
+    // Home already fetches featured experiences; only fetch when the store is empty
+    // (e.g. landing directly on /featured-experiences).
+    if (getFeaturedExperiences && (!experiences || experiences.length === 0)) {
       getFeaturedExperiences();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleLike = (id: any) => {
-    const numericId = Number(id);
-    if (liked.includes(numericId)) {
-      setLiked(liked.filter((i: number) => i !== numericId));
-    } else {
-      setLiked([...liked, numericId]);
-    }
-  };
+  const toggleLike = (id: number) =>
+    setLiked((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
-  if (loading) {
-    return (
-      <section className="section-padding bg-[#FDFAF4]">
-        <div className="max-w-[1380px] mx-auto px-6 text-center text-[#9E8A6A]">
-          Loading experiences...
-        </div>
-      </section>
-    );
-  }
-
-  const displayExperiences = experiences || [];
-  const finalExperiences = limit ? displayExperiences.slice(0, limit) : displayExperiences;
-  // Show "View All" if we are in limit mode (e.g. on Home page)
-  const showViewAll = limit !== undefined;
+  const all = (experiences ?? []).filter((e) => e && e.isActive !== false);
+  const list = limit ? all.slice(0, limit) : all;
+  // "View all" only when this is the teaser on the home page.
+  const showViewAll = limit !== undefined && all.length > list.length;
+  const isLoading = !!loading && list.length === 0;
 
   return (
-    <section className="section-padding bg-[#FDFAF4]">
-      <div className="max-w-[1380px] mx-auto px-6">
-
-        {/* Section Header */}
+    <section className="bg-[#FDFAF4] py-10 md:py-14">
+      <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
         <FadeIn>
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-4">
+          <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-[#9E8A6A] tracking-[0.25em] uppercase mb-2">
-                Handpicked For You
+              <p style={{ fontFamily: SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-[#9E8A6A]">
+                Handpicked for you
               </p>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-[#1A1208] font-semibold leading-tight">
-                Most <em>Loved</em> Experiences
+              <h2 style={{ fontFamily: SERIF }} className="text-[1.7rem] font-semibold leading-tight text-[#1A1208] md:text-[2.1rem]">
+                Most <em className="italic text-[var(--burgundy)]">loved</em> experiences
               </h2>
             </div>
-            {showViewAll && (
-              <Link 
-                to="/featured-experiences" 
-                style={{ fontFamily: "'Jost', sans-serif" }} 
-                className="text-[#C9A84C] text-[0.85rem] font-medium uppercase tracking-[0.1em] hover:text-[#1A1208] transition-colors flex items-center gap-2 group"
+            {(showViewAll || limit !== undefined) && (
+              <Link
+                to="/featured-experiences"
+                style={{ fontFamily: SANS }}
+                className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-[#C9A84C] transition-colors hover:text-[#1A1208]"
               >
-                View All 
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                View all
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             )}
           </div>
         </FadeIn>
 
-        {/* Grid */}
-        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {finalExperiences.map((service, idx) => {
-            const images = [
-              "https://images.unsplash.com/photo-1519741497674-611481863552?w=700&q=80",
-              "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=700&q=80",
-              "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=700&q=80",
-              "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=700&q=80",
-              "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=700&q=80",
-              "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=700&q=80",
-            ];
-            
-            const image = service.media && service.media.length > 0 ? service.media[0].url : images[idx % images.length];
-            const price = service.basePrice || service.pricing?.basePrice || 0;
-            const title = service.name || service.title;
-            const category = service.categoryName || service.category?.name || "Experience";
-            const city = service.location?.name || "India";
-            const id = service.id || idx;
-
-            return (
-              <StaggerItem key={id}>
-                <ExperienceCard
-                  id={id}
-                  image={image}
-                  title={title}
-                  category={category}
-                  city={city}
-                  price={price}
-                  showBadge={idx === 0}
-                  isLiked={liked.includes(Number(id))}
-                  onToggleLike={toggleLike}
-                />
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+            {Array.from({ length: Math.min(limit ?? 8, 8) }, (_, i) => (
+              <ExperienceTileSkeleton key={i} />
+            ))}
+          </div>
+        ) : list.length === 0 ? (
+          <p style={{ fontFamily: SANS }} className="rounded-2xl border border-dashed border-[var(--border-light)] p-10 text-center text-[0.9rem] text-[var(--mid)]">
+            No featured experiences yet. Check back soon.
+          </p>
+        ) : (
+          <StaggerContainer className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+            {list.map((e, idx) => (
+              <StaggerItem key={e.id} className="h-full">
+                <ExperienceTile experience={e} priority={idx < 4} isLiked={liked.includes(e.id)} onToggleLike={toggleLike} />
               </StaggerItem>
-            );
-          })}
-        </StaggerContainer>
+            ))}
+          </StaggerContainer>
+        )}
       </div>
     </section>
   );

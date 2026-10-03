@@ -5,7 +5,7 @@ import CategoryExperience from "./CategoryExperience";
 
 export const ExperienceRoutes = [
   {
-    path: "experience/:id",
+    path: "experience/:slugOrId",
     element: <ExperienceDetails />,
   },
   {

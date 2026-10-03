@@ -3,6 +3,7 @@ import { FiCheck } from 'react-icons/fi'
 import { combos } from '../../data/combos'
 import FadeIn from '../animations/FadeIn'
 import Slider from '../ui/Slider'
+import SmartImage from '@/components/common/SmartImage';
 
 const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
@@ -54,7 +55,7 @@ const ComboDeals = () => {
                   {combo.items.map((item, i) => (
                     <div key={item.id} className="relative flex-1">
                       <div className="w-full aspect-square rounded-lg overflow-hidden bg-[#FDFAF4]">
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        <SmartImage src={item.image} alt={item.title} className="w-full h-full object-cover" />
                       </div>
                       {i < combo.items.length - 1 && (
                         <span className="absolute -right-[9px] top-1/2 -translate-y-1/2 text-[#C9A84C] font-bold text-[0.9rem] z-10">+</span>

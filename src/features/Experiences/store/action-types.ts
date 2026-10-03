@@ -2,6 +2,7 @@ export const GET_DATA = 'experiences/GET_DATA';
 export const GET_DATA_SUCCESS = 'experiences/GET_DATA_SUCCESS';
 export const GET_DATA_FAILURE = 'experiences/GET_DATA_FAILURE';
 
+// Shared by the `/{id}` and `/slug/{slug}` detail endpoints — both fill `currentExperience`.
 export const GET_EXPERIENCE_DETAIL = 'experiences/GET_EXPERIENCE_DETAIL';
 export const GET_EXPERIENCE_DETAIL_SUCCESS = 'experiences/GET_EXPERIENCE_DETAIL_SUCCESS';
 export const GET_EXPERIENCE_DETAIL_FAILURE = 'experiences/GET_EXPERIENCE_DETAIL_FAILURE';
@@ -9,3 +10,11 @@ export const GET_EXPERIENCE_DETAIL_FAILURE = 'experiences/GET_EXPERIENCE_DETAIL_
 export const GET_SUBCATEGORY_EXPERIENCES = 'experiences/GET_SUBCATEGORY_EXPERIENCES';
 export const GET_SUBCATEGORY_EXPERIENCES_SUCCESS = 'experiences/GET_SUBCATEGORY_EXPERIENCES_SUCCESS';
 export const GET_SUBCATEGORY_EXPERIENCES_FAILURE = 'experiences/GET_SUBCATEGORY_EXPERIENCES_FAILURE';
+
+export const GET_ADDONS = 'experiences/GET_ADDONS';
+export const GET_ADDONS_SUCCESS = 'experiences/GET_ADDONS_SUCCESS';
+export const GET_ADDONS_FAILURE = 'experiences/GET_ADDONS_FAILURE';
+
+export const GET_EXPERIENCE_ADDONS = 'experiences/GET_EXPERIENCE_ADDONS';
+export const GET_EXPERIENCE_ADDONS_SUCCESS = 'experiences/GET_EXPERIENCE_ADDONS_SUCCESS';
+export const GET_EXPERIENCE_ADDONS_FAILURE = 'experiences/GET_EXPERIENCE_ADDONS_FAILURE';

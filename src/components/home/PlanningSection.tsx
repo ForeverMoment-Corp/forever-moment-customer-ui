@@ -1,4 +1,5 @@
 import { FiCalendar, FiUsers, FiCheckCircle } from 'react-icons/fi'
+import SmartImage from '@/components/common/SmartImage';
 
 const features = [
   {
@@ -27,7 +28,7 @@ const PlanningSection = () => {
 
           {/* LEFT — Image */}
           <div className="relative">
-            <img
+            <SmartImage
               src="https://images.unsplash.com/photo-1530023367847-a683933f4172?w=700"
               alt="Event Planning"
               className="w-full h-[400px] md:h-[500px] object-cover"

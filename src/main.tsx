@@ -6,6 +6,9 @@ import './index.css';
 import './styles/app.scss';
 import { store } from '@/store/store';
 import { router } from './router';
+import { registerImageServiceWorker } from '@/lib/images';
+
+registerImageServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

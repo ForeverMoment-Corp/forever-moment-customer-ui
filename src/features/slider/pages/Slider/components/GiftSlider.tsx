@@ -5,6 +5,7 @@ import "swiper/css"
 import "swiper/css/navigation"
 
 import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react"
+import SmartImage from '@/components/common/SmartImage';
 
 const gifts = [
   {
@@ -126,7 +127,7 @@ export default function GiftSlider(){
 
               <div className="relative overflow-hidden">
 
-                <img
+                <SmartImage
                   src={gift.img}
                   className="h-56 w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 />

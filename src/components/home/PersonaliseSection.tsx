@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FiArrowRight } from 'react-icons/fi'
+import SmartImage from '@/components/common/SmartImage';
 
 const personalItems = [
   {
@@ -74,7 +75,7 @@ const PersonaliseSection = () => {
             >
               {/* Image */}
               <div className="relative aspect-square rounded-2xl overflow-hidden shadow-[0_4px_12px_rgba(26,18,8,0.08)] group-hover:shadow-[0_12px_28px_rgba(26,18,8,0.14)] group-hover:-translate-y-1.5 transition-all duration-400 bg-[#FDFAF4]">
-                <img
+                <SmartImage
                   src={item.image}
                   alt={item.label}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

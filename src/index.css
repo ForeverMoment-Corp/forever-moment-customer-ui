@@ -358,7 +358,46 @@ body {
 }
 
 @layer utilities {
+  /* Page rhythm: compact by default so sections read as one page, not a stack of posters. */
   .section-padding {
-    @apply py-16 md:py-24;
+    @apply py-10 md:py-14;
+  }
+
+  /* Skip layout, style and paint for sections still off screen. `contain-intrinsic-size`
+     gives the scrollbar a stable estimate so skipping never shifts the page.
+     Only for sections below the fold; the hero and the first content block must paint. */
+  .defer-paint {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+  }
+}
+
+@layer components {
+  /* CMS text rendered by <RichText>. Tailwind resets list markers and heading sizes,
+     so the few tags an editor can produce get their formatting back here. */
+  .rich-text > * + * { margin-top: 0.75em; }
+  .rich-text p { line-height: 1.7; }
+  .rich-text ul,
+  .rich-text ol { padding-left: 1.25rem; display: grid; gap: 0.35rem; }
+  .rich-text ul { list-style: disc; }
+  .rich-text ol { list-style: decimal; }
+  .rich-text li { line-height: 1.6; }
+  .rich-text li::marker { color: var(--gold); }
+  .rich-text strong { font-weight: 600; color: var(--charcoal); }
+  .rich-text em { font-style: italic; }
+  .rich-text a { color: var(--burgundy); }
+  .rich-text h3,
+  .rich-text h4 {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--charcoal);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .rich-text h3 { font-size: 1.2rem; }
+  .rich-text h4 { font-size: 1.05rem; }
+  .rich-text blockquote {
+    border-left: 2px solid var(--gold);
+    padding-left: 0.9rem;
+    color: var(--mid);
   }
 }

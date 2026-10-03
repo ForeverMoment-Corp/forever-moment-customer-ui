@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiPlus, FiCheck } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import SmartImage from '@/components/common/SmartImage';
 // ============================================
 // ADDONS DATA — 3 categories
 // ============================================
@@ -242,7 +243,7 @@ const AddonSlider = ({
             >
               {/* same image div */}
               <div className="h-[140px] overflow-hidden relative">
-                <img
+                <SmartImage
                   src={item.image}
                   alt={item.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

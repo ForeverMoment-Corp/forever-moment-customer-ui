@@ -21,7 +21,8 @@ const CustomerLayout = () => {
       {/* CONTENT */}
       <main className="relative z-0 flex-1">
         <Outlet />
-        <FloatingBookingCTA />
+        {/* Experience detail pages ship their own price + book bar */}
+        {!pathname.startsWith('/experience/') && <FloatingBookingCTA />}
       </main>
 
       <WhatsAppButton />

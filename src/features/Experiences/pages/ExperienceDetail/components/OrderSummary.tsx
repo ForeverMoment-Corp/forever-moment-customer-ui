@@ -1,41 +1,45 @@
-export default function OrderSummary({basePrice,addons}:any){
+import type { AddOn } from '../types';
+import { FONT_SANS, FONT_SERIF, formatINR } from '../normalize';
 
-  const addonsPrice = addons
-    .filter((a:any)=>a.added)
-    .reduce((acc:number,a:any)=>acc+a.price,0)
+interface Props {
+  basePrice: number;
+  originalPrice: number;
+  addons: AddOn[];
+}
 
-  const total = basePrice + addonsPrice
+export default function OrderSummary({ basePrice, originalPrice, addons }: Props) {
+  // `addons` already holds only what the guest ticked, from the panel or the catalogue section.
+  const selected = addons.filter((a) => a.added);
+  const addonsTotal = selected.reduce((sum, a) => sum + a.price, 0);
+  const total = basePrice + addonsTotal;
+  const savings = Math.max(originalPrice - basePrice, 0);
 
-  return(
-
-    <div className="bg-white p-5 rounded-xl shadow-[var(--shadow-soft)]">
-
-      <h3 className="font-semibold mb-4">
-        Order Summary
-      </h3>
-
-      <div className="space-y-2 text-sm">
-
-        <div className="flex justify-between">
-          <span>Base Price</span>
-          <span>₹{basePrice}</span>
-        </div>
-
-        {addons.filter((a:any)=>a.added).map((a:any)=>(
-          <div key={a.id} className="flex justify-between">
-            <span>{a.name}</span>
-            <span>₹{a.price}</span>
-          </div>
-        ))}
-
-        <div className="border-t pt-3 flex justify-between font-semibold">
-          <span>Total</span>
-          <span>₹{total}</span>
-        </div>
-
+  return (
+    <dl style={{ fontFamily: FONT_SANS }} className="pt-3 border-t border-[var(--border-light)] text-[0.86rem] space-y-1.5">
+      <div className="flex justify-between text-[var(--charcoal)]">
+        <dt>Package</dt>
+        <dd className="tabular-nums">{formatINR(basePrice)}</dd>
       </div>
-
-    </div>
-
-  )
+      {selected.map((a) => (
+        <div key={a.id} className="flex justify-between gap-3 text-[var(--charcoal)]">
+          <dt className="truncate capitalize">{a.name}</dt>
+          <dd className="shrink-0 tabular-nums">{a.isFree ? 'Free' : formatINR(a.price)}</dd>
+        </div>
+      ))}
+      {savings > 0 && (
+        <div className="flex justify-between text-[#3F7A3F]">
+          <dt>Launch offer</dt>
+          <dd className="tabular-nums">− {formatINR(savings)}</dd>
+        </div>
+      )}
+      <div className="pt-2.5 border-t border-[var(--border-light)] flex items-baseline justify-between font-semibold">
+        <dt>
+          Total <span className="ml-1.5 text-[0.74rem] font-normal text-[var(--mid)]">incl. taxes</span>
+        </dt>
+        <dd style={{ fontFamily: FONT_SERIF }} className="text-[1.45rem] font-bold text-[var(--charcoal)] tabular-nums">
+          {formatINR(total)}
+        </dd>
+      </div>
+    </dl>
+  );
 }

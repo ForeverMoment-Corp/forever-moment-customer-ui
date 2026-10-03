@@ -1,1 +1,97 @@
 /* Experience Details Styles */
+
+/* react-datepicker, themed to match the booking card */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker-popper {
+  z-index: 60 !important;
+}
+
+.fm-datepicker.react-datepicker {
+  font-family: 'Jost', sans-serif;
+  border: 1px solid var(--border-light);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(124, 45, 59, 0.16);
+  overflow: hidden;
+  background: var(--bg-white);
+
+  .react-datepicker__triangle {
+    display: none;
+  }
+
+  .react-datepicker__header {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border-light);
+    padding-top: 14px;
+  }
+
+  .react-datepicker__current-month {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 4px;
+  }
+
+  .react-datepicker__day-name {
+    color: var(--mid);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    width: 2.2rem;
+  }
+
+  .react-datepicker__month {
+    margin: 0.6rem;
+  }
+
+  .react-datepicker__day {
+    width: 2.2rem;
+    line-height: 2.2rem;
+    border-radius: 999px;
+    color: var(--charcoal);
+    font-size: 0.85rem;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--rose-light);
+    }
+  }
+
+  .react-datepicker__day--today {
+    font-weight: 600;
+    color: var(--burgundy);
+  }
+
+  .react-datepicker__day--selected,
+  .react-datepicker__day--keyboard-selected {
+    background: var(--burgundy);
+    color: #fff;
+    font-weight: 600;
+
+    &:hover {
+      background: var(--burgundy-dark);
+    }
+  }
+
+  .react-datepicker__day--disabled {
+    color: #c9bfb5;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+
+  .react-datepicker__navigation {
+    top: 14px;
+  }
+
+  .react-datepicker__navigation-icon::before {
+    border-color: var(--mid);
+    border-width: 2px 2px 0 0;
+    width: 7px;
+    height: 7px;
+  }
+}

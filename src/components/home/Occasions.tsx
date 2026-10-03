@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { FiArrowRight } from 'react-icons/fi'
 import FadeIn from '@/components/animations/FadeIn'
 import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerContainer'
+import SmartImage from '@/components/common/SmartImage';
 
 const occasions = [
   { title: 'Weddings', image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=500', to: '/services?category=Wedding' },
@@ -31,7 +32,7 @@ const Occasions = () => {
           {occasions.map((item) => (
             <StaggerItem key={item.title}>
               <Link to={item.to} className="group relative h-[220px] md:h-[280px] rounded-2xl overflow-hidden cursor-pointer shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.25)] hover:-translate-y-2 transition-all duration-300 block">
-                <img
+                <SmartImage
                   src={item.image}
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

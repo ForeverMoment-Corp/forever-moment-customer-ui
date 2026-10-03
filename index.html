@@ -11,6 +11,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+  <!-- Image CDN - open the connection early so the first photos start sooner -->
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+  <link rel="dns-prefetch" href="https://images.unsplash.com">
+  <!-- First hero slide: start downloading before any JavaScript runs (candidates match SmartImage's srcset) -->
+  <link rel="preload" as="image" fetchpriority="high" imagesizes="100vw" imagesrcset="https://images.unsplash.com/photo-1519741497674-611481863552?w=320&auto=format&fit=crop&q=75 320w, https://images.unsplash.com/photo-1519741497674-611481863552?w=480&auto=format&fit=crop&q=75 480w, https://images.unsplash.com/photo-1519741497674-611481863552?w=640&auto=format&fit=crop&q=75 640w, https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=75 800w, https://images.unsplash.com/photo-1519741497674-611481863552?w=1080&auto=format&fit=crop&q=75 1080w, https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&auto=format&fit=crop&q=75 1400w">
+
   <!-- Google Fonts - Cormorant Garamond and Jost -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>

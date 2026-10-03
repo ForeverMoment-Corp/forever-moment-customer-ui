@@ -1,0 +1,342 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, ChevronRight, Clock, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
+import { EMAIL, HOURS, OCCASIONS, OFFICE, PHONE, whatsappLink } from '@/features/help/contact';
+
+const SANS = "'Jost', sans-serif";
+const SERIF = "'Cormorant Garamond', serif";
+
+interface LocationRef {
+  name: string;
+  isActive?: boolean;
+}
+
+export interface ContactViewProps {
+  /** GET /public/locations — the cities we actually serve. */
+  locations?: LocationRef[];
+  getLocations?: () => void;
+}
+
+interface FormState {
+  name: string;
+  phone: string;
+  city: string;
+  occasion: string;
+  date: string;
+  message: string;
+}
+
+const EMPTY: FormState = { name: '', phone: '', city: '', occasion: '', date: '', message: '' };
+
+export default function ContactView({ locations, getLocations }: ContactViewProps) {
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [touched, setTouched] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (getLocations && (!locations || locations.length === 0)) getLocations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cities = useMemo(
+    () => (locations ?? []).filter((l) => l && l.isActive !== false).map((l) => l.name).filter(Boolean),
+    [locations],
+  );
+
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setSent(false);
+  };
+
+  const errors = {
+    name: form.name.trim().length < 2 ? 'Tell us your name' : '',
+    phone: /^[6-9]\d{9}$/.test(form.phone) ? '' : 'Enter a 10-digit mobile number',
+    message: form.message.trim().length < 10 ? 'A line or two about what you need' : '',
+  };
+  const isValid = !errors.name && !errors.phone && !errors.message;
+
+  /** There is no enquiry endpoint yet, so the form hands the details to WhatsApp or email. */
+  const summary = () =>
+    [
+      'Hi Forever Moment, I would like to enquire.',
+      '',
+      `Name: ${form.name.trim()}`,
+      `Phone: ${form.phone}`,
+      ...(form.city ? [`City: ${form.city}`] : []),
+      ...(form.occasion ? [`Occasion: ${form.occasion}`] : []),
+      ...(form.date
+        ? [`Date: ${new Date(form.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`]
+        : []),
+      '',
+      form.message.trim(),
+    ].join('\n');
+
+  const submit = (channel: 'whatsapp' | 'email') => {
+    setTouched(true);
+    if (!isValid) return;
+    const text = summary();
+    if (channel === 'whatsapp') {
+      window.open(whatsappLink(text), '_blank', 'noopener');
+    } else {
+      window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(
+        `Enquiry from ${form.name.trim()}${form.occasion ? ` · ${form.occasion}` : ''}`,
+      )}&body=${encodeURIComponent(text)}`;
+    }
+    setSent(true);
+  };
+
+  const fieldClass = (invalid: boolean) =>
+    `w-full rounded-xl border bg-white px-3.5 py-2.5 text-[0.9rem] text-[var(--charcoal)] outline-none transition-colors placeholder:text-[var(--mid)] ${
+      invalid ? 'border-[var(--rose)]' : 'border-[var(--border-light)] focus:border-[var(--charcoal)]'
+    }`;
+
+  const Label = ({ htmlFor, children, optional }: { htmlFor: string; children: React.ReactNode; optional?: boolean }) => (
+    <label htmlFor={htmlFor} style={{ fontFamily: SANS }} className="mb-1.5 block text-[0.8rem] font-semibold text-[var(--charcoal)]">
+      {children}
+      {optional && <span className="ml-1.5 font-normal text-[0.74rem] text-[var(--mid)]">optional</span>}
+    </label>
+  );
+
+  const contacts = [
+    { icon: MessageCircle, label: 'WhatsApp', value: 'Usually replies in minutes', href: whatsappLink('Hi! I have a query about Forever Moment.'), external: true, tone: 'text-[#25D366]' },
+    { icon: Phone, label: 'Call us', value: PHONE, href: `tel:${PHONE.replace(/\s/g, '')}`, external: false, tone: 'text-[var(--burgundy)]' },
+    { icon: Mail, label: 'Email', value: EMAIL, href: `mailto:${EMAIL}`, external: false, tone: 'text-[var(--gold)]' },
+  ];
+
+  return (
+    <div className="min-h-[70vh] bg-[var(--cream)] pb-12 pt-5">
+      <div className="mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" style={{ fontFamily: SANS }} className="text-[0.78rem] text-[var(--mid)]">
+          <ol className="flex items-center gap-1">
+            <li className="flex items-center gap-1">
+              <Link to="/" className="transition-colors hover:text-[var(--burgundy)]">Home</Link>
+              <ChevronRight size={12} className="text-[var(--gold)]" />
+            </li>
+            <li className="text-[var(--charcoal)]">Contact</li>
+          </ol>
+        </nav>
+
+        {/* Header */}
+        <div className="mt-3 border-b border-[var(--border-light)] pb-5">
+          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-[#A8853F]">
+            Talk to a real person
+          </p>
+          <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
+            Let us plan it <em className="italic text-[var(--burgundy)]">together</em>
+          </h1>
+          <p style={{ fontFamily: SANS }} className="mt-1.5 max-w-xl text-[0.88rem] leading-relaxed text-[var(--mid)]">
+            Tell us the occasion, the date and the budget you have in mind. We reply with ideas, photos of past setups and a quote.
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-6 lg:grid-cols-12">
+          {/* Form */}
+          <div className="min-w-0 lg:col-span-7">
+            <form
+              onSubmit={(ev) => { ev.preventDefault(); submit('whatsapp'); }}
+              noValidate
+              className="rounded-2xl border border-[var(--border-light)] bg-white p-5 sm:p-6"
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-1">
+                  <Label htmlFor="contact-name">Your name</Label>
+                  <input
+                    id="contact-name"
+                    value={form.name}
+                    onChange={(ev) => set('name', ev.target.value)}
+                    placeholder="Priya Nair"
+                    autoComplete="name"
+                    aria-invalid={touched && !!errors.name}
+                    style={{ fontFamily: SANS }}
+                    className={fieldClass(touched && !!errors.name)}
+                  />
+                  {touched && errors.name && (
+                    <p style={{ fontFamily: SANS }} className="mt-1 text-[0.76rem] text-[var(--rose)]">{errors.name}</p>
+                  )}
+                </div>
+
+                <div className="sm:col-span-1">
+                  <Label htmlFor="contact-phone">Mobile number</Label>
+                  <input
+                    id="contact-phone"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={form.phone}
+                    onChange={(ev) => set('phone', ev.target.value.replace(/\D/g, ''))}
+                    placeholder="9876543210"
+                    autoComplete="tel-national"
+                    aria-invalid={touched && !!errors.phone}
+                    style={{ fontFamily: SANS }}
+                    className={fieldClass(touched && !!errors.phone)}
+                  />
+                  {touched && errors.phone && (
+                    <p style={{ fontFamily: SANS }} className="mt-1 text-[0.76rem] text-[var(--rose)]">{errors.phone}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="contact-occasion" optional>Occasion</Label>
+                  <select
+                    id="contact-occasion"
+                    value={form.occasion}
+                    onChange={(ev) => set('occasion', ev.target.value)}
+                    style={{ fontFamily: SANS }}
+                    className={`${fieldClass(false)} cursor-pointer`}
+                  >
+                    <option value="">Select one</option>
+                    {OCCASIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="contact-city" optional>City</Label>
+                  <select
+                    id="contact-city"
+                    value={form.city}
+                    onChange={(ev) => set('city', ev.target.value)}
+                    style={{ fontFamily: SANS }}
+                    className={`${fieldClass(false)} cursor-pointer capitalize`}
+                  >
+                    <option value="">Select one</option>
+                    {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                    <option value="Somewhere else">Somewhere else</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <Label htmlFor="contact-date" optional>Date you have in mind</Label>
+                  <input
+                    id="contact-date"
+                    type="date"
+                    value={form.date}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={(ev) => set('date', ev.target.value)}
+                    style={{ fontFamily: SANS }}
+                    className={`${fieldClass(false)} cursor-pointer`}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <Label htmlFor="contact-message">What are you planning?</Label>
+                  <textarea
+                    id="contact-message"
+                    rows={4}
+                    value={form.message}
+                    onChange={(ev) => set('message', ev.target.value)}
+                    placeholder="A surprise anniversary setup at home for two, soft lighting and white flowers. Budget around ₹8,000."
+                    aria-invalid={touched && !!errors.message}
+                    style={{ fontFamily: SANS }}
+                    className={`${fieldClass(touched && !!errors.message)} resize-y leading-relaxed`}
+                  />
+                  {touched && errors.message && (
+                    <p style={{ fontFamily: SANS }} className="mt-1 text-[0.76rem] text-[var(--rose)]">{errors.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  style={{ fontFamily: SANS, background: 'linear-gradient(135deg, var(--burgundy), var(--burgundy-dark))' }}
+                  className="inline-flex h-12 items-center gap-2 rounded-xl px-6 text-[0.92rem] font-semibold text-white shadow-[0_12px_28px_-10px_rgba(124,45,59,0.6)] transition-transform duration-200 hover:-translate-y-0.5"
+                >
+                  <MessageCircle size={17} /> Send on WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => submit('email')}
+                  style={{ fontFamily: SANS }}
+                  className="inline-flex h-12 items-center gap-2 rounded-xl border border-[var(--border-light)] bg-white px-5 text-[0.88rem] font-medium text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)]"
+                >
+                  <Send size={15} /> Send as email
+                </button>
+              </div>
+
+              {sent && (
+                <p style={{ fontFamily: SANS }} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#EAF3EA] px-3.5 py-2.5 text-[0.82rem] font-medium text-[#3F7A3F]">
+                  <CheckCircle2 size={15} /> Your message is ready to send. Finish it in the window that just opened.
+                </p>
+              )}
+
+              <p style={{ fontFamily: SANS }} className="mt-3 text-[0.76rem] leading-relaxed text-[var(--mid)]">
+                We use your number only to answer this enquiry.
+              </p>
+            </form>
+          </div>
+
+          {/* Details */}
+          <aside className="min-w-0 lg:col-span-5">
+            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5">
+              <p style={{ fontFamily: SERIF }} className="text-[1.3rem] font-semibold leading-tight text-[var(--charcoal)]">
+                Reach us directly
+              </p>
+              <ul className="mt-3 grid gap-2">
+                {contacts.map(({ icon: Icon, label, value, href, external, tone }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+                      className="flex items-center gap-3 rounded-xl border border-[var(--border-light)] px-3.5 py-2.5 transition-colors hover:border-[var(--gold)] hover:bg-[var(--cream)]"
+                    >
+                      <Icon size={17} className={`shrink-0 ${tone}`} />
+                      <span className="min-w-0" style={{ fontFamily: SANS }}>
+                        <span className="block text-[0.86rem] font-medium text-[var(--charcoal)]">{label}</span>
+                        <span className="block truncate text-[0.76rem] text-[var(--mid)]">{value}</span>
+                      </span>
+                      <ChevronRight size={14} className="ml-auto shrink-0 text-[var(--mid)]" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+
+              <dl style={{ fontFamily: SANS }} className="mt-4 grid gap-3 border-t border-[var(--border-light)] pt-4 text-[0.84rem]">
+                <div className="flex items-start gap-2.5">
+                  <Clock size={15} className="mt-0.5 shrink-0 text-[var(--gold)]" />
+                  <div>
+                    <dt className="font-medium text-[var(--charcoal)]">Hours</dt>
+                    <dd className="text-[var(--mid)]">{HOURS}</dd>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <MapPin size={15} className="mt-0.5 shrink-0 text-[var(--gold)]" />
+                  <div>
+                    <dt className="font-medium text-[var(--charcoal)]">Office</dt>
+                    <dd className="text-[var(--mid)]">{OFFICE}</dd>
+                  </div>
+                </div>
+              </dl>
+
+              {cities.length > 0 && (
+                <div className="mt-4 border-t border-[var(--border-light)] pt-4">
+                  <p style={{ fontFamily: SANS }} className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#A8853F]">
+                    Setting up in
+                  </p>
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {cities.map((c) => (
+                      <li
+                        key={c}
+                        style={{ fontFamily: SANS }}
+                        className="rounded-full bg-[var(--rose-light)] px-2.5 py-1 text-[0.78rem] capitalize text-[var(--burgundy)]"
+                      >
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-[var(--border-light)] bg-white p-5">
+              <p style={{ fontFamily: SANS }} className="text-[0.86rem] leading-relaxed text-[var(--mid)]">
+                Looking for an answer about an existing booking? The{' '}
+                <Link to="/help" className="font-medium text-[var(--burgundy)] underline underline-offset-4">help centre</Link>{' '}
+                covers refunds, rescheduling and what happens on the day.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+}

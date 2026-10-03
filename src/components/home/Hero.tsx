@@ -1,14 +1,57 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import SmartImage from '@/components/common/SmartImage';
+import { preloadResponsive, shouldPrefetch } from '@/lib/images';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { getPromotionImages } from '@/features/home/store/actions';
+import { promotionSlot, type PromotionImage } from '@/features/home/store/types';
+
+interface Slide {
+  image: string
+  /** Small rendition, paired with `image` so the browser can pick on narrow screens. */
+  thumbnail?: string
+  alt: string
+  label: string
+  heading: string
+  accent: string
+  description: string
+  cta: { label: string; to: string }
+}
+
+// Hero banners are managed in the admin as promotion images with key "hero" and placement "home".
+const PROMO_KEY = 'hero'
+const PROMO_PLACEMENT = 'home'
+
+/** Only banners that are active right now, highest priority first. */
+const liveSlides = (images: PromotionImage[] | undefined, now: Date): Slide[] =>
+  (images ?? [])
+    .filter((p) => p && p.isActive !== false && (p.heroUrl || p.url))
+    .filter((p) => (!p.startAt || new Date(p.startAt) <= now) && (!p.endAt || new Date(p.endAt) >= now))
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.id - b.id)
+    .map((p) => {
+      const title = (p.title || '').trim()
+      const alt = (p.altTextOverride || '').trim()
+      return {
+        image: p.heroUrl || p.url,
+        thumbnail: p.thumbnailUrl || undefined,
+        alt: alt || title || 'Forever Moment',
+        label: 'Featured',
+        heading: title,
+        accent: '',
+        description: alt && alt.toLowerCase() !== title.toLowerCase() ? alt : '',
+        cta: { label: 'Explore experiences', to: '/featured-experiences' },
+      }
+    })
 
 // ============================================
-// CAROUSEL SLIDES — har slide ka apna theme
+// FALLBACK SLIDES — used only until the API has banners
 // ============================================
-const slides = [
+const fallbackSlides: Slide[] = [
   {
     image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600',
+    alt: 'Wedding decor',
     label: 'Forever Begins Here',
     heading: 'Plan The',
     accent: 'Perfect Wedding',
@@ -17,6 +60,7 @@ const slides = [
   },
   {
     image: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1600',
+    alt: 'Birthday balloons',
     label: 'Pure Celebration',
     heading: 'Birthdays',
     accent: 'Made Magical',
@@ -25,6 +69,7 @@ const slides = [
   },
   {
     image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600',
+    alt: 'Romantic dinner table',
     label: 'No Planning Needed',
     heading: 'Experiences',
     accent: 'Worth Remembering',
@@ -33,6 +78,7 @@ const slides = [
   },
   {
     image: 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=1600',
+    alt: 'Gift box with flowers',
     label: 'Delivered With Love',
     heading: 'Thoughtful Gifts,',
     accent: 'Delivered Fresh',
@@ -41,6 +87,7 @@ const slides = [
   },
   {
     image: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1600',
+    alt: 'Corporate event stage',
     label: 'Professional Excellence',
     heading: 'Corporate Events,',
     accent: 'Elevated',
@@ -51,6 +98,22 @@ const slides = [
 
 const Hero = () => {
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const slot = promotionSlot(PROMO_KEY, PROMO_PLACEMENT)
+  const promoImages = useAppSelector((state) => state.home.promotions[slot])
+  const promoLoading = useAppSelector((state) => state.home.promotionsLoading[slot])
+
+  useEffect(() => {
+    if (promoImages === undefined && !promoLoading) dispatch(getPromotionImages(PROMO_KEY, PROMO_PLACEMENT))
+    // Fetch once per session; the store keeps the banners for later visits to the home page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const slides = useMemo(() => {
+    const live = liveSlides(promoImages, new Date())
+    return live.length > 0 ? live : fallbackSlides
+  }, [promoImages])
+
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -65,7 +128,14 @@ const Hero = () => {
       setCurrent((prev) => (prev + 1) % slides.length)
     }, 5000)
     return () => clearInterval(timer)
-  }, [paused])
+  }, [paused, slides.length])
+
+  // Warm the next slide's background so the crossfade never lands on a blank frame.
+  useEffect(() => {
+    if (!shouldPrefetch()) return
+    const id = window.setTimeout(() => void preloadResponsive(slides[(current + 1) % slides.length].image, '100vw'), 800)
+    return () => window.clearTimeout(id)
+  }, [current, slides])
 
   const next = () => setCurrent((prev) => (prev + 1) % slides.length)
   const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length)
@@ -74,7 +144,8 @@ const Hero = () => {
   if (searchQuery.trim()) navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
 }
 
-  const slide = slides[current]
+  const safeIndex = current % slides.length
+  const slide = slides[safeIndex]
 
   return (
     <section
@@ -87,14 +158,22 @@ const Hero = () => {
       ============================================ */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={current}
+          key={slide.image}
           initial={{ opacity: 0, scale: 1.06 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.9, ease: 'easeInOut' }}
           className="absolute inset-0"
         >
-          <img src={slide.image} alt={slide.heading} className="w-full h-full object-cover" />
+          <SmartImage
+            src={slide.image}
+            placeholderSrc={slide.thumbnail}
+            alt={slide.alt}
+            priority
+            noFade
+            sizes="100vw"
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,18,8,0.75) 0%, transparent 50%)' }} />
         </motion.div>
@@ -107,7 +186,7 @@ const Hero = () => {
         <div className="container mx-auto px-6">
           <AnimatePresence mode="wait">
             <motion.div
-              key={current}
+              key={slide.image}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -122,13 +201,20 @@ const Hero = () => {
               </div>
 
               <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2.4rem] md:text-[3.6rem] text-white font-semibold leading-[1.15] mb-4">
-                {slide.heading}{' '}
-                <span className="italic text-[#F5E6B8]">{slide.accent}</span>
+                {slide.heading}
+                {slide.accent && (
+                  <>
+                    {' '}
+                    <span className="italic text-[#F5E6B8]">{slide.accent}</span>
+                  </>
+                )}
               </h1>
 
-              <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.9rem] text-white/80 leading-relaxed mb-7 max-w-[460px]">
-                {slide.description}
-              </p>
+              {slide.description && (
+                <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.9rem] text-white/80 leading-relaxed mb-7 max-w-[460px]">
+                  {slide.description}
+                </p>
+              )}
 
               <Link
                 to={slide.cta.to}
@@ -191,7 +277,7 @@ const Hero = () => {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`h-[6px] rounded-full transition-all ${i === current ? 'w-8 bg-[#C9A84C]' : 'w-[6px] bg-white/40 hover:bg-white/60'}`}
+                className={`h-[6px] rounded-full transition-all ${i === safeIndex ? 'w-8 bg-[#C9A84C]' : 'w-[6px] bg-white/40 hover:bg-white/60'}`}
               />
             ))}
           </div>

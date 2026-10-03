@@ -3,6 +3,7 @@ import { FiArrowRight } from 'react-icons/fi'
 import type { DecorSlider } from '../../data/decorSliders'
 import FadeIn from '../animations/FadeIn'
 import Slider from '../ui/Slider'
+import SmartImage from '@/components/common/SmartImage';
 
 const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
@@ -34,7 +35,7 @@ const DecorSliderSection = ({ slider, bg = 'white' }: { slider: DecorSlider; bg?
             >
               <div className="rounded-[24px] bg-white border border-[#F3E7CC] shadow-[0_8px_30px_rgba(26,18,8,0.07)] overflow-hidden">
                 <div className="relative h-[200px] overflow-hidden">
-                  <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                  <SmartImage src={card.image} alt={card.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                   <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 text-[9px] tracking-[0.16em] uppercase text-[#1A1208] font-semibold">
                     Premium
@@ -67,7 +68,7 @@ const DecorSliderSection = ({ slider, bg = 'white' }: { slider: DecorSlider; bg?
               <Link key={card.id} to={`/services?category=${slider.heading.split(' ')[0]}`} className="group shrink-0 w-[230px] lg:w-[260px] block">
                 <div className="rounded-[22px] bg-white border border-[#F3E7CC] shadow-[0_8px_24px_rgba(26,18,8,0.06)] hover:shadow-[0_20px_50px_rgba(201,168,76,0.18)] transition-all duration-400 hover:-translate-y-2 overflow-hidden">
                   <div className="relative h-[160px] lg:h-[180px] overflow-hidden">
-                    <img src={card.image} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <SmartImage src={card.image} alt={card.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                     <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 text-[9px] tracking-[0.16em] uppercase text-[#1A1208] font-semibold">
                       Premium

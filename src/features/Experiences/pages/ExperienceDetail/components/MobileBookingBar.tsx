@@ -1,0 +1,40 @@
+import { ArrowRight } from 'lucide-react';
+import { FONT_SANS, FONT_SERIF, formatINR } from '../normalize';
+
+interface Props {
+  totalPrice: number;
+  originalPrice: number;
+  discount: number;
+  onBook: () => void;
+}
+
+// Sticky price + CTA for phones and tablets; sits above the bottom nav on phones.
+export default function MobileBookingBar({ totalPrice, originalPrice, discount, onBook }: Props) {
+  return (
+    <div className="lg:hidden fixed inset-x-0 bottom-[60px] md:bottom-0 z-[95] bg-white/95 backdrop-blur-md border-t border-[var(--border-light)] shadow-[0_-12px_30px_rgba(26,18,8,0.08)]">
+      <div className="max-w-[var(--container-width)] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p style={{ fontFamily: FONT_SANS }} className="text-[0.66rem] uppercase tracking-[0.12em] text-[var(--mid)]">Total</p>
+          <p className="flex items-baseline gap-1.5">
+            <span style={{ fontFamily: FONT_SERIF }} className="text-[1.5rem] leading-none font-bold text-[var(--charcoal)] tabular-nums">
+              {formatINR(totalPrice)}
+            </span>
+            {discount > 0 && (
+              <span style={{ fontFamily: FONT_SANS }} className="text-[0.76rem] text-[var(--mid)] line-through tabular-nums">
+                {formatINR(originalPrice)}
+              </span>
+            )}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onBook}
+          style={{ fontFamily: FONT_SANS, background: 'linear-gradient(135deg, var(--burgundy), var(--burgundy-dark))' }}
+          className="shrink-0 h-12 rounded-[14px] px-6 text-white font-semibold text-[0.9rem] inline-flex items-center gap-2 shadow-[0_10px_24px_-8px_rgba(124,45,59,0.6)] active:scale-[0.98] transition"
+        >
+          Book now <ArrowRight size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}

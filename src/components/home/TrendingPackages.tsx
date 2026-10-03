@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { FiArrowRight } from 'react-icons/fi'
 import FadeIn from '../animations/FadeIn'
 import { StaggerContainer, StaggerItem } from '../animations/StaggerContainer'
+import SmartImage from '@/components/common/SmartImage';
 
 const packages = [
   { id: 1, title: 'Royal Rose Terrace', subtitle: 'Wedding Decoration', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=500', price: 154999, badge: 'Best Seller' },
@@ -44,7 +45,7 @@ const TrendingPackages = () => {
                 className="group block bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.25)] hover:-translate-y-2 transition-all duration-300 h-full"
               >
                 <div className="relative h-[220px] overflow-hidden">
-                  <img
+                  <SmartImage
                     src={pkg.image}
                     alt={pkg.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

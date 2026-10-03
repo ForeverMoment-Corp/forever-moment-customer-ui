@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FiArrowRight, FiCalendar } from 'react-icons/fi'
+import SmartImage from '@/components/common/SmartImage';
 
 const blogs = [
   { title: '10 Trending Wedding Decor Themes for 2026', excerpt: 'From minimalist floral to maximalist gold accents — explore what\'s in style this season.', image: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=500', date: 'June 5, 2026', category: 'Wedding' },
@@ -33,7 +34,7 @@ const BlogSection = () => {
               className="group block bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.2)] hover:-translate-y-2 transition-all duration-300"
             >
               <div className="relative h-[220px] overflow-hidden">
-                <img src={blog.image} alt={blog.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <SmartImage src={blog.image} alt={blog.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-3 left-3 bg-[#D9776B] text-white rounded-full text-[0.6rem] px-3 py-1.5 tracking-[0.15em] uppercase font-semibold">
                   {blog.category}
                 </span>

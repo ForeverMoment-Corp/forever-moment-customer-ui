@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { FiChevronLeft, FiChevronRight, FiArrowRight } from 'react-icons/fi'
+import SmartImage from '@/components/common/SmartImage';
 
 const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
@@ -70,7 +71,7 @@ const RelatedSlider = ({ currentId, category, allPackages, title = 'You May Also
               className="shrink-0 w-[260px] group bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(26,18,8,0.06)] hover:shadow-[0_16px_40px_rgba(201,168,76,0.25)] hover:-translate-y-2 transition-all duration-300 block"
             >
               <div className="relative h-[180px] overflow-hidden">
-                <img src={pkg.image} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <SmartImage src={pkg.image} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 {pkg.badge && (
                   <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-3 left-3 bg-[#D9776B] text-white rounded-full text-[0.58rem] px-3 py-1 tracking-wider uppercase font-semibold">
                     {pkg.badge}

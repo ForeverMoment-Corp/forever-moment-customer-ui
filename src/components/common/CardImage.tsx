@@ -1,9 +1,12 @@
 import React from 'react';
-import { Heart } from "lucide-react";
+import { Heart, ImageOff } from "lucide-react";
+import SmartImage from '@/components/common/SmartImage';
 
 interface CardImageProps {
   id: string | number;
   image: string;
+  /** Low-res variant shown instantly while `image` downloads (blur-up). */
+  placeholderImage?: string;
   title: string;
   showBadge?: boolean;
   badgeText?: string;
@@ -15,6 +18,7 @@ interface CardImageProps {
 const CardImage: React.FC<CardImageProps> = ({
   id,
   image,
+  placeholderImage,
   title,
   showBadge,
   badgeText,
@@ -32,11 +36,23 @@ const CardImage: React.FC<CardImageProps> = ({
 
   return (
     <div className="relative h-[220px] sm:h-[240px] overflow-hidden">
-      <img
-        src={image}
-        alt={title}
-        className="w-full h-full object-cover group-hover:scale-[1.1] transition-transform duration-700"
-      />
+      {image ? (
+        <SmartImage
+          src={image}
+          placeholderSrc={placeholderImage && placeholderImage !== image ? placeholderImage : undefined}
+          alt={title}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          className="w-full h-full object-cover group-hover:scale-[1.1] transition-transform duration-700"
+        />
+      ) : (
+        <div
+          role="img"
+          aria-label={`${title} (no photo yet)`}
+          className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--rose-light,#F6E7E4)] to-[var(--cream,#FDFAF4)]"
+        >
+          <ImageOff size={28} className="text-[var(--mid)] opacity-60" />
+        </div>
+      )}
 
       {/* Badge */}
       {showBadge && (

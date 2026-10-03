@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FiArrowRight, FiPlus, FiCheck } from 'react-icons/fi'
+import SmartImage from '@/components/common/SmartImage';
 
 const gifts = [
   { id: 1, title: 'Luxury Red Roses', price: 799, image: 'https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?w=800', category: 'Flowers' },
@@ -59,7 +60,7 @@ const GiftPicker = () => {
               <div key={gift.id} className="group relative shrink-0 w-[210px] sm:w-[250px] md:w-[280px] rounded-[28px] overflow-hidden border border-[#F1E4C5] bg-white shadow-[0_10px_30px_rgba(26,18,8,0.08)] hover:shadow-[0_25px_60px_rgba(201,168,76,0.22)] transition-all duration-500 hover:-translate-y-2">
 
                 <div className="relative h-[220px] overflow-hidden">
-                  <img src={gift.image} alt={gift.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <SmartImage src={gift.image} alt={gift.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1208]/70 via-transparent to-transparent" />
                   <span style={{ fontFamily: "'Jost', sans-serif" }} className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-[#1A1208] text-[9px] tracking-[0.18em] uppercase font-semibold">
                     {gift.category}

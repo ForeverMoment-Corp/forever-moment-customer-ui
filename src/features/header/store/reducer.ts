@@ -6,6 +6,10 @@ export interface HeaderState {
     categories: any[];
     categoriesLoading: boolean;
     categoriesError: string | null;
+    /** GET /public/subcategories */
+    subCategories: any[];
+    subCategoriesLoading: boolean;
+    subCategoriesError: string | null;
 }
 
 const initialState: HeaderState = {
@@ -14,6 +18,9 @@ const initialState: HeaderState = {
     categories: [],
     categoriesLoading: false,
     categoriesError: null,
+    subCategories: [],
+    subCategoriesLoading: false,
+    subCategoriesError: null,
 };
 
 export const headerReducer = (state = initialState, action: any): HeaderState => {
@@ -46,6 +53,13 @@ export const headerReducer = (state = initialState, action: any): HeaderState =>
                 categoriesLoading: false,
                 categoriesError: action.payload,
             };
+        case types.GET_SUBCATEGORIES:
+            return { ...state, subCategoriesLoading: true, subCategoriesError: null };
+        case types.GET_SUBCATEGORIES_SUCCESS:
+            return { ...state, subCategoriesLoading: false, subCategories: action.payload ?? [] };
+        case types.GET_SUBCATEGORIES_FAILURE:
+            return { ...state, subCategoriesLoading: false, subCategoriesError: action.payload };
+
         default:
             return state;
     }
