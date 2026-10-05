@@ -9,9 +9,8 @@ export interface SectionNavItem {
 }
 
 /**
- * Sticky chapter bar for the content column: numbered pills that match the chapter numbers on
- * the sections. The active one is tracked by an IntersectionObserver and marked by a pill that
- * slides between them.
+ * Sticky section bar for the content column. The active section is tracked by an
+ * IntersectionObserver and marked by a pill that slides between the labels.
  */
 export default function SectionNav({ items }: { items: SectionNavItem[] }) {
   const [active, setActive] = useState(items[0]?.id);
@@ -60,13 +59,13 @@ export default function SectionNav({ items }: { items: SectionNavItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="Page sections" className="sticky top-[64px] z-30 -mx-4 mt-4 px-4 py-2 sm:mx-0 sm:px-0 md:top-[112px]">
+    <nav aria-label="Page sections" className="sticky top-[64px] z-30 -mx-4 px-4 py-2 sm:mx-0 sm:px-0 md:top-[112px]">
       <div className="relative">
         <div
           ref={stripRef}
-          className="flex gap-1 overflow-x-auto scrollbar-hide rounded-full border border-[var(--sand)] bg-white/85 p-1 shadow-[0_12px_30px_-18px_color-mix(in_srgb,_var(--ink)_45%,_transparent)] backdrop-blur-md"
+          className="flex gap-1 overflow-x-auto scrollbar-hide rounded-full border border-[var(--sand)] bg-white/90 p-1 backdrop-blur-md"
         >
-          {items.map((item, i) => {
+          {items.map((item) => {
             const isActive = active === item.id;
             return (
               <button
@@ -87,9 +86,6 @@ export default function SectionNav({ items }: { items: SectionNavItem[] }) {
                     className="absolute inset-0 rounded-full bg-[var(--ink)]"
                   />
                 )}
-                <span className={`relative text-[0.64rem] tabular-nums ${isActive ? 'text-[var(--gold-bright)]' : 'text-[var(--gold-deep)]'}`}>
-                  {String(i + 1).padStart(2, '0')}
-                </span>
                 <span className="relative">{item.label}</span>
                 {typeof item.count === 'number' && item.count > 0 && (
                   <span

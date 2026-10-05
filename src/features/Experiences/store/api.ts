@@ -93,3 +93,37 @@ export const fetchExperienceAddons = (experienceId: string | number) =>
         'Failed to fetch add-ons for this experience',
         [],
     );
+
+/** A serviceable pincode as returned by GET /public/locations/check-pincode. */
+export interface PincodeArea {
+    pincodeCode: string;
+    areaName?: string | null;
+    locationId: number;
+    locationName?: string | null;
+    locationCity?: string | null;
+}
+
+export interface PincodeServiceability {
+    /** This experience can be set up at the pincode. */
+    serviceable: boolean;
+    /** Where the pincode is, when we cover it at all (even if not for this experience). */
+    area: PincodeArea | null;
+}
+
+/**
+ * GET /public/experiences/{id}/serviceable?pincode= and GET /public/locations/check-pincode?pincode=,
+ * in parallel. Both answer 404 for a pincode we do not cover; that is "not serviceable", not an error.
+ */
+export async function checkPincodeServiceability(experienceId: string | number, pincode: string): Promise<PincodeServiceability> {
+    const code = encodeURIComponent(pincode.trim());
+    const [serviceable, area] = await Promise.all([
+        getPublic<boolean>(
+            `/public/experiences/${encodeURIComponent(String(experienceId))}/serviceable?pincode=${code}`,
+            'Could not check this pincode',
+            false,
+        ),
+        // The area only improves the message, so a failure here must not fail the check.
+        getPublic<PincodeArea | null>(`/public/locations/check-pincode?pincode=${code}`, 'Could not look up this pincode', null).catch(() => null),
+    ]);
+    return { serviceable: serviceable === true, area };
+}

@@ -53,41 +53,17 @@ export default function Reviews({ rating, reviewCount }: { rating: number; revie
         </a>
       }
     >
-      {/* Summary band */}
-      <div className="rounded-[20px] bg-white border border-[var(--sand)] p-4 sm:p-5 grid sm:grid-cols-[auto_minmax(0,1fr)_auto] gap-5 sm:gap-6 items-center">
-        <div>
-          <p style={{ fontFamily: FONT_SERIF }} className="text-[3rem] leading-[0.9] font-semibold text-[var(--charcoal)]">
-            {rating}
-            <span className="ml-1 text-[1.25rem] italic font-medium text-[var(--mid)]">/ 5</span>
-          </p>
-          <div className="mt-2.5">
-            <Stars value={rating} size={16} />
-          </div>
-          <p style={{ fontFamily: FONT_SANS }} className="mt-1.5 text-[0.8rem] text-[var(--mid)] whitespace-nowrap">
-            {reviewCount} verified reviews
-          </p>
-        </div>
-        <ul className="grid gap-1.5 max-w-[360px]">
-          {DISTRIBUTION.map(([stars, pct]) => (
-            <li key={stars} style={{ fontFamily: FONT_SANS }} className="grid grid-cols-[14px_minmax(0,1fr)_36px] gap-2.5 items-center text-[0.74rem] text-[var(--mid)]">
-              <span>{stars}</span>
-              <span className="block h-1.5 rounded-full bg-linen overflow-hidden">
-                <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--gold), var(--burgundy))' }} />
-              </span>
-              <span className="text-right tabular-nums">{pct}%</span>
-            </li>
-          ))}
-        </ul>
-        <div className="sm:max-w-[170px] sm:pl-6 sm:border-l sm:border-dashed sm:border-[var(--border-light)] pt-4 sm:pt-0 border-t sm:border-t-0 border-dashed border-[var(--border-light)]">
-          <p style={{ fontFamily: FONT_SERIF }} className="text-[2rem] leading-none font-semibold text-[var(--burgundy)]">{recommendPct}%</p>
-          <p style={{ fontFamily: FONT_SANS }} className="mt-1 text-[0.78rem] leading-snug text-[var(--mid)]">
-            would book again or recommend to a friend
-          </p>
-        </div>
+      {/* One line of summary keeps the focus on what guests actually wrote */}
+      <div style={{ fontFamily: FONT_SANS }} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[0.84rem] text-[var(--mid)]">
+        <span style={{ fontFamily: FONT_SERIF }} className="text-[2rem] font-semibold leading-none text-[var(--charcoal)]">{rating}</span>
+        <Stars value={rating} size={15} />
+        <span>{reviewCount} verified reviews</span>
+        <span aria-hidden className="text-[var(--sand)]">|</span>
+        <span><strong className="font-semibold text-[var(--burgundy)]">{recommendPct}%</strong> would book again</span>
       </div>
 
       {/* Review feed */}
-      <div className="mt-3 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-1">
+      <div className="mt-4 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-1">
         {SAMPLE_REVIEWS.map((review, i) => (
           <article
             key={review.name}

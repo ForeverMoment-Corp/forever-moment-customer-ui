@@ -4,7 +4,6 @@ import { ArrowLeft } from 'lucide-react';
 
 import Breadcrumbs from './Breadcrumbs';
 import Gallery from './Gallery';
-import Highlights from './Highlights';
 import BookingCard from './BookingCard';
 import SectionNav from './SectionNav';
 import type { SectionNavItem } from './SectionNav';
@@ -204,7 +203,7 @@ export default function ExperienceDetails({
   const sections = useMemo<SectionNavItem[]>(() => {
     if (!vm) return [];
     return [
-      (vm.description.trim() || vm.locations.length > 0) && { id: 'overview', label: 'Overview' },
+      (vm.description || vm.shortDescription) && { id: 'overview', label: 'Overview' },
       vm.inclusions.length > 0 && { id: 'included', label: "What's included" },
       extraAddons.length > 0 && { id: 'addons', label: 'Add-ons' },
       { id: 'how', label: 'How it works' },
@@ -247,8 +246,9 @@ export default function ExperienceDetails({
       <div className="max-w-[var(--container-width)] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-5">
         <Breadcrumbs items={crumbs} />
 
-        {/* Gallery top-left, sections below it, booking panel pinned on the right. Phones: gallery -> booking -> sections. */}
-        <div className="mt-3.5 grid lg:grid-cols-12 gap-6 xl:gap-8 items-start">
+        {/* Page opens on the gallery and booking panel (which carries the name and price); the panel
+            stays pinned on the right. Phones: gallery -> booking -> sections. */}
+        <div className="mt-3.5 grid lg:grid-cols-12 gap-x-6 gap-y-5 xl:gap-x-10 items-start">
           <div className="min-w-0 lg:col-span-7 lg:row-start-1">
             <Gallery key={vm.id} media={vm.media} name={vm.name} />
           </div>
@@ -265,10 +265,6 @@ export default function ExperienceDetails({
           </aside>
 
           <div className="min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-2">
-            <div className="mb-2">
-              <Highlights />
-            </div>
-
             <SectionNav items={sections} />
 
             {/* Sections number themselves as chapters from this counter (see SectionCard) */}

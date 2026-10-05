@@ -38,6 +38,9 @@ const ALLOWED: Record<string, keyof JSX.IntrinsicElements> = {
   BLOCKQUOTE: 'blockquote',
 };
 
+/** Elements whose contents are code or embedded documents, never readable text. */
+const DROP_WITH_CONTENT = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'HEAD', 'TITLE']);
+
 /** Only links that go somewhere safe survive; everything else renders as plain text. */
 const safeHref = (value: string | null): string | undefined => {
   if (!value) return undefined;
@@ -50,6 +53,8 @@ function renderNode(node: Node, key: string): ReactNode {
   if (node.nodeType !== Node.ELEMENT_NODE) return null;
 
   const el = node as Element;
+  // Code and embeds: drop the element and its contents, so no script or CSS text leaks onto the page.
+  if (DROP_WITH_CONTENT.has(el.tagName)) return null;
   const tag = ALLOWED[el.tagName];
   // Unknown tag: keep the text inside, drop the tag itself.
   if (!tag) return Array.from(el.childNodes).map((child, i) => renderNode(child, `${key}-${i}`));

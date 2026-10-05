@@ -20,8 +20,8 @@ export interface BookingCardProps {
   onViewReviews: () => void;
 }
 
-/** Days shown in the date strip before the calendar takes over. */
-const QUICK_DAYS = 7;
+/** Quick picks before the calendar takes over: today and tomorrow. */
+const QUICK_DAYS = 2;
 const DAY = 86_400_000;
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -54,6 +54,18 @@ const daypart = (startTime: string) => {
   return { label: 'Night', Icon: Moon };
 };
 
+/** Slots split into part-of-day groups, keeping their original (start time) order. */
+const groupByDaypart = <T extends { startTime: string }>(slots: T[]) => {
+  const groups: { label: string; Icon: typeof Moon; items: T[] }[] = [];
+  for (const slot of slots) {
+    const { label, Icon } = daypart(slot.startTime);
+    const group = groups.find((g) => g.label === label);
+    if (group) group.items.push(slot);
+    else groups.push({ label, Icon, items: [slot] });
+  }
+  return groups;
+};
+
 /** Calendar trigger at the end of the date strip. Shows the picked date once one is chosen from it. */
 const CalendarChip = forwardRef<HTMLButtonElement, { onClick?: () => void; picked: Date | null }>(({ onClick, picked }, ref) => (
   <button
@@ -63,7 +75,7 @@ const CalendarChip = forwardRef<HTMLButtonElement, { onClick?: () => void; picke
     aria-pressed={!!picked}
     aria-label={picked ? `Change date, currently ${picked.toDateString()}` : 'Pick a later date from the calendar'}
     style={{ fontFamily: FONT_SANS }}
-    className={`relative flex h-[78px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl border text-center transition-all ${
+    className={`relative flex h-[54px] w-full flex-col items-center justify-center rounded-xl border text-center transition-all ${
       picked
         ? 'border-[var(--ink)] bg-[var(--ink)] text-white shadow-[0_10px_22px_-12px_var(--ink)]'
         : 'border-dashed border-[var(--gold)] bg-[var(--gold-pale)]/40 text-[var(--gold-dark)] hover:bg-[var(--gold-pale)]'
@@ -71,14 +83,16 @@ const CalendarChip = forwardRef<HTMLButtonElement, { onClick?: () => void; picke
   >
     {picked ? (
       <>
-        <span className="text-[0.6rem] uppercase tracking-[0.12em] text-white/70">{picked.toLocaleDateString('en-IN', { weekday: 'short' })}</span>
-        <span style={{ fontFamily: FONT_SERIF }} className="text-[1.35rem] font-semibold leading-none">{picked.getDate()}</span>
-        <span className="text-[0.6rem] text-white/70">{picked.toLocaleDateString('en-IN', { month: 'short' })}</span>
+        <span className="text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-[var(--gold-bright)]">{picked.toLocaleDateString('en-IN', { weekday: 'short' })}</span>
+        <span style={{ fontFamily: FONT_SERIF }} className="mt-0.5 text-[1.02rem] font-semibold leading-none">
+          {picked.getDate()} <span className="text-[0.8rem] font-medium opacity-80">{picked.toLocaleDateString('en-IN', { month: 'short' })}</span>
+        </span>
       </>
     ) : (
       <>
-        <CalendarDays size={18} />
-        <span className="mt-1 text-[0.6rem] font-semibold uppercase leading-tight tracking-[0.1em]">Later<br />date</span>
+        <span className="inline-flex items-center gap-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.1em]">
+          <CalendarDays size={13} /> Later date
+        </span>
       </>
     )}
   </button>
@@ -151,6 +165,7 @@ function RecapRow({ icon: Icon, label, value, muted }: { icon: typeof Clock; lab
 }
 
 export default function BookingCard({ experience: e, addons, toggleAddon, selectedAddons, totalPrice, onViewReviews }: BookingCardProps) {
+  const showTag = !!e.tag && !(e.isFeatured && e.tag.trim().toLowerCase() === 'bestseller');
   const today = useMemo(() => startOfDay(new Date()), []);
   const quickDays = useMemo(() => Array.from({ length: QUICK_DAYS }, (_, i) => new Date(today.getTime() + i * DAY)), [today]);
 
@@ -226,58 +241,52 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       id="booking-card"
       className="scroll-mt-[90px] md:scroll-mt-[136px] overflow-hidden rounded-[28px] border border-[var(--border-light)] bg-white shadow-[0_30px_70px_-30px_color-mix(in_srgb,_var(--burgundy)_30%,_transparent)] [&>*]:min-w-0"
     >
-      {/* Title + price on a soft wash, so the card opens like an invitation rather than a form */}
-      <div className="relative bg-gradient-to-br from-[var(--gold-pale)]/60 via-white to-[var(--rose-light)]/50 px-4 pb-4 pt-5 sm:px-5">
-        <div style={{ fontFamily: FONT_SANS }} className="flex flex-wrap items-center gap-2">
-          <span className="text-[0.66rem] font-medium uppercase tracking-[0.2em] text-gold-deep">{e.subCategoryName}</span>
-          {e.isFeatured && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--burgundy)] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white">
-              <Sparkles size={10} /> Bestseller
-            </span>
-          )}
-          {/* Skip the tag when it only repeats the Bestseller badge. */}
-          {e.tag && !(e.isFeatured && e.tag.trim().toLowerCase() === 'bestseller') && (
-            <span className="rounded-full border border-[var(--gold)] bg-white px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[var(--burgundy)]">{e.tag}</span>
-          )}
-        </div>
-        <h1 style={{ fontFamily: FONT_SERIF }} className="mt-1.5 text-balance text-[1.65rem] font-semibold capitalize leading-[1.1] text-[var(--charcoal)] sm:text-[1.85rem]">
+      {/* Name and price together: one compact block that tells the guest what and how much
+          before the plan starts. */}
+      <div className="border-b border-[var(--sand)] px-4 pb-4 pt-5 sm:px-5">
+        <h1 style={{ fontFamily: FONT_SERIF }} className="text-balance text-[1.45rem] font-semibold capitalize leading-[1.15] text-[var(--charcoal)] sm:text-[1.6rem]">
           {e.name}
         </h1>
-        <ul style={{ fontFamily: FONT_SANS }} className="mt-2 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[0.8rem] text-[var(--mid)]">
+        <ul style={{ fontFamily: FONT_SANS }} className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.78rem] text-[var(--mid)]">
           <li>
             <button type="button" onClick={onViewReviews} className="group inline-flex items-center gap-1">
               <Star size={13} className="fill-[var(--gold)] text-[var(--gold)]" />
-              <span className="font-medium text-[var(--charcoal)]">{e.rating}</span>
-              <span className="underline decoration-[var(--gold)] underline-offset-4 transition-colors group-hover:text-[var(--burgundy)]">{e.reviewCount} reviews</span>
+              <span className="font-semibold text-[var(--charcoal)]">{e.rating}</span>
+              <span className="underline decoration-[var(--sand)] underline-offset-4 transition-colors group-hover:text-[var(--burgundy)]">({e.reviewCount})</span>
             </button>
           </li>
+          {e.isFeatured && (
+            <li className="inline-flex items-center gap-1 rounded-full bg-[var(--burgundy)] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white">
+              <Sparkles size={10} /> Bestseller
+            </li>
+          )}
+          {showTag && (
+            <li className="rounded-full border border-[var(--sand)] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[var(--burgundy)]">{e.tag}</li>
+          )}
+          {e.locations.length > 0 && (
+            <li className="inline-flex items-center gap-1 capitalize"><MapPin size={12} className="text-[var(--gold)]" /> {e.locations.slice(0, 2).join(', ')}</li>
+          )}
           {e.durationMinutes > 0 && (
-            <li className="inline-flex items-center gap-1"><Clock size={12} className="text-[var(--gold)]" /> {formatDuration(e.durationMinutes)} setup</li>
+            <li className="inline-flex items-center gap-1"><Clock size={12} className="text-[var(--gold)]" /> {formatDuration(e.durationMinutes)}</li>
           )}
           {e.maxCapacity > 0 && (
             <li className="inline-flex items-center gap-1"><Users size={12} className="text-[var(--gold)]" /> Up to {e.maxCapacity}</li>
           )}
         </ul>
 
-        <div className="mt-4 flex items-end justify-between gap-3">
-          <div>
-            <p style={{ fontFamily: FONT_SANS }} className="text-[0.62rem] font-medium uppercase tracking-[0.2em] text-[var(--mid)]">From</p>
-            <div className="flex flex-wrap items-baseline gap-2">
-              <span style={{ fontFamily: FONT_SERIF }} className="text-[2.2rem] font-bold leading-none text-[var(--charcoal)] tabular-nums">{formatINR(e.basePrice)}</span>
+        <div className="mt-3.5 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span style={{ fontFamily: FONT_SERIF }} className="text-[1.85rem] font-bold leading-none text-[var(--charcoal)] tabular-nums">{formatINR(e.basePrice)}</span>
               {e.discount > 0 && (
-                <span style={{ fontFamily: FONT_SANS }} className="text-[0.92rem] text-[var(--mid)] line-through tabular-nums">{formatINR(e.originalPrice)}</span>
+                <span style={{ fontFamily: FONT_SANS }} className="text-[0.86rem] text-[var(--mid)] line-through tabular-nums">{formatINR(e.originalPrice)}</span>
               )}
             </div>
-            <p style={{ fontFamily: FONT_SANS }} className="mt-1 text-[0.74rem] text-[var(--mid)]">per setup · all taxes included</p>
+            <p style={{ fontFamily: FONT_SANS }} className="mt-1 text-[0.72rem] text-[var(--mid)]">per setup · all taxes included</p>
           </div>
           {e.discount > 0 && (
-            // A rotated seal reads as an offer, not as another form chip.
-            <span
-              style={{ fontFamily: FONT_SANS }}
-              className="flex h-[66px] w-[66px] shrink-0 rotate-[-8deg] flex-col items-center justify-center rounded-full border-2 border-dashed border-[var(--leaf)] bg-leaf-light text-leaf"
-            >
-              <span className="text-[1.05rem] font-bold leading-none">{e.discount}%</span>
-              <span className="text-[0.56rem] font-semibold uppercase tracking-[0.12em]">off</span>
+            <span style={{ fontFamily: FONT_SANS }} className="shrink-0 rounded-full bg-leaf-light px-2.5 py-1 text-[0.72rem] font-semibold text-leaf">
+              {e.discount}% off
             </span>
           )}
         </div>
@@ -295,8 +304,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
 
           <ol>
             <Step n={next()} title="Pick a day" done={dateDone} summary={effectiveDate ? formatDay(effectiveDate) : undefined}>
-              {/* Fades out at the right edge to hint that the strip scrolls */}
-              <div ref={dateRef} className="-mx-1 flex gap-2 overflow-x-auto scrollbar-hide px-1 pb-1 pr-6 [mask-image:linear-gradient(to_right,black_82%,transparent)]">
+              <div ref={dateRef} className="grid grid-cols-3 gap-2">
                 {quickDays.map((d, i) => {
                   const active = sameDay(effectiveDate, d);
                   const soldOut = hasAnySlots && slotsOn(d).length === 0;
@@ -311,20 +319,21 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                       aria-label={`${formatDay(d)}${soldOut ? ', fully booked' : ''}`}
                       title={soldOut ? 'Fully booked' : undefined}
                       style={{ fontFamily: FONT_SANS }}
-                      className={`relative flex h-[78px] w-[62px] shrink-0 flex-col items-center justify-center rounded-2xl border text-center transition-all ${
+                      className={`relative flex h-[54px] w-full flex-col items-center justify-center rounded-xl border text-center transition-all ${
                         active
                           ? 'border-[var(--ink)] bg-[var(--ink)] text-white shadow-[0_10px_22px_-12px_var(--ink)]'
                           : `bg-white hover:-translate-y-0.5 hover:border-[var(--gold)] ${dateError ? 'border-[var(--rose)]' : 'border-[var(--sand)]'}`
                       } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:border-[var(--sand)]`}
                     >
-                      <span className={`text-[0.6rem] font-semibold uppercase tracking-[0.12em] ${active ? 'text-[var(--gold-bright)]' : weekend ? 'text-[var(--gold-dark)]' : 'text-[var(--mid)]'}`}>
-                        {i === 0 ? 'Today' : i === 1 ? 'Tmrw' : d.toLocaleDateString('en-IN', { weekday: 'short' })}
+                      <span className={`text-[0.58rem] font-semibold uppercase tracking-[0.12em] ${active ? 'text-[var(--gold-bright)]' : weekend ? 'text-[var(--gold-dark)]' : 'text-[var(--mid)]'}`}>
+                        {i === 0 ? 'Today' : 'Tomorrow'}
                       </span>
-                      <span style={{ fontFamily: FONT_SERIF }} className={`text-[1.35rem] font-semibold leading-none ${soldOut ? 'line-through' : ''}`}>{d.getDate()}</span>
-                      <span className={`text-[0.6rem] ${active ? 'text-white/70' : 'text-[var(--mid)]'}`}>{d.toLocaleDateString('en-IN', { month: 'short' })}</span>
+                      <span style={{ fontFamily: FONT_SERIF }} className={`mt-0.5 text-[1.02rem] font-semibold leading-none ${soldOut ? 'line-through' : ''}`}>
+                        {d.getDate()} <span className={`text-[0.8rem] font-medium ${active ? 'text-white/75' : 'text-[var(--mid)]'}`}>{d.toLocaleDateString('en-IN', { month: 'short' })}</span>
+                      </span>
                       {/* Availability dot */}
                       {hasAnySlots && (
-                        <span className={`absolute bottom-1.5 h-1 w-1 rounded-full ${soldOut ? 'bg-[var(--sand)]' : active ? 'bg-[var(--gold-bright)]' : 'bg-leaf'}`} />
+                        <span className={`absolute right-2 top-2 h-1.5 w-1.5 rounded-full ${soldOut ? 'bg-[var(--sand)]' : active ? 'bg-[var(--gold-bright)]' : 'bg-leaf'}`} />
                       )}
                     </button>
                   );
@@ -335,8 +344,11 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                   minDate={today}
                   customInput={<CalendarChip picked={effectiveDate && !inQuickRow(effectiveDate) ? effectiveDate : null} />}
                   calendarClassName="fm-datepicker"
-                  wrapperClassName="shrink-0"
+                  wrapperClassName="block [&>div]:block"
                   popperPlacement="bottom-end"
+                  // Render the calendar outside the card: the card clips its overflow, which hid it.
+                  portalId="fm-datepicker-portal"
+                  popperClassName="!z-[200]"
                 />
               </div>
               {hasAnySlots && (
@@ -384,34 +396,37 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               summary={selectedSlot ? selectedSlot.label : !hasAnySlots ? 'On request' : undefined}
             >
               {slots.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {slots.map((slot) => {
-                    const active = slot.id === effectiveSlotId;
-                    const { label, Icon } = daypart(slot.startTime);
-                    return (
-                      <button
-                        key={slot.id}
-                        type="button"
-                        onClick={() => setSlotId(slot.id)}
-                        aria-pressed={active}
-                        style={{ fontFamily: FONT_SANS }}
-                        className={`relative flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition-all ${
-                          active
-                            ? 'border-[var(--burgundy)] bg-[var(--rose-light)] shadow-[0_0_0_3px_color-mix(in_srgb,_var(--burgundy)_12%,_transparent)]'
-                            : 'border-[var(--sand)] bg-white hover:border-[var(--burgundy)]'
-                        }`}
-                      >
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${active ? 'bg-[var(--burgundy)] text-white' : 'bg-[var(--ivory)] text-[var(--gold-dark)]'}`}>
-                          <Icon size={15} />
-                        </span>
-                        <span className="min-w-0">
-                          <span className={`block text-[0.6rem] font-semibold uppercase tracking-[0.12em] ${active ? 'text-[var(--burgundy)]' : 'text-[var(--mid)]'}`}>{label}</span>
-                          <span className="block truncate text-[0.8rem] font-medium text-[var(--charcoal)] tabular-nums">{slot.label}</span>
-                          {slot.sublabel && <span className="block truncate text-[0.68rem] text-[var(--mid)]">{slot.sublabel}</span>}
-                        </span>
-                      </button>
-                    );
-                  })}
+                // Grouped by part of day: one short row per group keeps a long list of times compact.
+                <div className="grid gap-2.5">
+                  {groupByDaypart(slots).map(({ label, Icon, items }) => (
+                    <div key={label} className="grid grid-cols-1 items-start gap-1.5 sm:grid-cols-[86px_minmax(0,1fr)] sm:gap-2">
+                      <span style={{ fontFamily: FONT_SANS }} className="inline-flex sm:mt-1.5 items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-[0.1em] text-[var(--mid)]">
+                        <Icon size={14} className="text-[var(--gold-dark)]" /> {label}
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {items.map((slot) => {
+                          const active = slot.id === effectiveSlotId;
+                          return (
+                            <button
+                              key={slot.id}
+                              type="button"
+                              onClick={() => setSlotId(slot.id)}
+                              aria-pressed={active}
+                              title={slot.sublabel || undefined}
+                              style={{ fontFamily: FONT_SANS }}
+                              className={`rounded-full border px-3 py-1.5 text-[0.78rem] font-medium tabular-nums transition-colors ${
+                                active
+                                  ? 'border-[var(--burgundy)] bg-[var(--burgundy)] text-white'
+                                  : 'border-[var(--sand)] bg-white text-[var(--charcoal)] hover:border-[var(--burgundy)]'
+                              }`}
+                            >
+                              {slot.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p style={{ fontFamily: FONT_SANS }} className="flex items-start gap-2.5 rounded-2xl border border-dashed border-[var(--sand)] bg-[var(--ivory)] px-3.5 py-3 text-[0.8rem] leading-relaxed text-[var(--mid)]">
@@ -435,10 +450,17 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               n={next()}
               title="Where's the party?"
               done={venueDone}
-              summary={venueDone ? `Delivering to ${venue.pincode}` : undefined}
+              summary={venueDone ? `Setting up at ${venue.pincode}` : undefined}
               last={addons.length === 0}
             >
-              <PincodeChecker onResult={(pincode, result) => setVenue({ pincode, result })} />
+              <PincodeChecker
+                experienceId={e.id}
+                onResult={(pincode, result, area) => {
+                  setVenue({ pincode, result });
+                  // A serviceable pincode in one of this experience's cities picks that city, so its slots show.
+                  if (result === 'available' && area && e.locationOptions.some((l) => l.id === area.locationId)) setLocationId(area.locationId);
+                }}
+              />
             </Step>
 
             {addons.length > 0 && (
@@ -533,9 +555,6 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               {formatINR(totalPrice)} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
             </span>
           </button>
-          {!venueDone && (
-            <p style={{ fontFamily: FONT_SANS }} className="mt-2 text-center text-[0.72rem] text-[var(--mid)]">Tip: check your pincode above so we can confirm delivery.</p>
-          )}
         </div>
 
         <ul style={{ fontFamily: FONT_SANS }} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[0.72rem] text-[var(--mid)]">

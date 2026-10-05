@@ -62,6 +62,9 @@ export default function CancellationPolicy({ policies }: { policies: ListItem[] 
               </span>
             </li>
           ))}
+          <li style={{ fontFamily: FONT_SANS }} className="flex items-center gap-1.5 border-t border-dashed border-[var(--sand)] py-2.5 text-[0.74rem] text-[var(--mid)]">
+            <Info size={13} className="shrink-0 text-[var(--gold)]" /> Timelines count from the start of your selected slot.
+          </li>
         </ol>
       )}
 
@@ -76,10 +79,6 @@ export default function CancellationPolicy({ policies }: { policies: ListItem[] 
         </div>
       )}
 
-      <p style={{ fontFamily: FONT_SANS }} className="mt-3 flex items-start gap-2 text-[0.76rem] text-[var(--mid)]">
-        <Info size={14} className="text-[var(--gold)] shrink-0 mt-0.5" />
-        Timelines count from the start of your selected slot.
-      </p>
     </SectionCard>
   );
 }

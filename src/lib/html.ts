@@ -16,7 +16,14 @@ export function toPlainText(text: string | null | undefined): string {
   if (!value) return '';
   if (!looksLikeHtml(value)) return value;
   // DOMParser does not run scripts, and server-side rendering falls back to a regex strip.
-  if (typeof DOMParser === 'undefined') return value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (typeof DOMParser === 'undefined')
+    return value
+      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   const doc = new DOMParser().parseFromString(value, 'text/html');
+  // Script and style contents are code, not words: remove them before reading the text.
+  doc.body.querySelectorAll('script, style, noscript, template, iframe, object, embed, svg, math').forEach((el) => el.remove());
   return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim();
 }

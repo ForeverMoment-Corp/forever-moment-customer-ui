@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- this file is the boundary that maps the untyped API payload */
 import type { ExperienceVM, FaqItem, ListItem, LocationOption, MediaItem, TimeSlot } from './types';
 import { slugify } from '@/features/experiences/utils/slug';
+import { toPlainText } from '@/lib/html';
 
 export const FONT_SANS = "'Jost', sans-serif";
 export const FONT_SERIF = "'Cormorant Garamond', serif";
@@ -15,6 +16,13 @@ export const formatDuration = (minutes: number) => {
 };
 
 export { slugify };
+
+/**
+ * Rich-text fields from the admin editor (description, short description, what to bring, terms).
+ * The markup is kept for `RichText` to render; a value with no visible text, such as the
+ * editor's empty `<p><br></p>`, becomes '' so callers can simply test for presence.
+ */
+const richText = (value: unknown) => (typeof value === 'string' && toPlainText(value) ? value.trim() : '');
 
 const titleCase = (s: string) =>
   s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
@@ -129,10 +137,10 @@ export function normalizeExperience(raw: any): ExperienceVM {
     basePrice,
     originalPrice,
     discount,
-    shortDescription: detail.shortDescription || '',
-    description: detail.description || '',
-    whatToBring: typeof detail.whatToBring === 'string' ? detail.whatToBring.trim() : '',
-    termsConditions: typeof detail.termsConditions === 'string' ? detail.termsConditions.trim() : '',
+    shortDescription: richText(detail.shortDescription),
+    description: richText(detail.description),
+    whatToBring: richText(detail.whatToBring),
+    termsConditions: richText(detail.termsConditions),
     durationMinutes: Number(detail.durationMinutes) || 0,
     maxCapacity: Number(detail.maxCapacity) || 0,
     media: mapMedia(raw?.media, name),

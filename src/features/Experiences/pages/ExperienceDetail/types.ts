@@ -68,6 +68,7 @@ export interface ExperienceVM {
   basePrice: number;
   originalPrice: number;
   discount: number;
+  /** HTML or plain text from the admin editor; render with RichText. '' when it has no visible text. */
   shortDescription: string;
   description: string;
   whatToBring: string;
