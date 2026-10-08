@@ -14,12 +14,17 @@ type Dispatch = (action: { type: string; payload?: unknown }) => void;
 const errorMessage = (error: unknown, fallback: string) =>
     error instanceof Error && error.message ? error.message : fallback;
 
-/** GET /public/experiences */
+/** GET /public/experiences (or location-specific) */
 export const getData = () => {
-    return async (dispatch: Dispatch) => {
+    return async (dispatch: Dispatch, getState: any) => {
         dispatch({ type: types.GET_DATA });
         try {
-            const data = await fetchData();
+            const state = getState();
+            const locationName = state.home?.selectedLocation;
+            const location = state.home?.locations?.find((l: any) => l.name === locationName);
+            const locationId = location?.id;
+            
+            const data = await fetchData(locationId);
             dispatch({ type: types.GET_DATA_SUCCESS, payload: data ?? [] });
         } catch (error: unknown) {
             dispatch({

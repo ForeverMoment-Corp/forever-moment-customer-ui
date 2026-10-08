@@ -6,6 +6,7 @@ import { experiencesReducer } from '@/features/experiences/store/reducer';
 import { whyChooseUsReducer } from '@/features/whyChooseUs/store/reducer';
 import testimonialsReducer from '@/features/testimonials/store/reducer';
 import { configReducer } from '@/store/config/reducer';
+import { authReducer } from '@/features/auth/store/authSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     whyChooseUs: whyChooseUsReducer,
     testimonials: testimonialsReducer,
     config: configReducer as any,
+    auth: authReducer,
   },
 });
 

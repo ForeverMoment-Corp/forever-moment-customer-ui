@@ -25,6 +25,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getCategories } from "@/features/header/store/actions";
 import { getLocations, setSelectedLocation } from "@/features/home/store/actions";
 import { CUSTOMER_CONFIG } from "@/config/constants";
+import { openLoginModal } from "@/features/auth/store/authSlice";
 
 /* ────────────────────────────────────────────────────────────────
    Colours come from the app palette in src/styles/theme.scss
@@ -125,11 +126,12 @@ const Navbar = () => {
   const selectedLocation = useAppSelector((state) => state.home?.selectedLocation ?? "Delhi NCR");
 
   useEffect(() => {
-    dispatch(getCategories());
     if (locations.length === 0) {
       dispatch(getLocations());
+    } else {
+      dispatch(getCategories());
     }
-  }, [dispatch, locations.length]);
+  }, [dispatch, locations.length, selectedLocation]);
 
   const categories: NavCategory[] = apiCategories
     .filter((cat) => cat.isActive)
@@ -415,14 +417,16 @@ const Navbar = () => {
                       </p>
                     </div>
                     <div className="px-4 py-4 flex gap-2 border-b border-sand">
-                      <Link
-                        to="/login"
-                        onClick={() => setGuestOpen(false)}
+                      <button
+                        onClick={() => {
+                          setGuestOpen(false);
+                          dispatch(openLoginModal());
+                        }}
                         style={sans}
                         className="flex-1 text-center py-2.5 rounded-full border border-gold text-gold-dark text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-gold hover:text-white transition-all"
                       >
                         Login
-                      </Link>
+                      </button>
                       <Link
                         to="/register"
                         onClick={() => setGuestOpen(false)}
@@ -671,15 +675,29 @@ const Navbar = () => {
               <ul className="mb-4">
                 {guestMenuItems.map((item) => (
                   <li key={item.label}>
-                    <Link
-                      to={item.to}
-                      onClick={closeMobile}
-                      className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
-                      style={{ ...sans, fontSize: "0.8rem" }}
-                    >
-                      <item.icon size={15} className="text-gold" />
-                      {item.label}
-                    </Link>
+                    {item.to === "/login" ? (
+                      <button
+                        onClick={() => {
+                          closeMobile();
+                          dispatch(openLoginModal());
+                        }}
+                        className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
+                        style={{ ...sans, fontSize: "0.8rem" }}
+                      >
+                        <item.icon size={15} className="text-gold" />
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link
+                        to={item.to}
+                        onClick={closeMobile}
+                        className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
+                        style={{ ...sans, fontSize: "0.8rem" }}
+                      >
+                        <item.icon size={15} className="text-gold" />
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

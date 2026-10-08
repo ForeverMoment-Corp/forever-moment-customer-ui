@@ -1,0 +1,78 @@
+@reference "../../../index.css";
+
+.overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4;
+}
+
+.modalContent {
+  @apply relative w-full max-w-[420px] bg-[#f8f9fb] rounded-[32px] p-8 shadow-2xl;
+  font-family: 'Jost', sans-serif;
+}
+
+.title {
+  @apply text-[28px] font-bold text-gray-900 mb-2 leading-tight;
+}
+
+.subtitle {
+  @apply text-[15px] text-gray-600 mb-8 leading-relaxed pr-4;
+}
+
+.inputGroup {
+  @apply relative flex items-center border border-[#7C3AED] rounded-xl bg-white overflow-hidden mb-4 transition-all;
+}
+
+.countryCode {
+  @apply flex items-center justify-center font-bold text-gray-800 px-4 py-4 bg-transparent border-r border-gray-200 h-full;
+}
+
+.inputField {
+  @apply flex-1 w-full px-4 py-4 bg-transparent outline-none text-gray-800 text-[16px] placeholder-gray-400 font-medium;
+}
+
+.otpBtn {
+  @apply w-full bg-[#C4B5FD] text-white font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center text-[16px] mb-8 mt-4;
+}
+
+.otpBtnActive {
+  @apply bg-[#7C3AED] hover:bg-[#6D28D9] cursor-pointer;
+}
+
+.dividerContainer {
+  @apply flex items-center mb-6;
+}
+
+.dividerLine {
+  @apply flex-grow border-t border-gray-200;
+}
+
+.dividerText {
+  @apply px-4 text-[13px] text-gray-400 font-medium;
+}
+
+.socialGrid {
+  @apply grid grid-cols-3 gap-3 mb-8;
+}
+
+.socialBtn {
+  @apply flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors shadow-sm;
+}
+
+.socialIcon {
+  @apply text-lg;
+}
+
+.socialText {
+  @apply font-bold text-gray-700 text-[13px];
+}
+
+.footerText {
+  @apply text-center text-[12px] text-gray-400 font-medium px-4;
+}
+
+.link {
+  @apply text-[#7C3AED] font-bold hover:underline;
+}
+
+.closeBtn {
+  @apply absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100;
+}

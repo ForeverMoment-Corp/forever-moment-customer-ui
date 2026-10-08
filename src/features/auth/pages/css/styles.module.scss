@@ -1,0 +1,29 @@
+@reference "../../../../index.css";
+
+.inputField {
+  @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors outline-none text-gray-800 text-sm;
+}
+
+.primaryBtn {
+  @apply w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2;
+}
+
+.socialBtn {
+  @apply w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 relative;
+}
+
+.socialIcon {
+  @apply absolute left-4 text-xl;
+}
+
+.dividerContainer {
+  @apply flex items-center my-6;
+}
+
+.dividerLine {
+  @apply flex-grow border-t border-gray-200;
+}
+
+.dividerText {
+  @apply px-4 text-sm text-gray-500 font-medium;
+}

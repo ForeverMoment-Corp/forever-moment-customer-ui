@@ -5,6 +5,7 @@ import Footer from '@/components/navigation/footer';
 import FloatingBookingCTA from '@/components/FloatingBookingCTA/FloatingBooking';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import BottomNav from '@/components/layout/BottomNav';
+import LoginModal from '@/features/auth/components/LoginModal';
 
 const CustomerLayout = () => {
   const { pathname } = useLocation();
@@ -28,6 +29,9 @@ const CustomerLayout = () => {
       <WhatsAppButton />
       <BottomNav />
       <Footer />
+      
+      {/* Global Modals */}
+      <LoginModal />
     </div>
   );
 };

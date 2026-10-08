@@ -11,10 +11,15 @@ export const setSearchQuery = (query: string) => ({
 });
 
 export const getCategories = () => {
-    return async (dispatch: any) => {
+    return async (dispatch: any, getState: any) => {
         dispatch({ type: types.GET_CATEGORIES });
         try {
-            const categories = await fetchCategories();
+            const state = getState();
+            const locationName = state.home?.selectedLocation;
+            const location = state.home?.locations?.find((l: any) => l.name === locationName);
+            const locationId = location?.id;
+
+            const categories = await fetchCategories(locationId);
             console.log('API response categories:', categories);
             dispatch({
                 type: types.GET_CATEGORIES_SUCCESS,

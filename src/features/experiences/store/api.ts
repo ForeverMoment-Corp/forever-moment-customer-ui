@@ -29,9 +29,13 @@ async function getPublic<T>(path: string, fallbackMessage: string, emptyOn404?: 
     return (body?.response ?? null) as T;
 }
 
-/** GET /public/experiences — all active experiences. */
-export const fetchData = () =>
-    getPublic<ExperienceListItem[]>('/public/experiences', 'Failed to fetch experiences', []);
+/** GET /public/locations/{locationId}/experiences — all active experiences for location. */
+export const fetchData = (locationId?: number) => {
+    if (locationId) {
+        return getPublic<ExperienceListItem[]>(`/public/locations/${encodeURIComponent(String(locationId))}/experiences`, 'Failed to fetch experiences', []);
+    }
+    return getPublic<ExperienceListItem[]>('/public/experiences', 'Failed to fetch experiences', []);
+};
 
 /** GET /public/experiences/featured — experiences flagged as featured. */
 export const fetchFeaturedExperiences = () =>

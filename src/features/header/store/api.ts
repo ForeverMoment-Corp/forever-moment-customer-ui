@@ -1,7 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api/platform';
 
-export const fetchCategories = async () => {
-    const response = await fetch(`${API_BASE}/public/categories`);
+export const fetchCategories = async (locationId?: number) => {
+    const endpoint = locationId 
+        ? `${API_BASE}/public/locations/${encodeURIComponent(String(locationId))}/categories`
+        : `${API_BASE}/public/categories`;
+    const response = await fetch(endpoint);
     if (!response.ok) {
         throw new Error(`Failed to fetch categories: ${response.statusText}`);
     }
