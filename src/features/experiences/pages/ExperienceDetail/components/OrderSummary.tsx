@@ -5,14 +5,14 @@ interface Props {
   basePrice: number;
   originalPrice: number;
   addons: AddOn[];
+  couponDiscount?: number;
 }
 
-export default function OrderSummary({ basePrice, originalPrice, addons }: Props) {
+export default function OrderSummary({ basePrice, originalPrice, addons, couponDiscount = 0 }: Props) {
   // `addons` already holds only what the guest ticked, from the panel or the catalogue section.
   const selected = addons.filter((a) => a.added);
   const addonsTotal = selected.reduce((sum, a) => sum + a.price, 0);
-  const total = basePrice + addonsTotal;
-  const savings = Math.max(originalPrice - basePrice, 0);
+  const total = Math.max(0, basePrice + addonsTotal - couponDiscount);
 
   return (
     <dl style={{ fontFamily: FONT_SANS }} className="pt-3 border-t border-[var(--border-light)] text-[0.86rem] space-y-1.5">
@@ -26,10 +26,10 @@ export default function OrderSummary({ basePrice, originalPrice, addons }: Props
           <dd className="shrink-0 tabular-nums">{a.isFree ? 'Free' : formatINR(a.price)}</dd>
         </div>
       ))}
-      {savings > 0 && (
+      {couponDiscount > 0 && (
         <div className="flex justify-between text-leaf">
-          <dt>Launch offer</dt>
-          <dd className="tabular-nums">− {formatINR(savings)}</dd>
+          <dt>Coupon discount</dt>
+          <dd className="tabular-nums">− {formatINR(couponDiscount)}</dd>
         </div>
       )}
       <div className="pt-2.5 border-t border-[var(--border-light)] flex items-baseline justify-between font-semibold">

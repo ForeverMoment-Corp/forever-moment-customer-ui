@@ -140,15 +140,15 @@ export default function ExperienceDetails({
         .map((a) => {
           const price = a.isFree ? 0 : Number(a.effectivePrice) || 0;
           return {
-          id: a.addonId,
-          name: a.name,
-          description: a.description?.trim() || undefined,
-          price,
-          basePrice: Number(a.basePrice) || 0,
-          // A zero price is free to the guest, whatever the flag says.
-          isFree: !!a.isFree || price <= 0,
-          thumbnailUrl: a.thumbnailUrl || a.heroUrl || undefined,
-          added: selectedAddons.includes(a.addonId),
+            id: a.addonId,
+            name: a.name,
+            description: a.description?.trim() || undefined,
+            price,
+            basePrice: Number(a.basePrice) || 0,
+            // A zero price is free to the guest, whatever the flag says.
+            isFree: !!a.isFree || price <= 0,
+            thumbnailUrl: a.thumbnailUrl || a.heroUrl || undefined,
+            added: selectedAddons.includes(a.addonId),
           };
         }),
     [experienceAddons, addonKey, selectedAddons],

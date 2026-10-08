@@ -127,3 +127,44 @@ export async function checkPincodeServiceability(experienceId: string | number, 
     ]);
     return { serviceable: serviceable === true, area };
 }
+
+/** GET /public/coupons/experiences/{experienceId} */
+export const fetchExperienceCoupons = (experienceId: string | number) =>
+    getPublic<any[]>(
+        `/public/coupons/experiences/${encodeURIComponent(String(experienceId))}`,
+        'Failed to fetch coupons',
+        []
+    );
+
+export interface ValidateCouponRequest {
+    code: string;
+    experienceId?: number;
+    bookingAmount?: number;
+}
+
+export interface CouponValidationResponse {
+    isValid: boolean;
+    discountAmount: number;
+    discountType: 'PERCENTAGE' | 'FLAT';
+    message?: string;
+    finalPrice?: number;
+}
+
+/** POST /public/coupons/validate */
+export async function validateCoupon(data: ValidateCouponRequest): Promise<CouponValidationResponse> {
+    const response = await fetch(`${API_BASE}/public/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    let body: Partial<ApiEnvelope<CouponValidationResponse>> | null = null;
+    try {
+        body = await response.json() as ApiEnvelope<CouponValidationResponse>;
+    } catch {
+        body = null;
+    }
+    if (!response.ok) {
+        throw new Error(body?.msg || `Failed to validate coupon: ${response.statusText || response.status}`);
+    }
+    return body?.response as CouponValidationResponse;
+}

@@ -89,9 +89,8 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
               ev.stopPropagation();
               onToggleLike(e.id);
             }}
-            className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full shadow-sm backdrop-blur transition-colors ${
-              isLiked ? 'bg-[var(--burgundy)] text-white' : 'bg-white/90 text-[var(--mid)] hover:text-[var(--burgundy)]'
-            }`}
+            className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full shadow-sm backdrop-blur transition-colors ${isLiked ? 'bg-[var(--burgundy)] text-white' : 'bg-white/90 text-[var(--mid)] hover:text-[var(--burgundy)]'
+              }`}
           >
             <Heart size={15} className={isLiked ? 'fill-white' : ''} />
           </button>

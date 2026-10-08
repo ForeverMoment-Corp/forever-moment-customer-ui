@@ -3,9 +3,7 @@ export const combos = [
     id: 9001,
     title: 'Romantic Surprise Setup',
     description: 'Rose decoration + candle dinner + chocolate hamper — perfect anniversary surprise.',
-    badge: 'Save ₹800',
     comboPrice: 3999,
-    originalPrice: 4799,
     category: 'Anniversary',
     emoji: '💍',
     items: [
@@ -18,9 +16,7 @@ export const combos = [
     id: 9002,
     title: 'Birthday Blast Pack',
     description: 'Balloon decoration + custom cake + flower bouquet — the ultimate birthday celebration.',
-    badge: 'Save ₹600',
     comboPrice: 4499,
-    originalPrice: 5099,
     category: 'Birthday',
     emoji: '🎂',
     items: [
@@ -33,9 +29,7 @@ export const combos = [
     id: 9003,
     title: 'Love & Flowers Combo',
     description: 'Red roses bouquet + heart-shaped cake + personalized card — say it perfectly.',
-    badge: 'Save ₹500',
     comboPrice: 2999,
-    originalPrice: 3499,
     category: 'Romantic',
     emoji: '🌹',
     items: [
@@ -48,9 +42,7 @@ export const combos = [
     id: 9004,
     title: 'Luxury Gift Hamper',
     description: 'Premium dry fruits + exotic flowers + gourmet chocolates — the finest gifting combo.',
-    badge: 'Save ₹1000',
     comboPrice: 5499,
-    originalPrice: 6499,
     category: 'Gifts',
     emoji: '🧺',
     items: [
@@ -63,9 +55,7 @@ export const combos = [
     id: 9005,
     title: 'Mom\'s Special Combo',
     description: 'Orchid bouquet + spa hamper + photo frame — show mom how much she means.',
-    badge: 'Save ₹700',
     comboPrice: 3799,
-    originalPrice: 4499,
     category: 'For Her',
     emoji: '💐',
     items: [
@@ -78,9 +68,7 @@ export const combos = [
     id: 9006,
     title: 'Corporate Gifting Pack',
     description: 'Premium dry fruit box + branded diary set + artisan tea box — perfect for clients.',
-    badge: 'Save ₹900',
     comboPrice: 4299,
-    originalPrice: 5199,
     category: 'Corporate',
     emoji: '💼',
     items: [
@@ -93,9 +81,7 @@ export const combos = [
     id: 9007,
     title: 'Wedding Decor Bundle',
     description: 'Floral backdrop + fairy lights + welcome bouquet — transform any venue beautifully.',
-    badge: 'Save ₹2000',
     comboPrice: 12999,
-    originalPrice: 14999,
     category: 'Wedding',
     emoji: '💒',
     items: [
@@ -108,9 +94,7 @@ export const combos = [
     id: 9008,
     title: 'Kids Birthday Magic',
     description: 'Theme balloon setup + cartoon cake + candy hamper — make little ones extra happy.',
-    badge: 'Save ₹550',
     comboPrice: 3299,
-    originalPrice: 3849,
     category: 'Birthday',
     emoji: '🎈',
     items: [
@@ -123,9 +107,7 @@ export const combos = [
     id: 9009,
     title: 'Proposal Night Pack',
     description: 'Rose petal path + ring presentation box + champagne hamper — pop the question perfectly.',
-    badge: 'Save ₹1200',
     comboPrice: 6999,
-    originalPrice: 8199,
     category: 'Romantic',
     emoji: '💎',
     items: [
@@ -138,9 +120,7 @@ export const combos = [
     id: 9010,
     title: 'Self Care Sunday',
     description: 'Aromatherapy candles + bath salts + luxury chocolates — gift the gift of relaxation.',
-    badge: 'Save ₹450',
     comboPrice: 2499,
-    originalPrice: 2949,
     category: 'For Her',
     emoji: '🧘',
     items: [

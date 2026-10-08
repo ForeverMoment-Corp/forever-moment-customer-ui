@@ -8,6 +8,7 @@ import OrderSummary from './OrderSummary';
 import PincodeChecker, { type PincodeResult } from './PincodeChecker';
 import type { AddOn, ExperienceVM } from '../types';
 import { FONT_SANS, FONT_SERIF, formatDuration, formatINR } from '../normalize';
+import { fetchExperienceCoupons, validateCoupon } from '../../../store/api';
 import { whatsappLink } from '@/features/help/contact';
 
 export interface BookingCardProps {
@@ -75,11 +76,10 @@ const CalendarChip = forwardRef<HTMLButtonElement, { onClick?: () => void; picke
     aria-pressed={!!picked}
     aria-label={picked ? `Change date, currently ${picked.toDateString()}` : 'Pick a later date from the calendar'}
     style={{ fontFamily: FONT_SANS }}
-    className={`relative flex h-[54px] w-full flex-col items-center justify-center rounded-xl border text-center transition-all ${
-      picked
+    className={`relative flex h-[54px] w-full flex-col items-center justify-center rounded-xl border text-center transition-all ${picked
         ? 'border-[var(--ink)] bg-[var(--ink)] text-white shadow-[0_10px_22px_-12px_var(--ink)]'
         : 'border-dashed border-[var(--gold)] bg-[var(--gold-pale)]/40 text-[var(--gold-dark)] hover:bg-[var(--gold-pale)]'
-    }`}
+      }`}
   >
     {picked ? (
       <>
@@ -131,11 +131,10 @@ function Step({
       <span
         aria-hidden
         style={{ fontFamily: FONT_SANS }}
-        className={`relative z-[1] mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-[0.74rem] font-semibold transition-all duration-300 ${
-          done
+        className={`relative z-[1] mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-[0.74rem] font-semibold transition-all duration-300 ${done
             ? 'bg-[var(--gold)] text-white shadow-[0_0_0_4px_color-mix(in_srgb,_var(--gold)_18%,_transparent)]'
             : 'border-2 border-[var(--sand)] bg-white text-[var(--umber)]'
-        }`}
+          }`}
       >
         {done ? <Check size={14} strokeWidth={3} /> : n}
       </span>
@@ -176,6 +175,17 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const [couponOpen, setCouponOpen] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [couponNote, setCouponNote] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+  const [couponsList, setCouponsList] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchExperienceCoupons(e.id).then(setCouponsList).catch(console.error);
+  }, [e.id]);
+
   const [venue, setVenue] = useState<{ pincode: string; result: PincodeResult }>({ pincode: '', result: null });
   const dateRef = useRef<HTMLDivElement>(null);
 
@@ -227,11 +237,44 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
     // TODO: hand off to checkout once the booking flow exists.
   };
 
-  const applyCoupon = () => {
-    const code = coupon.trim().toUpperCase();
+  const applyCoupon = async (codeToApply = coupon) => {
+    const code = codeToApply.trim().toUpperCase();
     if (!code) return;
-    setCouponNote(`${code} will be validated at checkout.`);
+
+    setCouponLoading(true);
+    setCouponNote(null);
+    try {
+      const res = await validateCoupon({
+        code: code,
+        experienceId: e.id,
+        bookingAmount: totalPrice,
+      });
+      if (res.isValid || res.discountAmount !== undefined) {
+        setAppliedCoupon({
+          code: code,
+          discountAmount: res.discountAmount || 0,
+        });
+        setCoupon(code);
+        setCouponNote(`Coupon applied successfully!`);
+      } else {
+        setAppliedCoupon(null);
+        setCouponNote(res.message || 'Invalid coupon code.');
+      }
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      setCouponNote(err.message || 'Failed to apply coupon.');
+    } finally {
+      setCouponLoading(false);
+    }
   };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCoupon('');
+    setCouponNote(null);
+  };
+
+  const finalPrice = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discountAmount) : totalPrice;
 
   let n = 0;
   const next = () => ++n;
@@ -278,17 +321,9 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span style={{ fontFamily: FONT_SERIF }} className="text-[1.85rem] font-bold leading-none text-[var(--charcoal)] tabular-nums">{formatINR(e.basePrice)}</span>
-              {e.discount > 0 && (
-                <span style={{ fontFamily: FONT_SANS }} className="text-[0.86rem] text-[var(--mid)] line-through tabular-nums">{formatINR(e.originalPrice)}</span>
-              )}
             </div>
             <p style={{ fontFamily: FONT_SANS }} className="mt-1 text-[0.72rem] text-[var(--mid)]">per setup · all taxes included</p>
           </div>
-          {e.discount > 0 && (
-            <span style={{ fontFamily: FONT_SANS }} className="shrink-0 rounded-full bg-leaf-light px-2.5 py-1 text-[0.72rem] font-semibold text-leaf">
-              {e.discount}% off
-            </span>
-          )}
         </div>
       </div>
 
@@ -319,11 +354,10 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                       aria-label={`${formatDay(d)}${soldOut ? ', fully booked' : ''}`}
                       title={soldOut ? 'Fully booked' : undefined}
                       style={{ fontFamily: FONT_SANS }}
-                      className={`relative flex h-[54px] w-full flex-col items-center justify-center rounded-xl border text-center transition-all ${
-                        active
+                      className={`relative flex h-[54px] w-full flex-col items-center justify-center rounded-xl border text-center transition-all ${active
                           ? 'border-[var(--ink)] bg-[var(--ink)] text-white shadow-[0_10px_22px_-12px_var(--ink)]'
                           : `bg-white hover:-translate-y-0.5 hover:border-[var(--gold)] ${dateError ? 'border-[var(--rose)]' : 'border-[var(--sand)]'}`
-                      } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:border-[var(--sand)]`}
+                        } disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:border-[var(--sand)]`}
                     >
                       <span className={`text-[0.58rem] font-semibold uppercase tracking-[0.12em] ${active ? 'text-[var(--gold-bright)]' : weekend ? 'text-[var(--gold-dark)]' : 'text-[var(--mid)]'}`}>
                         {i === 0 ? 'Today' : 'Tomorrow'}
@@ -377,9 +411,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                         aria-checked={active}
                         onClick={() => setLocationId(l.id)}
                         style={{ fontFamily: FONT_SANS }}
-                        className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[0.84rem] capitalize transition-all ${
-                          active ? 'bg-white font-semibold text-[var(--charcoal)] shadow-[0_4px_12px_-6px_color-mix(in_srgb,_var(--ink)_40%,_transparent)]' : 'text-[var(--mid)] hover:text-[var(--charcoal)]'
-                        }`}
+                        className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[0.84rem] capitalize transition-all ${active ? 'bg-white font-semibold text-[var(--charcoal)] shadow-[0_4px_12px_-6px_color-mix(in_srgb,_var(--ink)_40%,_transparent)]' : 'text-[var(--mid)] hover:text-[var(--charcoal)]'
+                          }`}
                       >
                         <MapPin size={13} className={active ? 'text-[var(--gold)]' : ''} /> {l.name}
                       </button>
@@ -414,11 +447,10 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                               aria-pressed={active}
                               title={slot.sublabel || undefined}
                               style={{ fontFamily: FONT_SANS }}
-                              className={`rounded-full border px-3 py-1.5 text-[0.78rem] font-medium tabular-nums transition-colors ${
-                                active
+                              className={`rounded-full border px-3 py-1.5 text-[0.78rem] font-medium tabular-nums transition-colors ${active
                                   ? 'border-[var(--burgundy)] bg-[var(--burgundy)] text-white'
                                   : 'border-[var(--sand)] bg-white text-[var(--charcoal)] hover:border-[var(--burgundy)]'
-                              }`}
+                                }`}
                             >
                               {slot.label}
                             </button>
@@ -506,12 +538,23 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
 
           {/* The perforation already separates the bill, so drop the summary's own top rule */}
           <div className="px-4 pb-4 pt-1 [&>dl]:border-t-0 [&>dl]:pt-0">
-            <OrderSummary basePrice={e.basePrice} originalPrice={e.originalPrice} addons={selectedAddons} />
+            <OrderSummary basePrice={e.basePrice} originalPrice={e.originalPrice} addons={selectedAddons} couponDiscount={appliedCoupon?.discountAmount} />
 
             {!couponOpen ? (
               <button type="button" onClick={() => setCouponOpen(true)} style={{ fontFamily: FONT_SANS }} className="mt-3 inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-[var(--burgundy)] underline-offset-4 hover:underline">
                 <Tag size={13} /> Have a coupon code?
               </button>
+            ) : appliedCoupon ? (
+              <div className="mt-3 flex items-center justify-between rounded-[14px] border border-leaf bg-leaf-light/30 px-3.5 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Tag size={15} className="text-leaf" />
+                  <div className="min-w-0">
+                    <p style={{ fontFamily: FONT_SANS }} className="text-[0.8rem] font-bold text-leaf uppercase">{appliedCoupon.code}</p>
+                    <p style={{ fontFamily: FONT_SANS }} className="text-[0.72rem] font-medium text-leaf">-{formatINR(appliedCoupon.discountAmount)} saved!</p>
+                  </div>
+                </div>
+                <button type="button" onClick={removeCoupon} style={{ fontFamily: FONT_SANS }} className="text-[0.72rem] font-semibold text-[var(--rose)] hover:underline">Remove</button>
+              </div>
             ) : (
               <div className="mt-3">
                 <div className="flex h-11 items-center gap-2 rounded-[14px] border border-[var(--sand)] bg-white pl-3.5 pr-1.5 transition-colors focus-within:border-[var(--charcoal)]">
@@ -526,14 +569,37 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                     onKeyDown={(ev) => ev.key === 'Enter' && applyCoupon()}
                     placeholder="Enter code"
                     aria-label="Coupon code"
+                    disabled={couponLoading}
                     style={{ fontFamily: FONT_SANS }}
-                    className="min-w-0 flex-1 bg-transparent text-[0.88rem] uppercase tracking-wider text-[var(--charcoal)] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-[var(--mid)]"
+                    className="min-w-0 flex-1 bg-transparent text-[0.88rem] uppercase tracking-wider text-[var(--charcoal)] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-[var(--mid)] disabled:opacity-50"
                   />
-                  <button type="button" onClick={applyCoupon} disabled={!coupon.trim()} style={{ fontFamily: FONT_SANS }} className="shrink-0 rounded-[10px] px-3 py-2 text-[0.8rem] font-semibold text-[var(--burgundy)] transition-colors hover:bg-[var(--rose-light)] disabled:opacity-40 disabled:hover:bg-transparent">
-                    Apply
+                  <button type="button" onClick={() => applyCoupon()} disabled={!coupon.trim() || couponLoading} style={{ fontFamily: FONT_SANS }} className="shrink-0 rounded-[10px] px-3 py-2 text-[0.8rem] font-semibold text-[var(--burgundy)] transition-colors hover:bg-[var(--rose-light)] disabled:opacity-40 disabled:hover:bg-transparent">
+                    {couponLoading ? 'Applying...' : 'Apply'}
                   </button>
                 </div>
-                {couponNote && <p style={{ fontFamily: FONT_SANS }} className="mt-1.5 text-[0.76rem] text-[var(--mid)]">{couponNote}</p>}
+                {couponNote && <p style={{ fontFamily: FONT_SANS }} className={`mt-1.5 text-[0.76rem] ${couponNote.includes('success') ? 'text-leaf' : 'text-[var(--rose)]'}`}>{couponNote}</p>}
+
+                {couponsList.length > 0 && (
+                  <div className="mt-3.5 flex flex-col gap-2">
+                    <p style={{ fontFamily: FONT_SANS }} className="text-[0.72rem] font-semibold uppercase tracking-wider text-[var(--mid)]">Available Offers</p>
+                    {couponsList.map((c: any) => (
+                      <button
+                        key={c.code || c.couponCode}
+                        type="button"
+                        onClick={() => applyCoupon(c.code || c.couponCode)}
+                        disabled={couponLoading}
+                        style={{ fontFamily: FONT_SANS }}
+                        className="flex items-center justify-between rounded-[12px] border border-dashed border-[var(--gold)] bg-[var(--gold-pale)]/20 p-2.5 transition-colors hover:bg-[var(--gold-pale)]/40 disabled:opacity-50"
+                      >
+                        <div className="text-left min-w-0 pr-3">
+                          <p className="text-[0.8rem] font-bold text-[var(--burgundy)] uppercase truncate">{c.code || c.couponCode}</p>
+                          {c.description && <p className="text-[0.72rem] text-[var(--charcoal)] mt-0.5 leading-snug line-clamp-2">{c.description}</p>}
+                        </div>
+                        <span className="shrink-0 text-[0.76rem] font-semibold text-[var(--gold-dark)]">Apply</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -552,7 +618,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               <span className="block text-[0.7rem] text-white/75">Instant confirmation · pay securely</span>
             </span>
             <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-white/15 px-3.5 text-[0.95rem] font-semibold tabular-nums transition-colors group-hover:bg-white/25">
-              {formatINR(totalPrice)} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              {formatINR(finalPrice)} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
             </span>
           </button>
         </div>

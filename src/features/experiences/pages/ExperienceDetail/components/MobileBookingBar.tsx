@@ -19,11 +19,6 @@ export default function MobileBookingBar({ totalPrice, originalPrice, discount, 
             <span style={{ fontFamily: FONT_SERIF }} className="text-[1.5rem] leading-none font-bold text-[var(--charcoal)] tabular-nums">
               {formatINR(totalPrice)}
             </span>
-            {discount > 0 && (
-              <span style={{ fontFamily: FONT_SANS }} className="text-[0.76rem] text-[var(--mid)] line-through tabular-nums">
-                {formatINR(originalPrice)}
-              </span>
-            )}
           </p>
         </div>
         <button
