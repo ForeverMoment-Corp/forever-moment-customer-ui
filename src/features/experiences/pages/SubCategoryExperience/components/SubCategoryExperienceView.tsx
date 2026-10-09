@@ -5,6 +5,7 @@ import ExperienceTile from "@/components/common/ExperienceTile";
 import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
 import { slugify } from "@/features/experiences/utils/slug";
+import { experienceListKey } from "@/features/experiences/store/location";
 
 interface SubCategoryRef {
   id: number;
@@ -27,6 +28,9 @@ export interface SubCategoryExperienceViewProps {
   error?: string | null;
   /** GET /public/categories — gives the sub-category its name even when it has no experiences. */
   categories?: CategoryRef[];
+  locationId?: number;
+  /** False until the header's location list has settled. */
+  locationReady?: boolean;
   getSubCategoryExperiences: (id: string) => void;
   getCategories?: () => void;
 }
@@ -48,6 +52,8 @@ export default function SubCategoryExperienceView({
   loading,
   error,
   categories,
+  locationId,
+  locationReady,
   getSubCategoryExperiences,
   getCategories,
 }: SubCategoryExperienceViewProps) {
@@ -55,9 +61,12 @@ export default function SubCategoryExperienceView({
   const [sort, setSort] = useState<SortKey>("recommended");
   const { subCategoryId } = useParams<{ subCategoryId: string }>();
 
+  // Location-scoped: wait for the city, refetch when it changes.
+  const isCurrentList = !!subCategoryId && subCategoryKey === experienceListKey(locationId, subCategoryId);
   useEffect(() => {
-    if (subCategoryId) getSubCategoryExperiences(subCategoryId);
-  }, [subCategoryId, getSubCategoryExperiences]);
+    if (subCategoryId && locationReady && !isCurrentList) getSubCategoryExperiences(subCategoryId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subCategoryId, locationReady, locationId]);
 
   useEffect(() => {
     if (getCategories && (!categories || categories.length === 0)) getCategories();
@@ -73,7 +82,6 @@ export default function SubCategoryExperienceView({
     return null;
   }, [categories, subCategoryId]);
 
-  const isCurrentList = subCategoryKey === subCategoryId;
   const items = useMemo(() => {
     if (!isCurrentList) return [];
     const active = (experiences ?? []).filter((e) => e && e.isActive !== false);

@@ -6,6 +6,7 @@ import "swiper/css/navigation"
 
 import { Heart, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react"
 import SmartImage from '@/components/common/SmartImage';
+import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 
 const gifts = [
   {
@@ -72,6 +73,8 @@ const gifts = [
 
 export default function GiftSlider(){
 
+  const requireAuth = useRequireAuth()
+
   return(
 
     <section className="max-w-[1200px] mx-auto mt-16 px-4 relative">
@@ -134,7 +137,15 @@ export default function GiftSlider(){
 
                 {/* HEART */}
 
-                <button className="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full shadow hover:scale-110 transition">
+                <button
+                  type="button"
+                  aria-label="Save to wishlist"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    requireAuth()
+                  }}
+                  className="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full shadow hover:scale-110 transition">
 
                   <Heart size={16}/>
 

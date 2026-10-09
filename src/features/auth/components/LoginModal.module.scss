@@ -1,78 +1,122 @@
 @reference "../../../index.css";
 
 .overlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4;
+  /* Above navbar (90), WhatsApp / booking bar (95), sliders (400) and LowerHeader (999) */
+  @apply fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-ink/60 backdrop-blur-sm sm:p-4;
 }
 
 .modalContent {
-  @apply relative w-full max-w-[420px] bg-[#f8f9fb] rounded-[32px] p-8 shadow-2xl;
+  @apply relative w-full sm:max-w-[440px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain bg-ivory rounded-t-[28px] sm:rounded-[28px] px-6 pt-10 pb-[calc(24px+env(safe-area-inset-bottom))] sm:px-9 sm:pt-11 sm:pb-8 shadow-2xl border border-sand;
   font-family: 'Jost', sans-serif;
 }
 
+/* Thin gold band across the top edge */
+.accent {
+  @apply absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold-light via-gold to-gold-light;
+}
+
+/* Drag handle hint on the mobile bottom sheet */
+.handle {
+  @apply absolute left-1/2 top-3 h-1 w-10 -translate-x-1/2 rounded-full bg-sand sm:hidden;
+}
+
+.eyebrow {
+  @apply flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-gold-deep mb-3;
+}
+
 .title {
-  @apply text-[28px] font-bold text-gray-900 mb-2 leading-tight;
+  @apply text-[34px] font-semibold text-ink leading-[1.1] mb-2;
 }
 
 .subtitle {
-  @apply text-[15px] text-gray-600 mb-8 leading-relaxed pr-4;
+  @apply text-[14.5px] text-cocoa mb-7 leading-relaxed;
+}
+
+.label {
+  @apply block text-[12px] font-medium uppercase tracking-[0.12em] text-taupe mb-2;
 }
 
 .inputGroup {
-  @apply relative flex items-center border border-[#7C3AED] rounded-xl bg-white overflow-hidden mb-4 transition-all;
+  @apply flex items-stretch border border-sand rounded-2xl bg-white overflow-hidden transition-all;
+
+  &:focus-within {
+    @apply border-gold ring-4 ring-gold/15;
+  }
 }
 
 .countryCode {
-  @apply flex items-center justify-center font-bold text-gray-800 px-4 py-4 bg-transparent border-r border-gray-200 h-full;
+  @apply flex items-center gap-1.5 font-medium text-ink px-4 border-r border-sand bg-linen text-[15px];
 }
 
 .inputField {
-  @apply flex-1 w-full px-4 py-4 bg-transparent outline-none text-gray-800 text-[16px] placeholder-gray-400 font-medium;
+  @apply flex-1 min-w-0 px-4 py-3.5 bg-transparent outline-none text-ink text-[16px] tracking-wide placeholder:text-umber placeholder:tracking-normal;
+}
+
+.hint {
+  @apply mt-2 text-[12px] text-umber;
 }
 
 .otpBtn {
-  @apply w-full bg-[#C4B5FD] text-white font-bold py-4 px-4 rounded-xl transition-colors flex items-center justify-center text-[16px] mb-8 mt-4;
+  @apply w-full mt-5 mb-7 py-3.5 px-4 rounded-full font-semibold text-[15px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2 bg-sand text-umber cursor-not-allowed;
 }
 
 .otpBtnActive {
-  @apply bg-[#7C3AED] hover:bg-[#6D28D9] cursor-pointer;
+  @apply bg-ink text-ivory cursor-pointer shadow-lg shadow-ink/20 hover:bg-ink-soft hover:-translate-y-0.5 active:translate-y-0;
 }
 
 .dividerContainer {
-  @apply flex items-center mb-6;
+  @apply flex items-center mb-5;
 }
 
 .dividerLine {
-  @apply flex-grow border-t border-gray-200;
+  @apply flex-grow border-t border-sand;
 }
 
 .dividerText {
-  @apply px-4 text-[13px] text-gray-400 font-medium;
+  @apply px-4 text-[12px] uppercase tracking-[0.14em] text-umber;
 }
 
-.socialGrid {
-  @apply grid grid-cols-3 gap-3 mb-8;
+.googleSlot {
+  @apply flex justify-center min-h-[44px] mb-3;
 }
 
-.socialBtn {
-  @apply flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors shadow-sm;
+.emailBtn {
+  @apply w-full mb-7 flex items-center justify-center gap-2 bg-white border border-sand rounded-full py-2.5 text-taupe transition-all hover:border-gold hover:bg-cream hover:text-ink;
+}
+
+.backBtn {
+  @apply -ml-1 mb-4 inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-[13px] font-medium text-taupe transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
+}
+
+.passwordToggle {
+  @apply flex items-center px-4 text-umber transition-colors hover:text-ink focus-visible:outline-none focus-visible:text-ink;
 }
 
 .socialIcon {
-  @apply text-lg;
+  @apply text-[18px];
 }
 
 .socialText {
-  @apply font-bold text-gray-700 text-[13px];
+  @apply font-medium text-[14px];
+}
+
+.error {
+  @apply -mt-4 mb-5 rounded-xl bg-rose-light px-4 py-2.5 text-center text-[13px] text-burgundy;
+}
+
+/* In the email form the error sits above the fields, not under a divider */
+.errorInline {
+  @apply mt-0;
 }
 
 .footerText {
-  @apply text-center text-[12px] text-gray-400 font-medium px-4;
+  @apply text-center text-[12px] text-umber leading-relaxed px-2;
 }
 
 .link {
-  @apply text-[#7C3AED] font-bold hover:underline;
+  @apply text-gold-dark font-medium underline-offset-2 hover:underline;
 }
 
 .closeBtn {
-  @apply absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100;
+  @apply absolute top-4 right-4 p-2 rounded-full text-umber transition-colors hover:bg-linen hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
 }

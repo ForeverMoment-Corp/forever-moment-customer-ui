@@ -1,6 +1,7 @@
 import React from 'react';
 import { Heart, ImageOff } from "lucide-react";
 import SmartImage from '@/components/common/SmartImage';
+import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 
 interface CardImageProps {
   id: string | number;
@@ -26,12 +27,12 @@ const CardImage: React.FC<CardImageProps> = ({
   isLiked,
   onToggleLike
 }) => {
+  const requireAuth = useRequireAuth();
+
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onToggleLike) {
-      onToggleLike(id);
-    }
+    requireAuth(() => onToggleLike?.(id));
   };
 
   return (
@@ -63,6 +64,9 @@ const CardImage: React.FC<CardImageProps> = ({
 
       {/* Wishlist Button */}
       <button
+        type="button"
+        aria-pressed={isLiked}
+        aria-label={isLiked ? 'Remove from wishlist' : 'Save to wishlist'}
         onClick={handleLike}
         className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 z-10 shadow-sm"
         style={{

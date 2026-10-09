@@ -37,9 +37,34 @@ export const fetchData = (locationId?: number) => {
     return getPublic<ExperienceListItem[]>('/public/experiences', 'Failed to fetch experiences', []);
 };
 
-/** GET /public/experiences/featured — experiences flagged as featured. */
-export const fetchFeaturedExperiences = () =>
-    getPublic<ExperienceListItem[]>('/public/experiences/featured', 'Failed to fetch featured experiences', []);
+const segment = (value: string | number) => encodeURIComponent(String(value));
+
+/**
+ * GET /public/experiences/location/{locationId}/featured — featured experiences in the picked city.
+ * Falls back to /public/experiences/featured while no city is known.
+ */
+export const fetchFeaturedExperiences = (locationId?: number) =>
+    getPublic<ExperienceListItem[]>(
+        locationId != null ? `/public/experiences/location/${segment(locationId)}/featured` : '/public/experiences/featured',
+        'Failed to fetch featured experiences',
+        [],
+    );
+
+/**
+ * GET /public/experiences/location/{locationId}/category/{categoryId}.
+ * Without a city there is no category endpoint, so the full catalogue is filtered instead.
+ */
+export const fetchCategoryExperiences = async (categoryId: string | number, locationId?: number) => {
+    if (locationId != null) {
+        return getPublic<ExperienceListItem[]>(
+            `/public/experiences/location/${segment(locationId)}/category/${segment(categoryId)}`,
+            'Failed to fetch category experiences',
+            [],
+        );
+    }
+    const all = await fetchData();
+    return (all ?? []).filter((e) => String(e.categoryId) === String(categoryId));
+};
 
 /* ------------------------------------------------------------------ */
 /* Detail cache: dedupes in-flight requests and keeps responses briefly */
@@ -78,10 +103,15 @@ export function prefetchExperience(e: { id: string | number; slug?: string | nul
     request.then((detail) => preloadWhenIdle(getPrefetchableImages(detail))).catch(() => undefined);
 }
 
-/** GET /public/experiences/subcategory/{subCategoryId} */
-export const fetchSubCategoryExperiences = (subCategoryId: string | number) =>
+/**
+ * GET /public/experiences/location/{locationId}/subcategory/{subCategoryId}.
+ * Falls back to /public/experiences/subcategory/{subCategoryId} while no city is known.
+ */
+export const fetchSubCategoryExperiences = (subCategoryId: string | number, locationId?: number) =>
     getPublic<ExperienceListItem[]>(
-        `/public/experiences/subcategory/${encodeURIComponent(String(subCategoryId))}`,
+        locationId != null
+            ? `/public/experiences/location/${segment(locationId)}/subcategory/${segment(subCategoryId)}`
+            : `/public/experiences/subcategory/${segment(subCategoryId)}`,
         'Failed to fetch sub-category experiences',
         [],
     );
@@ -219,10 +249,13 @@ export interface BookingStatusResponse {
 
 /** GET /api/payments/admin/bookings/{bookingId}/status */
 export async function checkBookingStatus(bookingId: string, user: { id: string | number; role: string }): Promise<BookingStatusResponse> {
-    // We use fetch here for consistency with other functions in this file,
-    // though the URL is outside /api/platform.
-    const paymentsBase = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace('/platform', '') : '/api';
-    const response = await fetch(`${paymentsBase}/payments/admin/bookings/${encodeURIComponent(bookingId)}/status`, {
+    // Replace '/platform' with '/payment' to route to the payments service (as configured in gateway)
+    const paymentsBase = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace('/platform', '/payment') : '/api/payment';
+    
+    // The user explicitly requires this exact path structure: /api/payment/api/payments/admin/bookings/...
+    const url = `${paymentsBase}/api/payments/admin/bookings/${encodeURIComponent(bookingId)}/status`;
+    
+    const response = await fetch(url, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

@@ -134,12 +134,10 @@ const Navbar = () => {
   const isAuthenticated = useAppSelector((state) => state.auth?.isAuthenticated);
   const user = useAppSelector((state) => state.auth?.user);
 
+  // Both actions skip duplicate requests; categories wait for the city and follow it.
   useEffect(() => {
-    if (locations.length === 0) {
-      dispatch(getLocations());
-    } else {
-      dispatch(getCategories());
-    }
+    dispatch(getLocations());
+    dispatch(getCategories());
   }, [dispatch, locations.length, selectedLocation]);
 
   const categories: NavCategory[] = apiCategories

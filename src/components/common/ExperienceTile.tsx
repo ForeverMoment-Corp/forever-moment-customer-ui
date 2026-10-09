@@ -6,6 +6,7 @@ import { experiencePath } from '@/features/experiences/utils/slug';
 import { formatDuration, formatINR } from '@/features/experiences/pages/ExperienceDetail/normalize';
 import { toPlainText } from '@/lib/html';
 import type { ExperienceListItem } from '@/features/experiences/store/types';
+import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -33,6 +34,7 @@ export interface ExperienceTileProps {
  * The whole tile is the link; there is no per-card button.
  */
 export default function ExperienceTile({ experience: e, isLiked = false, onToggleLike, priority = false, note }: ExperienceTileProps) {
+  const requireAuth = useRequireAuth();
   const image = getPrimaryImage(e);
   // Pairing the thumbnail with the hero lets the browser fetch the 320px rendition for a card.
   const thumbnail = getPrimaryThumbnail(e);
@@ -87,7 +89,7 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
             onClick={(ev) => {
               ev.preventDefault();
               ev.stopPropagation();
-              onToggleLike(e.id);
+              requireAuth(() => onToggleLike(e.id));
             }}
             className={`absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full shadow-sm backdrop-blur transition-colors ${isLiked ? 'bg-[var(--burgundy)] text-white' : 'bg-white/90 text-[var(--mid)] hover:text-[var(--burgundy)]'
               }`}

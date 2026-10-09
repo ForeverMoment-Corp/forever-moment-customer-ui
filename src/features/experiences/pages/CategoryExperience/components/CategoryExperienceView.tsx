@@ -4,6 +4,7 @@ import { ChevronRight, SlidersHorizontal } from "lucide-react";
 import ExperienceTile from "@/components/common/ExperienceTile";
 import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import { matchesCategorySlug } from "@/features/experiences/utils/slug";
+import { experienceListKey } from "@/features/experiences/store/location";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
 
 interface SubCategoryRef {
@@ -22,13 +23,19 @@ interface CategoryRef {
 }
 
 export interface CategoryExperienceViewProps {
-  /** GET /public/experiences — filtered client-side by the category in the URL. */
+  /** GET /public/experiences/location/{locationId}/category/{categoryId} */
   experiences?: ExperienceListItem[];
+  /** City + category the list was fetched for; compared with the current one to skip stale lists. */
+  listKey?: string | null;
   loading?: boolean;
   error?: string | null;
-  /** GET /public/categories — resolves the slug to a display name / id. */
+  /** GET /public/categories — resolves the slug in the URL to the category id. */
   categories?: CategoryRef[];
-  getData: () => void;
+  categoriesLoading?: boolean;
+  locationId?: number;
+  /** False until the header's location list has settled. */
+  locationReady?: boolean;
+  getCategoryExperiences: (categoryId: number) => void;
   getCategories?: () => void;
 }
 
@@ -48,20 +55,20 @@ const titleFromSlug = (slug: string) =>
 
 export default function CategoryExperienceView({
   experiences,
+  listKey,
   loading,
   error,
   categories,
-  getData,
+  categoriesLoading,
+  locationId,
+  locationReady,
+  getCategoryExperiences,
   getCategories,
 }: CategoryExperienceViewProps) {
   const [liked, setLiked] = useState<number[]>([]);
   const [sort, setSort] = useState<SortKey>("recommended");
   const [subFilter, setSubFilter] = useState<number | null>(null);
   const { categorySlug } = useParams<{ categorySlug: string }>();
-
-  useEffect(() => {
-    getData();
-  }, [getData]);
 
   useEffect(() => {
     if (getCategories && (!categories || categories.length === 0)) getCategories();
@@ -82,14 +89,19 @@ export default function CategoryExperienceView({
     [categories, categorySlug],
   );
 
+  // Fetch once the slug resolves to a category and the city is known; again when the city changes.
+  const currentKey = category ? experienceListKey(locationId, category.id) : null;
+  const isCurrentList = currentKey != null && listKey === currentKey;
+  useEffect(() => {
+    if (category && locationReady && !isCurrentList) getCategoryExperiences(category.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category?.id, locationReady, locationId]);
+
   // Everything in this category, before the collection chips narrow it further.
-  const inCategory = useMemo(() => {
-    const all = (experiences ?? []).filter((e) => e && e.isActive !== false);
-    if (!categorySlug) return all;
-    return all.filter((e) =>
-      category ? e.categoryId === category.id || matchesCategorySlug(e.categoryName, categorySlug) : matchesCategorySlug(e.categoryName, categorySlug),
-    );
-  }, [experiences, categorySlug, category]);
+  const inCategory = useMemo(
+    () => (isCurrentList ? (experiences ?? []).filter((e) => e && e.isActive !== false) : []),
+    [experiences, isCurrentList],
+  );
 
   // Only offer chips for collections that actually have something to show.
   const chips = useMemo(() => {
@@ -123,7 +135,9 @@ export default function CategoryExperienceView({
   const toggleLike = (id: number) =>
     setLiked((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
-  const isLoading = !!loading && inCategory.length === 0;
+  // A slug that matches no category is "nothing here", not an endless spinner.
+  const unknownCategory = !category && !categoriesLoading && (categories?.length ?? 0) > 0;
+  const isLoading = !unknownCategory && (!!loading || !isCurrentList) && inCategory.length === 0;
   const title = category?.name || (categorySlug ? titleFromSlug(categorySlug) : "Our experiences");
 
   const chipClass = (active: boolean) =>

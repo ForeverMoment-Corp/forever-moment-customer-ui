@@ -25,14 +25,18 @@ import { normalizeExperience, FONT_SANS, FONT_SERIF } from '../normalize';
 import type { AddonCatalogueItem, ExperienceAddon } from '@/features/experiences/store/types';
 import type { AddOn, FaqItem } from '../types';
 import { experiencePath, isNumericId } from '@/features/experiences/utils/slug';
+import { experienceListKey } from '@/features/experiences/store/location';
 
 export interface ExperienceViewProps {
   experience: unknown;
   loading: boolean;
   error: string | null;
-  /** GET /public/experiences/subcategory/{id} result for the related section. */
+  /** GET /public/experiences/location/{locationId}/subcategory/{id} result for the related section. */
   subCategoryExperiences: ExperienceSummary[];
   subCategoryKey: string | null;
+  /** The city picked in the header; the related list is scoped to it. */
+  locationId?: number;
+  locationReady?: boolean;
   /** GET /public/experiences — fallback pool for the related section. */
   allExperiences: ExperienceSummary[];
   /** GET /public/experiences/{id}/addons, keyed by experience id. */
@@ -83,6 +87,8 @@ export default function ExperienceDetails({
   error,
   subCategoryExperiences,
   subCategoryKey,
+  locationId,
+  locationReady,
   allExperiences,
   experienceAddons,
   addonsLoading,
@@ -122,14 +128,15 @@ export default function ExperienceDetails({
   // Related section: same sub-category from the API, whole catalogue as fallback.
   useEffect(() => {
     if (!isCurrent) return;
-    if (vm?.subCategoryId != null && String(vm.subCategoryId) !== subCategoryKey) getSubCategoryExperiences(vm.subCategoryId);
-    if (allExperiences.length === 0) getData();
+    if (vm?.subCategoryId != null && experienceListKey(locationId, vm.subCategoryId) !== subCategoryKey) getSubCategoryExperiences(vm.subCategoryId);
+    // Fallback pool for the related row; skips itself when this city's list is loaded.
+    if (locationReady) getData();
     // Add-ons are attached per experience, so fetch them once the record is known.
     const key = vm ? String(vm.id) : null;
     if (key && experienceAddons[key] === undefined && !addonsLoading[key]) getExperienceAddons(key);
     if (addonCatalogue.length === 0) getAddons();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCurrent, vm?.subCategoryId]);
+  }, [isCurrent, vm?.subCategoryId, locationId, locationReady]);
 
   // The booking panel works from the API list plus whatever the guest has ticked.
   const addonKey = vm ? String(vm.id) : '';
@@ -281,7 +288,7 @@ export default function ExperienceDetails({
         </div>
 
         <RelatedExperiences
-          items={String(vm.subCategoryId) === subCategoryKey ? subCategoryExperiences : []}
+          items={vm.subCategoryId != null && experienceListKey(locationId, vm.subCategoryId) === subCategoryKey ? subCategoryExperiences : []}
           fallbackItems={allExperiences}
           currentId={vm.id}
           categoryId={vm.categoryId}

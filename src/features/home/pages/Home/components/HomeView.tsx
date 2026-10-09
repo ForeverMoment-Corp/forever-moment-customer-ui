@@ -35,14 +35,13 @@ import { decorSliders } from "@/data/decorSliders";
 interface HomeProps {
   loading: boolean;
   error: string | null;
-  getFeaturedExperiences: () => void;
   getLocations: () => void;
 }
 
-const Home = ({ loading, error, getFeaturedExperiences, getLocations }: HomeProps) => {
+const Home = ({ loading, error, getLocations }: HomeProps) => {
 
+  // Featured experiences are fetched by the FeaturedExperience section once the city is known.
   useEffect(() => {
-    getFeaturedExperiences();
     getLocations();
   }, []);
 

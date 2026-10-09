@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import '../css/styles.scss';
-import { getFeaturedExperiences, getLocations } from '@/features/home/store/actions';
+import { getLocations } from '@/features/home/store/actions';
 import HomeView from './components/HomeView';
 import type { RootState } from '@/store/store';
 
@@ -15,7 +15,6 @@ const mapStateToProps = (state: RootState) => ({
 });
 
 const mapDispatchToProps = {
-  getFeaturedExperiences,
   getLocations,
 };
 

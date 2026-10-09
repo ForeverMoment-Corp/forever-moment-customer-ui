@@ -2,17 +2,26 @@ import * as types from './action-types';
 import type { AddonCatalogueItem, ExperienceAddon, ExperienceDetailResponse, ExperienceListItem } from './types';
 
 export interface ExperiencesState {
-    /** GET /public/experiences */
+    /** GET /public/locations/{locationId}/experiences */
     data: ExperienceListItem[];
+    /** City `data` belongs to (experienceListKey). */
+    dataKey: string | null;
     loading: boolean;
     error: string | null;
 
-    /** GET /public/experiences/subcategory/{id} */
+    /** GET /public/experiences/location/{locationId}/subcategory/{id} */
     subCategoryData: ExperienceListItem[];
-    /** Which sub-category `subCategoryData` belongs to, so stale lists are never shown. */
+    /** City + sub-category `subCategoryData` belongs to (experienceListKey), so stale lists are never shown. */
     subCategoryKey: string | null;
     subCategoryLoading: boolean;
     subCategoryError: string | null;
+
+    /** GET /public/experiences/location/{locationId}/category/{id} */
+    categoryData: ExperienceListItem[];
+    /** City + category `categoryData` belongs to (experienceListKey). */
+    categoryKey: string | null;
+    categoryLoading: boolean;
+    categoryError: string | null;
 
     /** GET /public/experiences/{id} or /slug/{slug} */
     currentExperience: ExperienceDetailResponse | null;
@@ -31,6 +40,7 @@ export interface ExperiencesState {
 
 const initialState: ExperiencesState = {
     data: [],
+    dataKey: null,
     loading: false,
     error: null,
 
@@ -38,6 +48,11 @@ const initialState: ExperiencesState = {
     subCategoryKey: null,
     subCategoryLoading: false,
     subCategoryError: null,
+
+    categoryData: [],
+    categoryKey: null,
+    categoryLoading: false,
+    categoryError: null,
 
     currentExperience: null,
     detailKey: null,
@@ -54,12 +69,17 @@ const initialState: ExperiencesState = {
 export const experiencesReducer = (state = initialState, action: any): ExperiencesState => {
     switch (action.type) {
         // ── All experiences ──
-        case types.GET_DATA:
-            return { ...state, loading: true, error: null };
+        case types.GET_DATA: {
+            const key = action.payload?.key ?? null;
+            // Another city's list must not show while this one loads.
+            return { ...state, loading: true, error: null, dataKey: key, data: key === state.dataKey ? state.data : [] };
+        }
         case types.GET_DATA_SUCCESS:
-            return { ...state, loading: false, data: action.payload ?? [] };
+            if (action.payload?.key !== state.dataKey) return state;
+            return { ...state, loading: false, data: action.payload?.data ?? [] };
         case types.GET_DATA_FAILURE:
-            return { ...state, loading: false, error: action.payload };
+            if (action.payload?.key !== state.dataKey) return state;
+            return { ...state, loading: false, error: action.payload?.error ?? null };
 
         // ── Detail (by id or slug) ──
         case types.GET_EXPERIENCE_DETAIL:
@@ -83,18 +103,32 @@ export const experiencesReducer = (state = initialState, action: any): Experienc
                 ...state,
                 subCategoryLoading: true,
                 subCategoryError: null,
-                subCategoryKey: action.payload?.subCategoryId ?? null,
+                subCategoryKey: action.payload?.key ?? null,
                 subCategoryData: [],
             };
         case types.GET_SUBCATEGORY_EXPERIENCES_SUCCESS:
+            // A slower response for an earlier city / sub-category must not overwrite the current one.
+            if (action.payload?.key !== state.subCategoryKey) return state;
+            return { ...state, subCategoryLoading: false, subCategoryData: action.payload?.data ?? [] };
+        case types.GET_SUBCATEGORY_EXPERIENCES_FAILURE:
+            if (action.payload?.key !== state.subCategoryKey) return state;
+            return { ...state, subCategoryLoading: false, subCategoryError: action.payload?.error ?? null };
+
+        // ── Category list ──
+        case types.GET_CATEGORY_EXPERIENCES:
             return {
                 ...state,
-                subCategoryLoading: false,
-                subCategoryKey: action.payload?.subCategoryId ?? state.subCategoryKey,
-                subCategoryData: action.payload?.data ?? [],
+                categoryLoading: true,
+                categoryError: null,
+                categoryKey: action.payload?.key ?? null,
+                categoryData: [],
             };
-        case types.GET_SUBCATEGORY_EXPERIENCES_FAILURE:
-            return { ...state, subCategoryLoading: false, subCategoryError: action.payload };
+        case types.GET_CATEGORY_EXPERIENCES_SUCCESS:
+            if (action.payload?.key !== state.categoryKey) return state;
+            return { ...state, categoryLoading: false, categoryData: action.payload?.data ?? [] };
+        case types.GET_CATEGORY_EXPERIENCES_FAILURE:
+            if (action.payload?.key !== state.categoryKey) return state;
+            return { ...state, categoryLoading: false, categoryError: action.payload?.error ?? null };
 
         // ── Add-ons ──
         case types.GET_ADDONS:

@@ -3,6 +3,8 @@ import type { PromotionImage } from './types';
 
 export interface HomeState {
     featuredExperiences: any[];
+    /** City the featured list was fetched for (experienceListKey). */
+    featuredKey: string | null;
     locations: any[];
     selectedLocation: string;
     loading: boolean; // Global loading for initial page load
@@ -16,6 +18,7 @@ export interface HomeState {
 
 const initialState: HomeState = {
     featuredExperiences: [],
+    featuredKey: null,
     locations: [],
     selectedLocation: 'Vizag',
     loading: true, // Start with page-level loading
@@ -29,9 +32,11 @@ const initialState: HomeState = {
 export const homeReducer = (state = initialState, action: any): HomeState => {
     switch (action.type) {
         case types.GET_FEATURED_EXPERIENCES:
-            return { ...state, experiencesLoading: true, error: null };
+            return { ...state, experiencesLoading: true, error: null, featuredKey: action.payload?.key ?? null };
         case types.GET_FEATURED_EXPERIENCES_SUCCESS:
-            return { ...state, loading: false, experiencesLoading: false, featuredExperiences: action.payload };
+            // Ignore a late response for a city the user has already switched away from.
+            if (action.payload?.key !== state.featuredKey) return state;
+            return { ...state, loading: false, experiencesLoading: false, featuredExperiences: action.payload?.experiences ?? [] };
         case types.GET_FEATURED_EXPERIENCES_FAILURE:
             return { ...state, loading: false, experiencesLoading: false, error: action.payload };
 

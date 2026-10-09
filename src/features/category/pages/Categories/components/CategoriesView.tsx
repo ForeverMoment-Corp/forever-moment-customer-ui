@@ -21,6 +21,9 @@ export interface CategoriesViewProps {
   /** GET /public/experiences — used for per-category counts, prices and cover photos. */
   experiences?: ExperienceListItem[];
   experiencesLoading?: boolean;
+  locationId?: number;
+  /** False until the header's location list has settled. */
+  locationReady?: boolean;
   getCategories: () => void;
   getData: () => void;
 }
@@ -32,18 +35,20 @@ export default function CategoriesView({
   categoriesLoading,
   categoriesError,
   experiences,
+  locationId,
+  locationReady,
   getCategories,
   getData,
 }: CategoriesViewProps) {
   const [query, setQuery] = useState("");
 
+  // Both are per city and skip duplicate requests (the navbar loads categories too).
   useEffect(() => {
-    // Categories are shared with the navbar; only fetch when nobody has yet.
-    if (!categories || categories.length === 0) getCategories();
-    // Experiences power the counts / prices / photos; fetch once for the page.
-    if (!experiences || experiences.length === 0) getData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!locationReady) return;
+    getCategories();
+    // Experiences power the counts / prices / photos.
+    getData();
+  }, [locationReady, locationId, getCategories, getData]);
 
   const activeCategories = useMemo(
     () =>

@@ -1,6 +1,7 @@
 import * as types from './action-types';
 import {
     fetchAddons,
+    fetchCategoryExperiences,
     fetchData,
     fetchExperienceAddons,
     fetchExperienceBySlug,
@@ -8,28 +9,30 @@ import {
     fetchSubCategoryExperiences,
 } from './api';
 import { isNumericId } from '../utils/slug';
+import { experienceListKey, selectLocationId } from './location';
+import type { RootState } from '@/store/store';
 
 type Dispatch = (action: { type: string; payload?: unknown }) => void;
 
 const errorMessage = (error: unknown, fallback: string) =>
     error instanceof Error && error.message ? error.message : fallback;
 
-/** GET /public/experiences (or location-specific) */
+/** GET /public/locations/{locationId}/experiences — every experience in the picked city. */
 export const getData = () => {
-    return async (dispatch: Dispatch, getState: any) => {
-        dispatch({ type: types.GET_DATA });
+    return async (dispatch: Dispatch, getState: () => RootState) => {
+        const locationId = selectLocationId(getState());
+        const key = experienceListKey(locationId, 'all');
+        // Already loaded or in flight for this city (e.g. StrictMode's second mount): don't call again.
+        const { dataKey, error } = getState().experiences;
+        if (dataKey === key && !error) return;
+        dispatch({ type: types.GET_DATA, payload: { key } });
         try {
-            const state = getState();
-            const locationName = state.home?.selectedLocation;
-            const location = state.home?.locations?.find((l: any) => l.name === locationName);
-            const locationId = location?.id;
-            
             const data = await fetchData(locationId);
-            dispatch({ type: types.GET_DATA_SUCCESS, payload: data ?? [] });
+            dispatch({ type: types.GET_DATA_SUCCESS, payload: { key, data: data ?? [] } });
         } catch (error: unknown) {
             dispatch({
                 type: types.GET_DATA_FAILURE,
-                payload: errorMessage(error, 'Failed to fetch data'),
+                payload: { key, error: errorMessage(error, 'Failed to fetch data') },
             });
         }
     };
@@ -74,20 +77,43 @@ export const getExperienceBySlug = (slug: string) => {
 export const getExperience = (slugOrId: string) =>
     isNumericId(slugOrId) ? getExperienceDetail(slugOrId) : getExperienceBySlug(slugOrId);
 
-/** GET /public/experiences/subcategory/{subCategoryId} */
+/** GET /public/experiences/location/{locationId}/subcategory/{subCategoryId} */
 export const getSubCategoryExperiences = (subCategoryId: string | number) => {
-    return async (dispatch: Dispatch) => {
-        dispatch({ type: types.GET_SUBCATEGORY_EXPERIENCES, payload: { subCategoryId: String(subCategoryId) } });
+    return async (dispatch: Dispatch, getState: () => RootState) => {
+        const locationId = selectLocationId(getState());
+        const key = experienceListKey(locationId, subCategoryId);
+        // Already loaded or in flight for this city (e.g. StrictMode's second mount): don't call again.
+        const { subCategoryKey, subCategoryError } = getState().experiences;
+        if (subCategoryKey === key && !subCategoryError) return;
+        dispatch({ type: types.GET_SUBCATEGORY_EXPERIENCES, payload: { key } });
         try {
-            const data = await fetchSubCategoryExperiences(subCategoryId);
-            dispatch({
-                type: types.GET_SUBCATEGORY_EXPERIENCES_SUCCESS,
-                payload: { subCategoryId: String(subCategoryId), data: data ?? [] },
-            });
+            const data = await fetchSubCategoryExperiences(subCategoryId, locationId);
+            dispatch({ type: types.GET_SUBCATEGORY_EXPERIENCES_SUCCESS, payload: { key, data: data ?? [] } });
         } catch (error: unknown) {
             dispatch({
                 type: types.GET_SUBCATEGORY_EXPERIENCES_FAILURE,
-                payload: errorMessage(error, 'Failed to fetch sub-category experiences'),
+                payload: { key, error: errorMessage(error, 'Failed to fetch sub-category experiences') },
+            });
+        }
+    };
+};
+
+/** GET /public/experiences/location/{locationId}/category/{categoryId} */
+export const getCategoryExperiences = (categoryId: string | number) => {
+    return async (dispatch: Dispatch, getState: () => RootState) => {
+        const locationId = selectLocationId(getState());
+        const key = experienceListKey(locationId, categoryId);
+        // Already loaded or in flight for this city (e.g. StrictMode's second mount): don't call again.
+        const { categoryKey, categoryError } = getState().experiences;
+        if (categoryKey === key && !categoryError) return;
+        dispatch({ type: types.GET_CATEGORY_EXPERIENCES, payload: { key } });
+        try {
+            const data = await fetchCategoryExperiences(categoryId, locationId);
+            dispatch({ type: types.GET_CATEGORY_EXPERIENCES_SUCCESS, payload: { key, data: data ?? [] } });
+        } catch (error: unknown) {
+            dispatch({
+                type: types.GET_CATEGORY_EXPERIENCES_FAILURE,
+                payload: { key, error: errorMessage(error, 'Failed to fetch category experiences') },
             });
         }
     };

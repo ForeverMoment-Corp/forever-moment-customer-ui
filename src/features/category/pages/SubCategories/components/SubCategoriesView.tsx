@@ -4,6 +4,7 @@ import { ChevronRight, Search, X } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
 import { getPrimaryImage, getPrimaryThumbnail } from "@/features/experiences/utils/primaryImage";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
+import { experienceListKey } from "@/features/experiences/store/location";
 import SubCategoryCard from "./SubCategoryCard";
 import type { SubCategoryCardStats, SubCategoryRef } from "./SubCategoryCard";
 
@@ -11,10 +12,15 @@ const FONT_SANS = "'Jost', sans-serif";
 const FONT_SERIF = "'Cormorant Garamond', serif";
 
 export interface SubCategoriesViewProps {
-  /** GET /public/subcategories */
+  /** GET /public/locations/{locationId}/subcategories */
   subCategories?: SubCategoryRef[];
   subCategoriesLoading?: boolean;
   subCategoriesError?: string | null;
+  /** City the list was fetched for; compared with the current one to skip stale lists. */
+  subCategoriesKey?: string | null;
+  locationId?: number;
+  /** False until the header's location list has settled. */
+  locationReady?: boolean;
   /** GET /public/experiences — powers per-sub-category counts, prices and cover photos. */
   experiences?: ExperienceListItem[];
   getSubCategories: () => void;
@@ -40,6 +46,9 @@ export default function SubCategoriesView({
   subCategories,
   subCategoriesLoading,
   subCategoriesError,
+  subCategoriesKey,
+  locationId,
+  locationReady,
   experiences,
   getSubCategories,
   getData,
@@ -47,19 +56,24 @@ export default function SubCategoriesView({
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
 
+  // Collections are per city: fetch once the city is known, again when it changes.
+  const isCurrentList = subCategoriesKey === experienceListKey(locationId, "subcategories");
   useEffect(() => {
-    if (!subCategories || subCategories.length === 0) getSubCategories();
-    // Experiences power the counts, prices and stand-in photos.
-    if (!experiences || experiences.length === 0) getData();
+    if (locationReady && !isCurrentList) getSubCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [locationReady, locationId]);
+
+  // Experiences power the counts, prices and stand-in photos; per city like the collections.
+  useEffect(() => {
+    if (locationReady) getData();
+  }, [locationReady, locationId, getData]);
 
   const active = useMemo(
     () =>
-      (subCategories ?? [])
+      (isCurrentList ? subCategories ?? [] : [])
         .filter((s) => s && s.isActive !== false)
         .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name)),
-    [subCategories],
+    [subCategories, isCurrentList],
   );
 
   /** Per-sub-category rollup of the experiences list. */
@@ -104,7 +118,7 @@ export default function SubCategoriesView({
     });
   }, [active, query, categoryFilter]);
 
-  const isLoading = !!subCategoriesLoading && active.length === 0;
+  const isLoading = (!!subCategoriesLoading || !isCurrentList) && active.length === 0;
   const totalSetups = Array.from(statsById.values()).reduce((sum, s) => sum + s.experienceCount, 0);
 
   const chipClass = (on: boolean) =>

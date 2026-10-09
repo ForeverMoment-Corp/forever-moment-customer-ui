@@ -1,15 +1,23 @@
 import * as types from './action-types';
 import { fetchFeaturedExperiences, fetchLocations, fetchPromotionImages } from './api';
 import { promotionSlot } from './types';
+import { experienceListKey, selectLocationId } from '@/features/experiences/store/location';
+import type { RootState } from '@/store/store';
 
+/** GET /public/experiences/location/{locationId}/featured */
 export const getFeaturedExperiences = () => {
-    return async (dispatch: any) => {
-        dispatch({ type: types.GET_FEATURED_EXPERIENCES });
+    return async (dispatch: any, getState: () => RootState) => {
+        const locationId = selectLocationId(getState());
+        const key = experienceListKey(locationId, 'featured');
+        // Already loaded or in flight for this city (e.g. StrictMode's second mount): don't call again.
+        const { featuredKey, error } = getState().home;
+        if (featuredKey === key && !error) return;
+        dispatch({ type: types.GET_FEATURED_EXPERIENCES, payload: { key } });
         try {
-            const experiences = await fetchFeaturedExperiences();
+            const experiences = await fetchFeaturedExperiences(locationId);
             dispatch({
                 type: types.GET_FEATURED_EXPERIENCES_SUCCESS,
-                payload: experiences,
+                payload: { key, experiences: experiences ?? [] },
             });
         } catch (error: any) {
             console.error('Failed to fetch featured experiences:', error);
@@ -22,7 +30,10 @@ export const getFeaturedExperiences = () => {
 };
 
 export const getLocations = () => {
-    return async (dispatch: any) => {
+    return async (dispatch: any, getState: () => RootState) => {
+        // Navbar, header, slider, home and contact all ask for this; one request serves them all.
+        const { locations, locationsLoading } = getState().home;
+        if (locationsLoading || locations.length > 0) return;
         dispatch({ type: types.GET_LOCATIONS });
         try {
             const locations = await fetchLocations();

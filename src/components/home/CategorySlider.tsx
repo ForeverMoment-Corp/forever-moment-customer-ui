@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { FiChevronLeft, FiChevronRight, FiHeart } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import SmartImage from '@/components/common/SmartImage';
+import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 
 const tabs = ['Weddings', 'Birthday', 'Corporate', 'Engagement']
 
@@ -24,6 +25,7 @@ const allItems = [
 const formatPrice = (price: number) => `₹${price.toLocaleString('en-IN')}`
 
 const CategorySlider = () => {
+  const requireAuth = useRequireAuth();
   const [activeTab, setActiveTab] = useState('Weddings')
   const scrollRef = useRef<HTMLDivElement>(null)
   const filteredItems = allItems.filter((item) => item.category === activeTab)
@@ -82,7 +84,16 @@ const CategorySlider = () => {
 >
                 <div className="relative h-[200px] overflow-hidden">
                   <SmartImage src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-coral hover:text-white transition-colors">
+                  <button
+                    type="button"
+                    aria-label="Save to wishlist"
+                    onClick={(e) => {
+                      // The card is a link; keep the heart from navigating
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requireAuth();
+                    }}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:bg-coral hover:text-white transition-colors">
                     <FiHeart size={14} />
                   </button>
                 </div>

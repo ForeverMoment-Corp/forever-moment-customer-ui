@@ -2,6 +2,7 @@ import { connect } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { getCategories } from '@/features/header/store/actions';
 import { getData } from '@/features/experiences/store/actions';
+import { selectLocationId, selectLocationReady } from '@/features/experiences/store/location';
 import CategoriesView from './components/CategoriesView';
 
 /** `/categories` — every active category from GET /public/categories, enriched with GET /public/experiences. */
@@ -10,6 +11,8 @@ const mapStateToProps = (state: RootState) => ({
     categoriesLoading: state.header?.categoriesLoading ?? false,
     categoriesError: state.header?.categoriesError ?? null,
     experiences: state.experiences.data,
+    locationId: selectLocationId(state),
+    locationReady: selectLocationReady(state),
     experiencesLoading: state.experiences.loading,
 });
 

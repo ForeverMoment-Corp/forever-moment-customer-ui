@@ -12,9 +12,8 @@ export const fetchCategories = async (locationId?: number) => {
     return data.response;
 };
 
-/** GET /public/subcategories — every sub-category across all categories. */
-export const fetchSubCategories = async () => {
-    const response = await fetch(`${API_BASE}/public/subcategories`);
+const getSubCategoryList = async (path: string) => {
+    const response = await fetch(`${API_BASE}${path}`);
     // Nothing to list is an empty result, not a failure.
     if (response.status === 404) return [];
     if (!response.ok) {
@@ -22,4 +21,21 @@ export const fetchSubCategories = async () => {
     }
     const data = await response.json();
     return Array.isArray(data.response) ? data.response : [];
+};
+
+/**
+ * GET /public/locations/{locationId}/subcategories — the sub-categories active in the picked city.
+ * That endpoint carries no `media` / `description`, so those are filled in from
+ * GET /public/subcategories (fetched in parallel; if it fails the cards use stock photos).
+ * Without a city, falls back to GET /public/subcategories alone.
+ */
+export const fetchSubCategories = async (locationId?: number) => {
+    if (locationId == null) return getSubCategoryList('/public/subcategories');
+
+    const [inLocation, all] = await Promise.all([
+        getSubCategoryList(`/public/locations/${encodeURIComponent(String(locationId))}/subcategories`),
+        getSubCategoryList('/public/subcategories').catch(() => []),
+    ]);
+    const details = new Map(all.map((s: { id: number }) => [s.id, s]));
+    return inLocation.map((s: { id: number }) => ({ ...(details.get(s.id) ?? {}), ...s }));
 };

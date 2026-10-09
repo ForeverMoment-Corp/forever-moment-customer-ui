@@ -5,6 +5,7 @@ import SmartImage from "@/components/common/SmartImage";
 import CategoryIcon from "@/components/navbar/CategoryIcon";
 import FadeIn from "@/components/animations/FadeIn";
 import { getSubCategoryImages } from "@/features/category/utils/categoryImage";
+import { experienceListKey } from "@/features/experiences/store/location";
 
 const FONT_SANS = "'Jost', sans-serif";
 const FONT_SERIF = "'Cormorant Garamond', serif";
@@ -18,8 +19,13 @@ interface SubCategory {
 }
 
 export interface SubCategoryListViewProps {
-  /** GET /public/subcategories */
+  /** GET /public/locations/{locationId}/subcategories */
   subCategories?: SubCategory[];
+  /** City the list was fetched for; compared with the current one to skip stale lists. */
+  subCategoriesKey?: string | null;
+  locationId?: number;
+  /** False until the header's location list has settled. */
+  locationReady?: boolean;
   getSubCategories: () => void;
   /** How many to show on the home page before "View all". */
   limit?: number;
@@ -28,18 +34,27 @@ export interface SubCategoryListViewProps {
 const DEFAULT_LIMIT = 12;
 
 /** Home strip of collections, linking into each sub-category listing. */
-export default function SubCategoryListView({ subCategories, getSubCategories, limit = DEFAULT_LIMIT }: SubCategoryListViewProps) {
+export default function SubCategoryListView({
+  subCategories,
+  subCategoriesKey,
+  locationId,
+  locationReady,
+  getSubCategories,
+  limit = DEFAULT_LIMIT,
+}: SubCategoryListViewProps) {
+  // Collections are per city: fetch once the city is known, again when it changes.
+  const isCurrentList = subCategoriesKey === experienceListKey(locationId, "subcategories");
   useEffect(() => {
-    if (!subCategories || subCategories.length === 0) getSubCategories();
+    if (locationReady && !isCurrentList) getSubCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [locationReady, locationId]);
 
   const active = useMemo(
     () =>
-      (subCategories ?? [])
+      (isCurrentList ? subCategories ?? [] : [])
         .filter((s) => s && s.isActive !== false)
         .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name)),
-    [subCategories],
+    [subCategories, isCurrentList],
   );
 
   if (active.length === 0) return null;

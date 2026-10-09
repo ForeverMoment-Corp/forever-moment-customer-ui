@@ -1,5 +1,6 @@
 import { connect } from 'react-redux';
 import { getAddons, getData, getExperience, getExperienceAddons, getSubCategoryExperiences } from '@/features/experiences/store/actions';
+import { selectLocationId, selectLocationReady } from '@/features/experiences/store/location';
 import type { RootState } from '@/store/store';
 import ExperienceDetails from './components/ExperienceView';
 import '../css/styles.scss';
@@ -11,6 +12,8 @@ const mapStateToProps = (state: RootState) => ({
     // Related section: same sub-category first, whole catalogue as fallback.
     subCategoryExperiences: state.experiences?.subCategoryData ?? [],
     subCategoryKey: state.experiences?.subCategoryKey ?? null,
+    locationId: selectLocationId(state),
+    locationReady: selectLocationReady(state),
     allExperiences: state.experiences?.data ?? [],
     // GET /public/experiences/{id}/addons, keyed by experience id.
     experienceAddons: state.experiences?.experienceAddons ?? {},

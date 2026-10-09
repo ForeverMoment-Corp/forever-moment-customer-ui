@@ -6,11 +6,17 @@ import FadeIn from "@/components/animations/FadeIn";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
+import { experienceListKey } from "@/features/experiences/store/location";
 
 export interface FeaturedExperienceProps {
-  /** GET /public/experiences/featured */
+  /** GET /public/experiences/location/{locationId}/featured */
   experiences?: ExperienceListItem[];
+  /** City the list was fetched for; compared with the current one to skip stale lists. */
+  featuredKey?: string | null;
   loading?: boolean;
+  locationId?: number;
+  /** False until the header's location list has settled. */
+  locationReady?: boolean;
   getFeaturedExperiences?: () => void;
   limit?: number;
 }
@@ -18,26 +24,25 @@ export interface FeaturedExperienceProps {
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
 
-export default function FeaturedExperienceView({ experiences, loading, getFeaturedExperiences, limit }: FeaturedExperienceProps) {
+export default function FeaturedExperienceView({ experiences, featuredKey, loading, locationId, locationReady, getFeaturedExperiences, limit }: FeaturedExperienceProps) {
   const [liked, setLiked] = useState<number[]>([]);
 
+  // Featured is per city: fetch once the city is known (home teaser and /featured-experiences
+  // share the store, so whichever mounts first fetches) and again when it changes.
+  const isCurrentList = featuredKey === experienceListKey(locationId, 'featured');
   useEffect(() => {
-    // Home already fetches featured experiences; only fetch when the store is empty
-    // (e.g. landing directly on /featured-experiences).
-    if (getFeaturedExperiences && (!experiences || experiences.length === 0)) {
-      getFeaturedExperiences();
-    }
+    if (getFeaturedExperiences && locationReady && !isCurrentList) getFeaturedExperiences();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [locationReady, locationId]);
 
   const toggleLike = (id: number) =>
     setLiked((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
-  const all = (experiences ?? []).filter((e) => e && e.isActive !== false);
+  const all = isCurrentList ? (experiences ?? []).filter((e) => e && e.isActive !== false) : [];
   const list = limit ? all.slice(0, limit) : all;
   // "View all" only when this is the teaser on the home page.
   const showViewAll = limit !== undefined && all.length > list.length;
-  const isLoading = !!loading && list.length === 0;
+  const isLoading = (!!loading || !isCurrentList) && list.length === 0;
 
   return (
     <section className="bg-ivory py-10 md:py-14">
