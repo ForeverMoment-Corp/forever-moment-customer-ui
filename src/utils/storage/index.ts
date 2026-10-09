@@ -55,6 +55,7 @@ export const storage = {
     },
     setToken: (token: string) => {
         setLoginSession(`${STORAGE_PREFIX}token`, token);
+        setLoginSession('access_token', token);
     },
     clearToken: () => {
         removeLoginSession(`${STORAGE_PREFIX}token`);

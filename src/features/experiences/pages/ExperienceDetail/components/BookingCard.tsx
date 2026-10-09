@@ -8,8 +8,11 @@ import OrderSummary from './OrderSummary';
 import PincodeChecker, { type PincodeResult } from './PincodeChecker';
 import type { AddOn, ExperienceVM } from '../types';
 import { FONT_SANS, FONT_SERIF, formatDuration, formatINR } from '../normalize';
-import { fetchExperienceCoupons, validateCoupon } from '../../../store/api';
+import { fetchExperienceCoupons, validateCoupon, createBooking, checkBookingStatus } from '../../../store/api';
 import { whatsappLink } from '@/features/help/contact';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '@/store/store';
+import { openLoginModal } from '@/features/auth/store/authSlice';
 
 export interface BookingCardProps {
   experience: ExperienceVM;
@@ -164,6 +167,9 @@ function RecapRow({ icon: Icon, label, value, muted }: { icon: typeof Clock; lab
 }
 
 export default function BookingCard({ experience: e, addons, toggleAddon, selectedAddons, totalPrice, onViewReviews }: BookingCardProps) {
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+
   const showTag = !!e.tag && !(e.isFeatured && e.tag.trim().toLowerCase() === 'bestseller');
   const today = useMemo(() => startOfDay(new Date()), []);
   const quickDays = useMemo(() => Array.from({ length: QUICK_DAYS }, (_, i) => new Date(today.getTime() + i * DAY)), [today]);
@@ -175,6 +181,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const [couponOpen, setCouponOpen] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [couponNote, setCouponNote] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -228,13 +235,49 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
     setDateError(false);
   };
 
-  const handleBook = () => {
+  const handleBook = async () => {
+    if (!isAuthenticated) {
+      dispatch(openLoginModal());
+      return;
+    }
+
     if (!effectiveDate || (hasAnySlots && !selectedSlot)) {
       setDateError(true);
       dateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    // TODO: hand off to checkout once the booking flow exists.
+
+    if (!venueDone) {
+      alert("Please check pincode availability before booking.");
+      return;
+    }
+
+    setIsBooking(true);
+    try {
+      const payload = {
+        timeSlotMapperId: selectedSlot?.id || 0,
+        bookingDate: toISODate(effectiveDate),
+        guestCount: e.minGuests || 2, // minimum guests
+        pincode: venue.pincode,
+        addonMapperIds: selectedAddons.map(a => a.id),
+      };
+      const response = await createBooking(payload, { id: user?.id as string, role: user?.role as string });
+      
+      try {
+        const statusResponse = await checkBookingStatus(response.bookingId || response.id || '', { id: user?.id as string, role: user?.role as string });
+        console.log('Booking status:', statusResponse);
+        alert('Booking created successfully! Reference ID: ' + (response.bookingId || response.id));
+      } catch (statusErr: any) {
+        console.error('Failed to check booking status:', statusErr);
+        alert('Booking created successfully (ID: ' + (response.bookingId || response.id) + '), but failed to fetch status.');
+      }
+      
+      // TODO: Navigate to success or order confirmation page.
+    } catch (err: any) {
+      alert(err.message || 'Failed to create booking');
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const applyCoupon = async (codeToApply = coupon) => {
@@ -610,11 +653,12 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
           <button
             type="button"
             onClick={handleBook}
+            disabled={isBooking}
             style={{ fontFamily: FONT_SANS, background: 'linear-gradient(135deg, var(--burgundy), var(--burgundy-dark))' }}
-            className="group flex h-[56px] w-full items-center justify-between gap-3 rounded-2xl pl-5 pr-2 text-white shadow-[0_16px_34px_-12px_color-mix(in_srgb,_var(--burgundy)_60%,_transparent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-12px_color-mix(in_srgb,_var(--burgundy)_70%,_transparent)] active:translate-y-0"
+            className="group flex h-[56px] w-full items-center justify-between gap-3 rounded-2xl pl-5 pr-2 text-white shadow-[0_16px_34px_-12px_color-mix(in_srgb,_var(--burgundy)_60%,_transparent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-12px_color-mix(in_srgb,_var(--burgundy)_70%,_transparent)] active:translate-y-0 disabled:opacity-75 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
           >
             <span className="min-w-0 text-left leading-tight">
-              <span className="block text-[0.95rem] font-semibold">{effectiveDate ? `Book for ${formatDay(effectiveDate)}` : 'Book this setup'}</span>
+              <span className="block text-[0.95rem] font-semibold">{isBooking ? 'Booking...' : (effectiveDate ? `Book for ${formatDay(effectiveDate)}` : 'Book this setup')}</span>
               <span className="block text-[0.7rem] text-white/75">Instant confirmation · pay securely</span>
             </span>
             <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-white/15 px-3.5 text-[0.95rem] font-semibold tabular-nums transition-colors group-hover:bg-white/25">

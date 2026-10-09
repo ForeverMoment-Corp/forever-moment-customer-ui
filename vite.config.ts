@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8086',
+        target: 'https://api.15.134.55.225.nip.io',
         changeOrigin: true,
         secure: false,
       },

@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CircleHelp,
   LogIn,
+  LogOut,
   MapPin,
   Menu,
   MessageSquare,
@@ -25,7 +26,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getCategories } from "@/features/header/store/actions";
 import { getLocations, setSelectedLocation } from "@/features/home/store/actions";
 import { CUSTOMER_CONFIG } from "@/config/constants";
-import { openLoginModal } from "@/features/auth/store/authSlice";
+import { openLoginModal, logoutUser } from "@/features/auth/store/authSlice";
 
 /* ────────────────────────────────────────────────────────────────
    Colours come from the app palette in src/styles/theme.scss
@@ -54,7 +55,6 @@ interface Location {
   isActive: boolean;
 }
 
-/* Small labelled icon button used in the top-right cluster */
 const IconAction = ({
   icon: Icon,
   label,
@@ -62,6 +62,7 @@ const IconAction = ({
   onClick,
   badge,
   active,
+  avatarUrl,
 }: {
   icon: typeof User;
   label: string;
@@ -69,6 +70,7 @@ const IconAction = ({
   onClick?: () => void;
   badge?: number;
   active?: boolean;
+  avatarUrl?: string;
 }) => {
   const cls = `group flex flex-col items-center gap-1 min-w-[48px] transition-colors ${
     active ? "text-gold" : "text-taupe hover:text-gold"
@@ -76,7 +78,11 @@ const IconAction = ({
   const inner = (
     <>
       <span className="relative">
-        <Icon size={19} strokeWidth={1.6} />
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={label} className="w-[19px] h-[19px] rounded-full object-cover" />
+        ) : (
+          <Icon size={19} strokeWidth={1.6} />
+        )}
         {badge ? (
           <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-coral text-white text-[9px] rounded-full flex items-center justify-center font-bold">
             {badge}
@@ -124,6 +130,9 @@ const Navbar = () => {
   const apiCategories = useAppSelector((state) => state.header?.categories ?? []) as NavCategory[];
   const locations = useAppSelector((state) => state.home?.locations ?? []) as Location[];
   const selectedLocation = useAppSelector((state) => state.home?.selectedLocation ?? "Delhi NCR");
+  
+  const isAuthenticated = useAppSelector((state) => state.auth?.isAuthenticated);
+  const user = useAppSelector((state) => state.auth?.user);
 
   useEffect(() => {
     if (locations.length === 0) {
@@ -134,11 +143,11 @@ const Navbar = () => {
   }, [dispatch, locations.length, selectedLocation]);
 
   const categories: NavCategory[] = apiCategories
-    .filter((cat) => cat.isActive)
+    .filter((cat) => cat.isActive !== false)
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
   const activeCategory = categories.find((c) => c.id === activeMenu) ?? null;
-  const activeLocations = locations.filter((loc) => loc.isActive);
+  const activeLocations = locations.filter((loc) => loc.isActive !== false);
 
   /* ── Hover intent: a short delay before opening and a grace period before
         closing stops the mega menu flickering while the cursor travels. ── */
@@ -151,7 +160,7 @@ const Navbar = () => {
 
   const scheduleOpen = (cat: NavCategory) => {
     clearTimers();
-    const hasSubs = cat.subCategories?.some((s) => s.isActive);
+    const hasSubs = cat.subCategories?.some((s) => s.isActive !== false);
     if (!hasSubs) {
       setActiveMenu(null);
       return;
@@ -396,6 +405,7 @@ const Navbar = () => {
                   icon={User}
                   label="Account"
                   active={guestOpen}
+                  avatarUrl={isAuthenticated ? user?.profilePictureUrl : undefined}
                   onClick={() => setGuestOpen((v) => !v)}
                 />
 
@@ -407,35 +417,50 @@ const Navbar = () => {
                     <div className="absolute -top-1.5 right-5 w-3 h-3 bg-ink rotate-45" />
                     <div className="px-5 pt-5 pb-4 bg-gradient-to-br from-ink to-ink-soft">
                       <p style={{ ...serif, fontSize: "1.15rem", color: "var(--gold)", fontWeight: 600 }}>
-                        Welcome
+                        {isAuthenticated ? `Welcome, ${user?.name?.split(' ')[0] || 'User'}` : "Welcome"}
                       </p>
                       <p
                         className="uppercase mt-1"
                         style={{ ...sans, fontSize: "0.58rem", color: "rgba(255,255,255,0.55)", letterSpacing: "0.14em" }}
                       >
-                        Login to access your account
+                        {isAuthenticated ? "Manage your account" : "Login to access your account"}
                       </p>
                     </div>
-                    <div className="px-4 py-4 flex gap-2 border-b border-sand">
-                      <button
-                        onClick={() => {
-                          setGuestOpen(false);
-                          dispatch(openLoginModal());
-                        }}
-                        style={sans}
-                        className="flex-1 text-center py-2.5 rounded-full border border-gold text-gold-dark text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-gold hover:text-white transition-all"
-                      >
-                        Login
-                      </button>
-                      <Link
-                        to="/register"
-                        onClick={() => setGuestOpen(false)}
-                        style={sans}
-                        className="flex-1 text-center py-2.5 rounded-full bg-gold text-white text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-ink transition-all"
-                      >
-                        Register
-                      </Link>
-                    </div>
+                    {!isAuthenticated ? (
+                      <div className="px-4 py-4 flex gap-2 border-b border-sand">
+                        <button
+                          onClick={() => {
+                            setGuestOpen(false);
+                            dispatch(openLoginModal());
+                          }}
+                          style={sans}
+                          className="flex-1 text-center py-2.5 rounded-full border border-gold text-gold-dark text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-gold hover:text-white transition-all"
+                        >
+                          Login
+                        </button>
+                        <Link
+                          to="/register"
+                          onClick={() => setGuestOpen(false)}
+                          style={sans}
+                          className="flex-1 text-center py-2.5 rounded-full bg-gold text-white text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-ink transition-all"
+                        >
+                          Register
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="px-4 py-4 flex flex-col gap-2 border-b border-sand">
+                        <button
+                          onClick={() => {
+                            setGuestOpen(false);
+                            dispatch(logoutUser() as any);
+                          }}
+                          style={sans}
+                          className="w-full text-center py-2.5 rounded-full border border-sand text-umber text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-ivory transition-all"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
                     <div className="py-2">
                       {guestMenuItems.slice(2).map((item) => (
                         <Link
@@ -503,7 +528,7 @@ const Navbar = () => {
 
             {categories.map((cat) => {
               const isActive = activeMenu === cat.id;
-              const hasSubs = cat.subCategories?.some((s) => s.isActive);
+              const hasSubs = cat.subCategories?.some((s) => s.isActive !== false);
               return (
                 <button
                   key={cat.id}
@@ -630,7 +655,7 @@ const Navbar = () => {
 
               <ul className="px-3 pb-3">
                 {categories.map((cat) => {
-                  const hasSubs = cat.subCategories?.some((s) => s.isActive);
+                  const hasSubs = cat.subCategories?.some((s) => s.isActive !== false);
                   return (
                     <li key={cat.id}>
                       {hasSubs ? (
@@ -673,9 +698,9 @@ const Navbar = () => {
                 Account
               </p>
               <ul className="mb-4">
-                {guestMenuItems.map((item) => (
-                  <li key={item.label}>
-                    {item.to === "/login" ? (
+                {!isAuthenticated && (
+                  <>
+                    <li>
                       <button
                         onClick={() => {
                           closeMobile();
@@ -684,22 +709,51 @@ const Navbar = () => {
                         className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
                         style={{ ...sans, fontSize: "0.8rem" }}
                       >
-                        <item.icon size={15} className="text-gold" />
-                        {item.label}
+                        <LogIn size={15} className="text-gold" />
+                        Login
                       </button>
-                    ) : (
+                    </li>
+                    <li>
                       <Link
-                        to={item.to}
+                        to="/register"
                         onClick={closeMobile}
                         className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
                         style={{ ...sans, fontSize: "0.8rem" }}
                       >
-                        <item.icon size={15} className="text-gold" />
-                        {item.label}
+                        <UserPlus size={15} className="text-gold" />
+                        Register
                       </Link>
-                    )}
+                    </li>
+                  </>
+                )}
+                {guestMenuItems.slice(2).map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      to={item.to}
+                      onClick={closeMobile}
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
+                      style={{ ...sans, fontSize: "0.8rem" }}
+                    >
+                      <item.icon size={15} className="text-gold" />
+                      {item.label}
+                    </Link>
                   </li>
                 ))}
+                {isAuthenticated && (
+                  <li>
+                    <button
+                      onClick={() => {
+                        closeMobile();
+                        dispatch(logoutUser() as any);
+                      }}
+                      className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-coral"
+                      style={{ ...sans, fontSize: "0.8rem" }}
+                    >
+                      <LogOut size={15} className="text-coral" />
+                      Logout
+                    </button>
+                  </li>
+                )}
               </ul>
 
               <div className="px-5 pb-6">
@@ -742,7 +796,7 @@ const Navbar = () => {
 
               <ul className="py-2">
                 {(mobileCategory.subCategories ?? [])
-                  .filter((s) => s.isActive)
+                  .filter((s) => s.isActive !== false)
                   .sort((a, b) => a.displayOrder - b.displayOrder)
                   .map((sub) => (
                     <li key={sub.id}>

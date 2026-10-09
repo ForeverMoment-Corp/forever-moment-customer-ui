@@ -5,9 +5,11 @@ import { MdEmail } from 'react-icons/md';
 import { X } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
-import { closeLoginModal } from '../store/authSlice';
+import { closeLoginModal, loginSuccess, fetchProfile } from '../store/authSlice';
 import styles from './LoginModal.module.scss';
 import { AnimatePresence, motion } from 'framer-motion';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { googleLogin } from '../store/api';
 
 const LoginModal: React.FC = () => {
     const dispatch = useDispatch();
@@ -87,10 +89,30 @@ const LoginModal: React.FC = () => {
                     </div>
 
                     <div className={styles.socialGrid}>
-                        <button type="button" className={styles.socialBtn}>
-                            <FcGoogle className={styles.socialIcon} />
-                            <span className={styles.socialText}>Google</span>
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID"}>
+                                <GoogleLogin
+                                    onSuccess={async (credentialResponse) => {
+                                        if (credentialResponse.credential) {
+                                            try {
+                                                const result = await googleLogin(credentialResponse.credential);
+                                                console.log('Login successful', result);
+                                                dispatch(loginSuccess(result));
+                                                // Fetch full profile info in background
+                                                dispatch(fetchProfile() as any);
+                                            } catch (e) {
+                                                console.error('Google login error', e);
+                                            }
+                                        }
+                                    }}
+                                    onError={() => {
+                                        console.error('Login Failed');
+                                    }}
+                                    type="icon"
+                                    shape="circle"
+                                />
+                            </GoogleOAuthProvider>
+                        </div>
                         
                         <button type="button" className={styles.socialBtn}>
                             <FaFacebook className={`${styles.socialIcon} text-[#1877F2]`} />

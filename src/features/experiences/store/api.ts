@@ -172,3 +172,75 @@ export async function validateCoupon(data: ValidateCouponRequest): Promise<Coupo
     }
     return body?.response as CouponValidationResponse;
 }
+
+export interface BookingRequest {
+    timeSlotMapperId: number;
+    bookingDate: string; // YYYY-MM-DD
+    guestCount: number;
+    pincode: string;
+    addonMapperIds: number[];
+}
+
+export interface BookingResponse {
+    bookingId: string;
+    // other fields as returned by the backend
+    [key: string]: any;
+}
+
+/** POST /user/booking */
+export async function createBooking(data: BookingRequest, user: { id: string | number; role: string }): Promise<BookingResponse> {
+    const response = await fetch(`${API_BASE}/user/booking`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Id': String(user.id),
+            'X-User-Roles': user.role,
+            'Idempotency-Key': crypto.randomUUID(),
+            'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        },
+        body: JSON.stringify(data),
+    });
+    let body: Partial<ApiEnvelope<BookingResponse>> | null = null;
+    try {
+        body = await response.json() as ApiEnvelope<BookingResponse>;
+    } catch {
+        body = null;
+    }
+    if (!response.ok) {
+        throw new Error(body?.msg || `Failed to create booking: ${response.statusText || response.status}`);
+    }
+    return body?.response as BookingResponse;
+}
+
+export interface BookingStatusResponse {
+    // fields based on what the API returns, e.g. status
+    [key: string]: any;
+}
+
+/** GET /api/payments/admin/bookings/{bookingId}/status */
+export async function checkBookingStatus(bookingId: string, user: { id: string | number; role: string }): Promise<BookingStatusResponse> {
+    // We use fetch here for consistency with other functions in this file,
+    // though the URL is outside /api/platform.
+    const paymentsBase = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace('/platform', '') : '/api';
+    const response = await fetch(`${paymentsBase}/payments/admin/bookings/${encodeURIComponent(bookingId)}/status`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': String(user.id),
+            'X-User-Roles': user.role,
+            'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        }
+    });
+    
+    let body: any = null;
+    try {
+        body = await response.json();
+    } catch {
+        body = null;
+    }
+    if (!response.ok) {
+        throw new Error(body?.msg || body?.message || `Failed to fetch booking status: ${response.statusText || response.status}`);
+    }
+    
+    return body;
+}
