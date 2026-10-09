@@ -1,14 +1,14 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { ArrowRight, BadgeCheck, CalendarDays, CalendarHeart, Check, Clock, MapPin, MessageCircle, Moon, ShieldCheck, Sparkles, Star, Sun, Sunrise, Sunset, Tag, Users } from 'lucide-react';
+import { ArrowRight, BadgeCheck, CalendarDays, CalendarHeart, Check, Clock, Loader2, MapPin, MessageCircle, Moon, ShieldCheck, Sparkles, Star, Sun, Sunrise, Sunset, Tag, Users } from 'lucide-react';
 
 import AddOns from './AddOns';
 import OrderSummary from './OrderSummary';
 import PincodeChecker, { type PincodeResult } from './PincodeChecker';
 import type { AddOn, ExperienceVM } from '../types';
 import { FONT_SANS, FONT_SERIF, formatDuration, formatINR } from '../normalize';
-import { fetchExperienceCoupons, validateCoupon, createBooking, checkBookingStatus } from '../../../store/api';
+import { fetchExperienceCoupons, validateCoupon, createBooking, waitForPaymentLink } from '../../../store/api';
 import { whatsappLink } from '@/features/help/contact';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store/store';
@@ -182,6 +182,10 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const [coupon, setCoupon] = useState('');
   const [couponNote, setCouponNote] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  // Set once the booking exists: payment retries reuse it instead of booking again.
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const [paymentStage, setPaymentStage] = useState<'idle' | 'preparing' | 'redirecting' | 'delayed'>('idle');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -252,7 +256,14 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       return;
     }
 
+    // The booking already exists (payment link was slow): only fetch the link again.
+    if (pendingBookingId) {
+      await goToPayment(pendingBookingId);
+      return;
+    }
+
     setIsBooking(true);
+    setPaymentError(null);
     try {
       const payload = {
         timeSlotMapperId: selectedSlot?.id || 0,
@@ -262,19 +273,33 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         addonMapperIds: selectedAddons.map(a => a.id),
       };
       const response = await createBooking(payload, { id: user?.id as string, role: user?.role as string });
-      
-      try {
-        const statusResponse = await checkBookingStatus(response.bookingId || response.id || '', { id: user?.id as string, role: user?.role as string });
-        console.log('Booking status:', statusResponse);
-        alert('Booking created successfully! Reference ID: ' + (response.bookingId || response.id));
-      } catch (statusErr: any) {
-        console.error('Failed to check booking status:', statusErr);
-        alert('Booking created successfully (ID: ' + (response.bookingId || response.id) + '), but failed to fetch status.');
-      }
-      
-      // TODO: Navigate to success or order confirmation page.
+      const bookingId = String(response.bookingId || response.id || '');
+      if (!bookingId) throw new Error('Booking was created but no booking reference came back.');
+      setPendingBookingId(bookingId);
+      await goToPayment(bookingId);
     } catch (err: any) {
       alert(err.message || 'Failed to create booking');
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  /** GET /api/payment/bookings/{id}/payment-link (polled), then hand the browser to Stripe Checkout. */
+  const goToPayment = async (bookingId: string) => {
+    setIsBooking(true);
+    setPaymentError(null);
+    setPaymentStage('preparing');
+    try {
+      const url = await waitForPaymentLink(bookingId, { id: user?.id as string, role: user?.role as string });
+      if (!url) {
+        setPaymentStage('delayed');
+        return;
+      }
+      setPaymentStage('redirecting');
+      window.location.assign(url);
+    } catch (err: unknown) {
+      setPaymentStage('delayed');
+      setPaymentError(err instanceof Error && err.message ? err.message : 'We could not open the payment page.');
     } finally {
       setIsBooking(false);
     }
@@ -658,13 +683,35 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
             className="group flex h-[56px] w-full items-center justify-between gap-3 rounded-2xl pl-5 pr-2 text-white shadow-[0_16px_34px_-12px_color-mix(in_srgb,_var(--burgundy)_60%,_transparent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-12px_color-mix(in_srgb,_var(--burgundy)_70%,_transparent)] active:translate-y-0 disabled:opacity-75 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
           >
             <span className="min-w-0 text-left leading-tight">
-              <span className="block text-[0.95rem] font-semibold">{isBooking ? 'Booking...' : (effectiveDate ? `Book for ${formatDay(effectiveDate)}` : 'Book this setup')}</span>
-              <span className="block text-[0.7rem] text-white/75">Instant confirmation · pay securely</span>
+              <span className="flex items-center gap-2 text-[0.95rem] font-semibold">
+                {isBooking && <Loader2 size={16} className="animate-spin" />}
+                {paymentStage === 'preparing'
+                  ? 'Preparing secure payment…'
+                  : paymentStage === 'redirecting'
+                    ? 'Opening payment…'
+                    : isBooking
+                      ? 'Booking…'
+                      : paymentStage === 'delayed'
+                        ? 'Continue to payment'
+                        : effectiveDate ? `Book for ${formatDay(effectiveDate)}` : 'Book this setup'}
+              </span>
+              <span className="block text-[0.7rem] text-white/75">
+                {pendingBookingId ? `Booking ref ${pendingBookingId} · pay securely` : 'Instant confirmation · pay securely'}
+              </span>
             </span>
             <span className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-white/15 px-3.5 text-[0.95rem] font-semibold tabular-nums transition-colors group-hover:bg-white/25">
               {formatINR(finalPrice)} <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
             </span>
           </button>
+
+          {paymentStage === 'delayed' && (
+            <p role="status" style={{ fontFamily: FONT_SANS }} className="mt-2.5 rounded-xl bg-[var(--rose-light)] px-3.5 py-2.5 text-[0.78rem] leading-snug text-[var(--burgundy)]">
+              {paymentError
+                ? `Your booking is saved (ref ${pendingBookingId}), but ${paymentError.charAt(0).toLowerCase() + paymentError.slice(1)}`
+                : `Your booking is saved (ref ${pendingBookingId}). The payment page is taking longer than usual.`}{' '}
+              Tap “Continue to payment” to try again. You won't be booked twice.
+            </p>
+          )}
         </div>
 
         <ul style={{ fontFamily: FONT_SANS }} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[0.72rem] text-[var(--mid)]">

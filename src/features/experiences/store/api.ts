@@ -247,6 +247,71 @@ export interface BookingStatusResponse {
     [key: string]: any;
 }
 
+/** Base for the payments service behind the gateway (`/api/payment/**`). */
+const PAYMENTS_BASE = import.meta.env.VITE_API_URL
+    ? String(import.meta.env.VITE_API_URL).replace('/platform', '/payment')
+    : '/api/payment';
+
+/** Pulls the Stripe Checkout URL out of whichever field the payments service uses. */
+function pickPaymentUrl(payload: unknown): string | null {
+    if (typeof payload === 'string') return /^https?:\/\//.test(payload) ? payload : null;
+    if (!payload || typeof payload !== 'object') return null;
+    const p = payload as Record<string, unknown>;
+    for (const key of ['paymentUrl', 'paymentLink', 'checkoutUrl', 'sessionUrl', 'url']) {
+        const value = p[key];
+        if (typeof value === 'string' && /^https?:\/\//.test(value)) return value;
+    }
+    // Envelope: { code, status, msg, response }
+    return 'response' in p ? pickPaymentUrl(p.response) : null;
+}
+
+/**
+ * GET /api/payment/bookings/{bookingId}/payment-link — the Stripe Checkout URL for a booking.
+ * Payment creates the Checkout Session asynchronously after the booking, so "not ready yet"
+ * (404 / 202 / no URL in the body) resolves to null rather than throwing.
+ */
+export async function fetchPaymentLink(bookingId: string | number, user: { id: string | number; role: string }): Promise<string | null> {
+    const response = await fetch(`${PAYMENTS_BASE}/bookings/${encodeURIComponent(String(bookingId))}/payment-link`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': String(user.id),
+            'X-User-Roles': user.role,
+            'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        },
+    });
+    let body: unknown = null;
+    try {
+        body = await response.json();
+    } catch {
+        body = null;
+    }
+    if (response.status === 404 || response.status === 202) return null;
+    if (!response.ok) {
+        const msg = (body as { msg?: string; message?: string } | null);
+        throw new Error(msg?.msg || msg?.message || `Failed to get payment link: ${response.statusText || response.status}`);
+    }
+    return pickPaymentUrl(body);
+}
+
+/**
+ * Poll fetchPaymentLink until the Checkout URL is ready. Resolves null if it is not ready
+ * within `timeoutMs`, so the caller can offer a retry without creating another booking.
+ */
+export async function waitForPaymentLink(
+    bookingId: string | number,
+    user: { id: string | number; role: string },
+    { timeoutMs = 30_000, intervalMs = 1_500 }: { timeoutMs?: number; intervalMs?: number } = {},
+): Promise<string | null> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+        const url = await fetchPaymentLink(bookingId, user);
+        if (url) return url;
+        if (Date.now() + intervalMs > deadline) return null;
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+}
+
 /** GET /api/payments/admin/bookings/{bookingId}/status */
 export async function checkBookingStatus(bookingId: string, user: { id: string | number; role: string }): Promise<BookingStatusResponse> {
     // Replace '/platform' with '/payment' to route to the payments service (as configured in gateway)

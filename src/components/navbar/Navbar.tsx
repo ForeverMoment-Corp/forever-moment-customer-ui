@@ -10,16 +10,15 @@ import {
   LogOut,
   MapPin,
   Menu,
-  MessageSquare,
-  Package,
-  Phone,
   Search,
   ShoppingBag,
   User,
-  UserPlus,
   X,
 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import MegaMenu from "./MegaMenu";
+import AccountMenu from "./AccountMenu";
+import { accountMenuItems, helpMenuItems } from "./accountMenuItems";
 import CategoryIcon from "./CategoryIcon";
 import { categoryPath, subCategoryPath, type NavCategory } from "./navTypes";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -38,16 +37,6 @@ const serif = { fontFamily: "'Cormorant Garamond', serif" } as const;
 
 const TOP_BAR_H = 72;
 const CAT_BAR_H = 48;
-
-const guestMenuItems = [
-  { icon: LogIn, label: "Login", to: "/login" },
-  { icon: UserPlus, label: "Register", to: "/register" },
-  { icon: Package, label: "My Bookings", to: "/dashboard" },
-  { icon: User, label: "My Account", to: "/dashboard" },
-  { icon: Phone, label: "Contact Us", to: "/contact" },
-  { icon: MessageSquare, label: "My Queries", to: "/support" },
-  { icon: CircleHelp, label: "FAQs", to: "/faqs" },
-];
 
 interface Location {
   id?: number;
@@ -407,74 +396,17 @@ const Navbar = () => {
                   onClick={() => setGuestOpen((v) => !v)}
                 />
 
-                {guestOpen && (
-                  <div
-                    className="absolute right-0 top-[calc(100%+14px)] w-[232px] bg-white rounded-2xl border border-sand z-[200] overflow-hidden"
-                    style={{ boxShadow: "0 16px 48px color-mix(in srgb, var(--ink) 14%, transparent)" }}
-                  >
-                    <div className="absolute -top-1.5 right-5 w-3 h-3 bg-ink rotate-45" />
-                    <div className="px-5 pt-5 pb-4 bg-gradient-to-br from-ink to-ink-soft">
-                      <p style={{ ...serif, fontSize: "1.15rem", color: "var(--gold)", fontWeight: 600 }}>
-                        {isAuthenticated ? `Welcome, ${user?.name?.split(' ')[0] || 'User'}` : "Welcome"}
-                      </p>
-                      <p
-                        className="uppercase mt-1"
-                        style={{ ...sans, fontSize: "0.58rem", color: "rgba(255,255,255,0.55)", letterSpacing: "0.14em" }}
-                      >
-                        {isAuthenticated ? "Manage your account" : "Login to access your account"}
-                      </p>
-                    </div>
-                    {!isAuthenticated ? (
-                      <div className="px-4 py-4 flex gap-2 border-b border-sand">
-                        <button
-                          onClick={() => {
-                            setGuestOpen(false);
-                            dispatch(openLoginModal());
-                          }}
-                          style={sans}
-                          className="flex-1 text-center py-2.5 rounded-full border border-gold text-gold-dark text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-gold hover:text-white transition-all"
-                        >
-                          Login
-                        </button>
-                        <Link
-                          to="/register"
-                          onClick={() => setGuestOpen(false)}
-                          style={sans}
-                          className="flex-1 text-center py-2.5 rounded-full bg-gold text-white text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-ink transition-all"
-                        >
-                          Register
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="px-4 py-4 flex flex-col gap-2 border-b border-sand">
-                        <button
-                          onClick={() => {
-                            setGuestOpen(false);
-                            dispatch(logoutUser() as any);
-                          }}
-                          style={sans}
-                          className="w-full text-center py-2.5 rounded-full border border-sand text-umber text-[0.62rem] tracking-[0.14em] uppercase font-semibold hover:bg-ivory transition-all"
-                        >
-                          Logout
-                        </button>
-                      </div>
-                    )}
-                    <div className="py-2">
-                      {guestMenuItems.slice(2).map((item) => (
-                        <Link
-                          key={item.label}
-                          to={item.to}
-                          onClick={() => setGuestOpen(false)}
-                          className="flex items-center gap-3 px-5 py-2.5 text-taupe hover:bg-ivory hover:text-gold-dark transition-colors"
-                          style={{ ...sans, fontSize: "0.78rem" }}
-                        >
-                          <item.icon size={14} className="text-gold" />
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {guestOpen && (
+                    <AccountMenu
+                      isAuthenticated={!!isAuthenticated}
+                      user={user ?? null}
+                      onClose={() => setGuestOpen(false)}
+                      onLogin={() => dispatch(openLoginModal())}
+                      onLogout={() => dispatch(logoutUser())}
+                    />
+                  )}
+                </AnimatePresence>
               </div>
 
               <IconAction icon={ShoppingBag} label="Cart" to="/cart" badge={cartCount} />
@@ -695,40 +627,35 @@ const Navbar = () => {
               >
                 Account
               </p>
+              {!isAuthenticated && (
+                <div className="px-5 pb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMobile();
+                      dispatch(openLoginModal());
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-gold py-3 text-gold-dark transition-colors hover:bg-gold hover:text-white"
+                    style={{ ...sans, fontSize: "0.72rem", letterSpacing: "0.14em", fontWeight: 600 }}
+                  >
+                    <LogIn size={15} />
+                    <span className="uppercase">Log in or sign up</span>
+                  </button>
+                </div>
+              )}
               <ul className="mb-4">
-                {!isAuthenticated && (
-                  <>
-                    <li>
-                      <button
-                        onClick={() => {
-                          closeMobile();
-                          dispatch(openLoginModal());
-                        }}
-                        className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
-                        style={{ ...sans, fontSize: "0.8rem" }}
-                      >
-                        <LogIn size={15} className="text-gold" />
-                        Login
-                      </button>
-                    </li>
-                    <li>
-                      <Link
-                        to="/register"
-                        onClick={closeMobile}
-                        className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
-                        style={{ ...sans, fontSize: "0.8rem" }}
-                      >
-                        <UserPlus size={15} className="text-gold" />
-                        Register
-                      </Link>
-                    </li>
-                  </>
-                )}
-                {guestMenuItems.slice(2).map((item) => (
+                {[...accountMenuItems, ...helpMenuItems].map((item) => (
                   <li key={item.label}>
                     <Link
                       to={item.to}
-                      onClick={closeMobile}
+                      onClick={(e) => {
+                        closeMobile();
+                        // Guests sign in first for account pages
+                        if (item.requiresAuth && !isAuthenticated) {
+                          e.preventDefault();
+                          dispatch(openLoginModal());
+                        }
+                      }}
                       className="flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-taupe"
                       style={{ ...sans, fontSize: "0.8rem" }}
                     >
@@ -742,13 +669,13 @@ const Navbar = () => {
                     <button
                       onClick={() => {
                         closeMobile();
-                        dispatch(logoutUser() as any);
+                        dispatch(logoutUser());
                       }}
-                      className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-ivory hover:text-gold-dark transition-colors text-coral"
+                      className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-rose-light transition-colors text-burgundy"
                       style={{ ...sans, fontSize: "0.8rem" }}
                     >
-                      <LogOut size={15} className="text-coral" />
-                      Logout
+                      <LogOut size={15} />
+                      Log out
                     </button>
                   </li>
                 )}
