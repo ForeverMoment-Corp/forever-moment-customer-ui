@@ -270,7 +270,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         bookingDate: toISODate(effectiveDate),
         guestCount: e.minGuests || 2, // minimum guests
         pincode: venue.pincode,
-        addonMapperIds: selectedAddons.map(a => a.id),
+        addonMapperIds: selectedAddons.flatMap((a) => (a.mapperId != null ? [a.mapperId] : [])),
         requestedAmount: finalPrice,
       };
       const response = await createBooking(payload, { id: user?.id as string, role: user?.role as string });

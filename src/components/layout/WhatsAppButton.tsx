@@ -3,8 +3,8 @@ import { useLocation } from 'react-router-dom'
 
 const WhatsAppButton = () => {
   const { pathname } = useLocation()
-  // Experience detail pages show a sticky price bar below lg, so lift the bubble above it there.
-  const hasBookingBar = pathname.startsWith('/experience/')
+  // Experience detail and cart pages show a sticky price bar below lg, so lift the bubble above it there.
+  const hasBookingBar = pathname.startsWith('/experience/') || pathname === '/cart'
 
   return (
     <a

@@ -43,6 +43,8 @@ export interface LocationOption {
 
 export interface AddOn {
   id: number;
+  /** Experience-addon mapping id (sent when booking); only add-ons attached to this experience have one. */
+  mapperId?: number;
   name: string;
   description?: string;
   /** What this add-on costs with this experience (priceOverride applied). */

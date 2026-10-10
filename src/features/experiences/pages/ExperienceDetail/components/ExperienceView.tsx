@@ -148,6 +148,7 @@ export default function ExperienceDetails({
           const price = a.isFree ? 0 : Number(a.effectivePrice) || 0;
           return {
             id: a.addonId,
+            mapperId: a.mapperId,
             name: a.name,
             description: a.description?.trim() || undefined,
             price,
