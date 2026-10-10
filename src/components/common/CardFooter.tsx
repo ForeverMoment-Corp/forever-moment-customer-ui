@@ -12,9 +12,9 @@ const CardFooter: React.FC<CardFooterProps> = ({ price, priceLabel }) => {
         <div>
           <div
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "1.6rem",
-              fontWeight: 700,
+              fontFamily: "'Jost', sans-serif",
+              fontSize: "1.3rem",
+              fontWeight: 600,
               color: "var(--burgundy)",
             }}
           >

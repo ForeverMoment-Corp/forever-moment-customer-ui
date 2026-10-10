@@ -5,8 +5,8 @@ const navItems = [
   { label: 'Home', icon: FiHome, to: '/' },
   { label: 'Explore', icon: FiCompass, to: '/experiences' },
   { label: 'Cart', icon: FiShoppingBag, to: '/cart' },
-  { label: 'Bookings', icon: FiCalendar, to: '/dashboard' },
-  { label: 'Account', icon: FiUser, to: '/dashboard' },
+  { label: 'Bookings', icon: FiCalendar, to: '/bookings' },
+  { label: 'Account', icon: FiUser, to: '/profile' },
 ]
 
 const BottomNav = () => {

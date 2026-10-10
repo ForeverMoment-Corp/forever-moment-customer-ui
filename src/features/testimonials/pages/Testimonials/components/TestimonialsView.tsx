@@ -28,7 +28,7 @@ export default function TestimonialsView() {
         <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t) => (
             <StaggerItem key={t.name}>
-              <div className="bg-white rounded-2xl p-7 shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_16px_40px_color-mix(in_srgb,_var(--gold)_20%,_transparent)] hover:-translate-y-2 transition-all duration-300 h-full">
+              <div className="bg-white rounded-2xl p-7 shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_16px_40px_color-mix(in_srgb,_var(--gold)_20%,_transparent)] hover:-translate-y-2 transition-all duration-300 h-full flex flex-col">
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <FiStar key={i} size={14} fill={i < t.rating ? 'var(--coral)' : 'none'} color={i < t.rating ? 'var(--coral)' : 'var(--sand)'} />
@@ -37,7 +37,7 @@ export default function TestimonialsView() {
                 <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.1rem] text-ink italic leading-relaxed mb-6">
                   "{t.review}"
                 </p>
-                <div className="flex items-center gap-3">
+                <div className="mt-auto flex items-center gap-3">
                   <img src={t.avatar} alt={t.name} className="w-11 h-11 rounded-full object-cover ring-2 ring-ivory" />
                   <div>
                     <h4 style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.85rem] text-ink font-semibold">{t.name}</h4>

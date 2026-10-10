@@ -11,7 +11,7 @@ export interface AccountMenuItem {
 }
 
 export const accountMenuItems: AccountMenuItem[] = [
-  { icon: Package, label: "My Bookings", hint: "Upcoming and past celebrations", to: "/dashboard", requiresAuth: true },
+  { icon: Package, label: "My Bookings", hint: "Upcoming and past celebrations", to: "/bookings", requiresAuth: true },
   { icon: User, label: "My Profile", hint: "Your details and preferences", to: "/profile", requiresAuth: true },
   { icon: MessageSquare, label: "My Queries", hint: "Support requests and replies", to: "/support", requiresAuth: true },
 ];

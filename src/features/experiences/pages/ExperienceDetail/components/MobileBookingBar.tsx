@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { FONT_SANS, FONT_SERIF, formatINR } from '../normalize';
+import { FONT_SANS, formatINR } from '../normalize';
 
 interface Props {
   totalPrice: number;
@@ -16,7 +16,7 @@ export default function MobileBookingBar({ totalPrice, originalPrice, discount, 
         <div className="min-w-0">
           <p style={{ fontFamily: FONT_SANS }} className="text-[0.66rem] uppercase tracking-[0.12em] text-[var(--mid)]">Total</p>
           <p className="flex items-baseline gap-1.5">
-            <span style={{ fontFamily: FONT_SERIF }} className="text-[1.5rem] leading-none font-bold text-[var(--charcoal)] tabular-nums">
+            <span style={{ fontFamily: FONT_SANS }} className="text-[1.25rem] leading-none font-semibold text-[var(--charcoal)] tabular-nums">
               {formatINR(totalPrice)}
             </span>
           </p>

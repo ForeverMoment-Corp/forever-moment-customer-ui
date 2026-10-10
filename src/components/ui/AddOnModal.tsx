@@ -96,7 +96,7 @@ const AddOnModal = ({ addOns, categories, selectedAddOns, onToggle, onClose }: A
         <div className="p-5 border-t border-sand flex items-center justify-between bg-ivory">
           <div>
             <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber">{selectedAddOns.length} item(s) selected</p>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.1rem] text-ink font-bold">+ {formatPrice(addedTotal)}</p>
+            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.98rem] text-ink font-semibold tabular-nums">+ {formatPrice(addedTotal)}</p>
           </div>
           <button onClick={onClose} style={{ fontFamily: "'Jost', sans-serif" }} className="bg-gold text-white rounded-full px-8 py-3 text-[0.75rem] tracking-[0.15em] uppercase font-semibold hover:bg-ink transition-colors">
             Done

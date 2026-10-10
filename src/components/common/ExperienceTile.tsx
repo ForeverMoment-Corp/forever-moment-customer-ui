@@ -149,7 +149,7 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
           <div>
             <p style={{ fontFamily: SANS }} className="text-[0.6rem] uppercase tracking-[0.12em] text-[var(--mid)]">From</p>
             <p className="flex items-baseline gap-1.5">
-              <span style={{ fontFamily: SERIF }} className="text-[1.25rem] font-bold leading-none text-[var(--charcoal)] tabular-nums">
+              <span style={{ fontFamily: SANS }} className="text-[1.05rem] font-semibold leading-none text-[var(--charcoal)] tabular-nums">
                 {formatINR(price)}
               </span>
               {discount > 0 && (

@@ -388,7 +388,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         <div className="mt-3.5 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span style={{ fontFamily: FONT_SERIF }} className="text-[1.85rem] font-bold leading-none text-[var(--charcoal)] tabular-nums">{formatINR(e.basePrice)}</span>
+              <span style={{ fontFamily: FONT_SANS }} className="text-[1.5rem] font-semibold leading-none text-[var(--charcoal)] tabular-nums">{formatINR(e.basePrice)}</span>
             </div>
             <p style={{ fontFamily: FONT_SANS }} className="mt-1 text-[0.72rem] text-[var(--mid)]">per setup · all taxes included</p>
           </div>

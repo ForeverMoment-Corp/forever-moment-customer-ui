@@ -5,6 +5,7 @@ import { helpRoutes } from '@/features/help/pages/routes';
 import { supportRoutes } from '@/features/support/pages/routes';
 import { authRoutes } from '@/features/auth/pages/routes';
 import { profileRoutes } from '@/features/profile/pages/routes';
+import { bookingRoutes } from '@/features/bookings/pages/routes';
 
 export const customerRoutes = [
     ...homeRoutes,
@@ -14,4 +15,5 @@ export const customerRoutes = [
     ...supportRoutes,
     ...authRoutes,
     ...profileRoutes,
+    ...bookingRoutes,
 ];

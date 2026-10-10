@@ -62,7 +62,7 @@ export default function CategoryCard({ category, index, stats }: CategoryCardPro
 
   return (
     <article
-      className="group relative flex flex-col rounded-[26px] border border-[var(--border-light)] bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_color-mix(in_srgb,_var(--burgundy)_12%,_transparent)]"
+      className="group relative flex h-full flex-col rounded-[26px] border border-[var(--border-light)] bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_color-mix(in_srgb,_var(--burgundy)_12%,_transparent)]"
       style={{ fontFamily: FONT_SANS }}
     >
       {/* Cover: slider over the whole category gallery */}
@@ -88,12 +88,11 @@ export default function CategoryCard({ category, index, stats }: CategoryCardPro
 
       {/* Body */}
       <div className="flex flex-col flex-1 p-5">
-        {meta.length > 0 && (
-          <p className="text-[0.7rem] tracking-[0.18em] uppercase text-[var(--gold)] font-medium">
-            {meta.join(" · ")}
-          </p>
-        )}
-        <p className="mt-2 text-[0.88rem] leading-relaxed text-[var(--mid)] line-clamp-2">
+        {/* Meta line and description reserve their space so cards in a row line up. */}
+        <p className="min-h-[1.5em] text-[0.7rem] tracking-[0.18em] uppercase text-[var(--gold)] font-medium">
+          {meta.join(" · ")}
+        </p>
+        <p className="mt-2 min-h-[3.25em] text-[0.88rem] leading-relaxed text-[var(--mid)] line-clamp-2">
           {description || `Curated ${category.name.toLowerCase()} experiences, decor and surprises, set up for you.`}
         </p>
 

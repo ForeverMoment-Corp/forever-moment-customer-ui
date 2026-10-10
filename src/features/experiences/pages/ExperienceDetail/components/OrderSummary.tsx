@@ -1,5 +1,5 @@
 import type { AddOn } from '../types';
-import { FONT_SANS, FONT_SERIF, formatINR } from '../normalize';
+import { FONT_SANS, formatINR } from '../normalize';
 
 interface Props {
   basePrice: number;
@@ -36,7 +36,7 @@ export default function OrderSummary({ basePrice, originalPrice, addons, couponD
         <dt>
           Total <span className="ml-1.5 text-[0.74rem] font-normal text-[var(--mid)]">incl. taxes</span>
         </dt>
-        <dd style={{ fontFamily: FONT_SERIF }} className="text-[1.45rem] font-bold text-[var(--charcoal)] tabular-nums">
+        <dd style={{ fontFamily: FONT_SANS }} className="text-[1.2rem] font-semibold text-[var(--charcoal)] tabular-nums">
           {formatINR(total)}
         </dd>
       </div>

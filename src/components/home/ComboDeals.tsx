@@ -69,7 +69,7 @@ const ComboDeals = () => {
                 ============================================ */}
                 <div className="flex items-center justify-between pt-3 border-t border-sand gap-3">
                   <div className="flex items-baseline gap-1.5 flex-wrap">
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.25rem] text-ink font-bold">{formatPrice(combo.comboPrice)}</span>
+                    <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[1.05rem] text-ink font-semibold tabular-nums">{formatPrice(combo.comboPrice)}</span>
                     <span style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber line-through">{formatPrice(originalTotal)}</span>
                   </div>
                   <button

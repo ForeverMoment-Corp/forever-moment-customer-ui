@@ -73,7 +73,7 @@ const GiftPicker = () => {
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[10px] uppercase tracking-[0.15em] text-umber">Starting From</p>
-                      <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.4rem] font-bold text-ink whitespace-nowrap">{formatPrice(gift.price)}</p>
+                      <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[1.15rem] font-semibold text-ink whitespace-nowrap tabular-nums">{formatPrice(gift.price)}</p>
                     </div>
 
                     <button
