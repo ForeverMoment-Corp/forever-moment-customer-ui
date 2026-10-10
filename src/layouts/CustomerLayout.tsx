@@ -22,8 +22,8 @@ const CustomerLayout = () => {
       {/* CONTENT */}
       <main className="relative z-0 flex-1">
         <Outlet />
-        {/* Experience detail and cart pages ship their own price + action bar */}
-        {!pathname.startsWith('/experience/') && pathname !== '/cart' && <FloatingBookingCTA />}
+        {/* Experience detail and cart pages ship their own price + action bar; payment results need no upsell */}
+        {!pathname.startsWith('/experience/') && pathname !== '/cart' && !pathname.startsWith('/payment/') && <FloatingBookingCTA />}
       </main>
 
       <WhatsAppButton />

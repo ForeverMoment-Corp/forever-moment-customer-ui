@@ -13,6 +13,8 @@ import { whatsappLink } from '@/features/help/contact';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { openLoginModal } from '@/features/auth/store/authSlice';
+import { experiencePath } from '@/features/experiences/utils/slug';
+import { savePendingPayment } from '@/features/bookings/pendingPayment';
 
 export interface BookingCardProps {
   experience: ExperienceVM;
@@ -297,6 +299,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         return;
       }
       setPaymentStage('redirecting');
+      savePendingPayment({ bookingId, experienceName: e.name, experiencePath: experiencePath({ id: e.id, slug: e.slug }) });
       window.location.assign(url);
     } catch (err: unknown) {
       setPaymentStage('delayed');
