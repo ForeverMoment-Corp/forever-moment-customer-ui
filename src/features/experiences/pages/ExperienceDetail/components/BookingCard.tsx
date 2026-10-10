@@ -271,6 +271,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         guestCount: e.minGuests || 2, // minimum guests
         pincode: venue.pincode,
         addonMapperIds: selectedAddons.map(a => a.id),
+        requestedAmount: finalPrice,
       };
       const response = await createBooking(payload, { id: user?.id as string, role: user?.role as string });
       const bookingId = String(response.bookingId || response.id || '');

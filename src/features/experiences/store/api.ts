@@ -209,6 +209,8 @@ export interface BookingRequest {
     guestCount: number;
     pincode: string;
     addonMapperIds: number[];
+    /** The amount shown to the guest (after any coupon discount). */
+    requestedAmount: number;
 }
 
 export interface BookingResponse {
