@@ -64,6 +64,8 @@ const Home = ({ loading, error, getLocations }: HomeProps) => {
   return (
     <div>
       <Hero />
+      {/* Sub-categories right under the hero: the quickest way into a collection. Visible on load, so no defer-paint. */}
+      <SubCategoryList limit={12} />
       {/* <QuickCategories /> */}
       {/* <StatsBar /> */}
       {/* <TrustBar /> */}
@@ -82,9 +84,6 @@ const Home = ({ loading, error, getLocations }: HomeProps) => {
       {/* <CategorySlider /> */}
       <div className="defer-paint">
         <CategoryList />
-      </div>
-      <div className="defer-paint">
-        <SubCategoryList limit={12} />
       </div>
 
       {/* <ComboDeals /> */}

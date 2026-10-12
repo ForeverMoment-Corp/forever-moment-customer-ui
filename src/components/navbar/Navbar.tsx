@@ -1,22 +1,23 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   CircleHelp,
   LogIn,
   LogOut,
   MapPin,
   Menu,
-  Search,
   ShoppingBag,
   User,
   X,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import MegaMenu from "./MegaMenu";
+import NavSearch from "./NavSearch";
 import AccountMenu from "./AccountMenu";
 import { accountMenuItems, helpMenuItems } from "./accountMenuItems";
 import CategoryIcon from "./CategoryIcon";
@@ -37,6 +38,10 @@ const serif = { fontFamily: "'Cormorant Garamond', serif" } as const;
 
 const TOP_BAR_H = 72;
 const CAT_BAR_H = 48;
+const catPillClass = (active: boolean) =>
+  `relative flex items-center gap-1.5 h-[30px] pl-2.5 pr-3 rounded-full whitespace-nowrap text-[0.74rem] font-medium capitalize transition-colors shrink-0 ${
+    active ? "bg-ivory text-ink" : "text-taupe hover:bg-ivory hover:text-ink"
+  }`;
 
 interface Location {
   id?: number;
@@ -99,9 +104,11 @@ const IconAction = ({
 
 const Navbar = () => {
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  // Category row scrolls sideways (hidden scrollbar); arrows appear at whichever edge has more.
+  const catBarRef = useRef<HTMLDivElement>(null);
+  const [catScroll, setCatScroll] = useState({ left: false, right: false });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMobileCategory, setActiveMobileCategory] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [guestOpen, setGuestOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
 
@@ -134,6 +141,15 @@ const Navbar = () => {
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
   const activeCategory = categories.find((c) => c.id === activeMenu) ?? null;
+
+  // The category the current page belongs to (its own page or one of its sub-categories), kept lit in the bar.
+  const subCategoryMatch = pathname.match(/^\/subcategory\/(\d+)/);
+  const currentCategoryId =
+    categories.find((c) =>
+      subCategoryMatch
+        ? c.subCategories?.some((sub) => String(sub.id) === subCategoryMatch[1])
+        : decodeURIComponent(pathname) === categoryPath(c),
+    )?.id ?? null;
   const activeLocations = locations.filter((loc) => loc.isActive !== false);
 
   /* ── Hover intent: a short delay before opening and a grace period before
@@ -213,17 +229,31 @@ const Navbar = () => {
 
   useEffect(() => clearTimers, [clearTimers]);
 
-  const submitSearch = () => {
-    const q = searchQuery.trim();
-    if (!q) return;
-    navigate(`/search?q=${encodeURIComponent(q)}`);
-    setSearchQuery("");
-  };
-
   const closeMobile = () => {
     setMobileOpen(false);
     setActiveMobileCategory(null);
   };
+
+  /* Show the scroll arrows only when the category row overflows on that side. */
+  const categoryKey = categories.map((c) => c.name).join("|");
+  const updateCatScroll = useCallback(() => {
+    const bar = catBarRef.current;
+    if (!bar) return;
+    const left = bar.scrollLeft > 2;
+    const right = bar.scrollLeft + bar.clientWidth < bar.scrollWidth - 2;
+    setCatScroll((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
+  }, []);
+  useLayoutEffect(() => {
+    const bar = catBarRef.current;
+    if (!bar) return;
+    updateCatScroll();
+    const observer = new ResizeObserver(updateCatScroll);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [categoryKey, updateCatScroll]);
+
+  const scrollCategories = (direction: 1 | -1) =>
+    catBarRef.current?.scrollBy({ left: direction * Math.max(200, catBarRef.current.clientWidth * 0.6), behavior: "smooth" });
 
   const mobileCategory = categories.find((c) => c.id === activeMobileCategory) ?? null;
 
@@ -237,10 +267,14 @@ const Navbar = () => {
       >
         {/* ═══════════════════ TOP BAR ═══════════════════ */}
         <div className="border-b border-sand">
+          {/* Same edge padding as the category bar. The two side groups share the leftover width
+              equally (flex-1 basis-0), which keeps the search exactly centred. */}
           <div
-            className="container mx-auto px-6 flex items-center gap-4 lg:gap-6"
+            className="w-full px-4 lg:px-5 flex items-center gap-4 lg:gap-6"
             style={{ height: TOP_BAR_H }}
           >
+            {/* LEFT: logo + city */}
+            <div className="flex items-center gap-4 lg:gap-6 shrink-0 md:flex-1 md:basis-0 md:min-w-0">
             {/* LOGO */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0" onClick={closeAll}>
               <img
@@ -343,48 +377,15 @@ const Navbar = () => {
               )}
             </div>
 
+            </div>
+
             {/* SEARCH (desktop) */}
-            <div className="hidden md:flex flex-1 justify-center">
-              <div
-                role="search"
-                className="w-full max-w-[520px] flex items-center bg-ivory border border-sand rounded-full pl-4 pr-1.5 h-[42px] gap-3 hover:border-gold transition-colors focus-within:border-gold focus-within:bg-white focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,_var(--gold)_12%,_transparent)]"
-              >
-                <Search size={16} className="text-gold shrink-0" strokeWidth={1.75} />
-                <input
-                  type="search"
-                  aria-label="Search"
-                  placeholder="Search events, cakes, gifts, vendors…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submitSearch()}
-                  onFocus={() => setActiveMenu(null)}
-                  className="flex-1 min-w-0 bg-transparent outline-none placeholder-umber text-ink [&::-webkit-search-cancel-button]:hidden"
-                  style={{ ...sans, fontSize: "0.82rem" }}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    aria-label="Clear search"
-                    onClick={() => setSearchQuery("")}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-umber hover:text-ink hover:bg-sand/60 transition-colors"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  aria-label="Submit search"
-                  onClick={submitSearch}
-                  className="h-[32px] px-4 rounded-full bg-ink text-white uppercase tracking-[0.12em] hover:bg-gold transition-colors shrink-0"
-                  style={{ ...sans, fontSize: "0.6rem", fontWeight: 600 }}
-                >
-                  Search
-                </button>
-              </div>
+            <div className="hidden md:flex flex-[0_1_520px] min-w-0 justify-center">
+              <NavSearch variant="desktop" categories={categories} onFocus={() => setActiveMenu(null)} onNavigate={closeAll} />
             </div>
 
             {/* RIGHT ACTIONS (desktop) */}
-            <div className="hidden md:flex items-center gap-2 lg:gap-3 shrink-0">
+            <div className="hidden md:flex md:flex-1 md:basis-0 justify-end items-center gap-2 lg:gap-3">
               <IconAction icon={CircleHelp} label="Help" to="/faqs" />
 
               <div className="relative" ref={guestRef}>
@@ -414,19 +415,7 @@ const Navbar = () => {
 
             {/* MOBILE RIGHT */}
             <div className="flex md:hidden flex-1 items-center justify-end gap-2">
-              <div className="flex flex-1 max-w-[220px] items-center bg-ivory border border-sand rounded-full px-3 h-[36px] gap-2 focus-within:border-gold">
-                <Search size={14} className="text-gold shrink-0" />
-                <input
-                  type="search"
-                  aria-label="Search"
-                  placeholder="Search…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submitSearch()}
-                  className="w-full min-w-0 bg-transparent outline-none placeholder-umber text-ink [&::-webkit-search-cancel-button]:hidden"
-                  style={{ ...sans, fontSize: "0.75rem" }}
-                />
-              </div>
+              <NavSearch variant="mobile" categories={categories} onNavigate={closeAll} />
               <button
                 type="button"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -442,72 +431,97 @@ const Navbar = () => {
 
         {/* ═══════════════════ CATEGORY BAR ═══════════════════ */}
         <div className="hidden md:block bg-white border-b border-sand">
-          <div
-            role="menubar"
-            aria-label="Categories"
-            className="container mx-auto px-6 flex items-center gap-1 overflow-x-auto scrollbar-hide"
-            style={{ height: CAT_BAR_H }}
-          >
-            {categories.length === 0 &&
-              Array.from({ length: 6 }).map((_, i) => (
-                <span
-                  key={i}
-                  className="h-[30px] w-[110px] rounded-full bg-ivory border border-sand animate-pulse shrink-0"
-                />
-              ))}
+          <div className="relative w-full px-4 lg:px-5 flex items-center" style={{ height: CAT_BAR_H }}>
+            <div
+              ref={catBarRef}
+              role="menubar"
+              aria-label="Categories"
+              onScroll={updateCatScroll}
+              className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-hide"
+              style={sans}
+            >
+              {categories.length === 0 &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <span key={i} className="h-[30px] w-[96px] rounded-full bg-ivory animate-pulse shrink-0" />
+                ))}
 
-            {categories.map((cat) => {
-              const isActive = activeMenu === cat.id;
-              const hasSubs = cat.subCategories?.some((s) => s.isActive !== false);
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  role="menuitem"
-                  aria-haspopup={hasSubs ? "true" : undefined}
-                  aria-expanded={hasSubs ? isActive : undefined}
-                  onMouseEnter={() => scheduleOpen(cat)}
-                  onFocus={() => scheduleOpen(cat)}
-                  onClick={() => {
-                    closeAll();
-                    navigate(categoryPath(cat));
-                  }}
-                  style={sans}
-                  className={`relative flex items-center gap-2 pl-3 pr-3.5 h-[32px] rounded-full whitespace-nowrap text-[0.76rem] font-medium tracking-wide capitalize transition-all shrink-0 border ${
-                    isActive
-                      ? "bg-ivory border-sand text-ink"
-                      : "border-transparent text-taupe hover:bg-ivory hover:text-ink"
-                  }`}
-                >
-                  <CategoryIcon
-                    name={cat.name}
-                    size={15}
-                    strokeWidth={1.75}
-                    className={`transition-colors ${isActive ? "text-gold-dark" : "text-gold"}`}
-                  />
-                  {cat.name}
-                  {hasSubs && (
-                    <ChevronDown
-                      size={12}
-                      className={`text-umber transition-transform ${isActive ? "rotate-180" : ""}`}
+              {categories.map((cat) => {
+                const isActive = activeMenu === cat.id;
+                const isCurrent = currentCategoryId === cat.id;
+                const lit = isActive || isCurrent;
+                const hasSubs = cat.subCategories?.some((s) => s.isActive !== false);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    role="menuitem"
+                    aria-current={isCurrent ? "page" : undefined}
+                    aria-haspopup={hasSubs ? "true" : undefined}
+                    aria-expanded={hasSubs ? isActive : undefined}
+                    onMouseEnter={() => scheduleOpen(cat)}
+                    onFocus={() => scheduleOpen(cat)}
+                    onClick={() => {
+                      closeAll();
+                      navigate(categoryPath(cat));
+                    }}
+                    className={catPillClass(lit)}
+                  >
+                    <CategoryIcon
+                      name={cat.name}
+                      size={14}
+                      strokeWidth={1.75}
+                      className={`transition-colors ${lit ? "text-gold-dark" : "text-gold"}`}
                     />
-                  )}
-                  {/* gold indicator under the active pill */}
-                  <span
-                    className={`absolute left-4 right-4 -bottom-[9px] h-[2px] rounded-full bg-gold transition-opacity ${
-                      isActive ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                </button>
-              );
-            })}
+                    {cat.name}
+                    {hasSubs && (
+                      <ChevronDown
+                        size={12}
+                        className={`-ml-0.5 text-umber transition-transform ${isActive ? "rotate-180" : ""}`}
+                      />
+                    )}
+                    {/* gold indicator under the hovered pill and the current page's category */}
+                    <span
+                      className={`absolute left-3 right-3 -bottom-[9px] h-[2px] rounded-full bg-gold transition-opacity ${
+                        lit ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Edge arrows: only on the side that has more categories to show */}
+            {catScroll.left && (
+              <button
+                type="button"
+                aria-label="Scroll categories left"
+                onClick={() => scrollCategories(-1)}
+                className="absolute left-0 inset-y-0 flex items-center pl-2 pr-6 bg-gradient-to-r from-white via-white to-transparent text-taupe hover:text-ink"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-sand bg-white shadow-sm">
+                  <ChevronLeft size={14} />
+                </span>
+              </button>
+            )}
+            {catScroll.right && (
+              <button
+                type="button"
+                aria-label="Scroll categories right"
+                onClick={() => scrollCategories(1)}
+                className="absolute right-0 inset-y-0 flex items-center pr-2 pl-6 bg-gradient-to-l from-white via-white to-transparent text-taupe hover:text-ink"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-sand bg-white shadow-sm">
+                  <ChevronRight size={14} />
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
         {/* ═══════════════════ MEGA MENU ═══════════════════ */}
         {activeCategory && (
           <div className="hidden md:block">
-            <MegaMenu category={activeCategory} onNavigate={closeAll} />
+            <MegaMenu category={activeCategory} index={categories.indexOf(activeCategory)} onNavigate={closeAll} />
           </div>
         )}
       </nav>
@@ -529,6 +543,8 @@ const Navbar = () => {
 
       <aside
         aria-hidden={!mobileOpen}
+        // Off-screen while closed: keep its links out of the tab order too.
+        inert={!mobileOpen}
         className={`fixed top-0 left-0 h-full w-[85vw] max-w-[340px] bg-white z-[102] md:hidden transition-transform duration-300 ease-in-out flex flex-col ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -683,12 +699,12 @@ const Navbar = () => {
 
               <div className="px-5 pb-6">
                 <Link
-                  to="/services"
+                  to="/categories"
                   onClick={closeMobile}
                   className="block bg-ink text-white text-center rounded-full py-3.5 text-xs tracking-[0.16em] uppercase font-semibold hover:bg-gold transition-all"
                   style={sans}
                 >
-                  Book Now
+                  Explore celebrations
                 </Link>
               </div>
             </div>
