@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, Check, Loader2, MapPin, X } from 'lucide-react';
 import { checkPincodeServiceability, type PincodeArea } from '@/features/experiences/store/api';
 import { FONT_SANS } from '../normalize';
@@ -10,6 +10,8 @@ interface Props {
   experienceId: number;
   /** Reports each finished check (and the reset when the pincode is edited) so the booking panel can react. */
   onResult?: (pincode: string, result: PincodeResult, area: PincodeArea | null) => void;
+  /** The guest's saved venue pincode (set in the header): filled in and checked as soon as the page opens. */
+  defaultPincode?: string;
 }
 
 type State =
@@ -26,27 +28,34 @@ const placeOf = (area: PincodeArea | null) => {
 };
 
 /** Venue pincode check against GET /public/experiences/{id}/serviceable. */
-export default function PincodeChecker({ experienceId, onResult }: Props) {
-  const [pincode, setPincode] = useState('');
+export default function PincodeChecker({ experienceId, onResult, defaultPincode }: Props) {
+  const [pincode, setPincode] = useState(() => (defaultPincode && /^\d{6}$/.test(defaultPincode) ? defaultPincode : ''));
   const [state, setState] = useState<State>({ kind: 'idle' });
   // Only the latest request may update the UI, in case an earlier one answers late.
   const requestId = useRef(0);
 
-  const check = async () => {
-    if (pincode.length !== 6 || state.kind === 'checking') return;
+  const check = async (code: string = pincode) => {
+    if (code.length !== 6 || state.kind === 'checking') return;
     const id = ++requestId.current;
     setState({ kind: 'checking' });
     try {
-      const { serviceable, area } = await checkPincodeServiceability(experienceId, pincode);
+      const { serviceable, area } = await checkPincodeServiceability(experienceId, code);
       if (id !== requestId.current) return;
       const result = serviceable ? 'available' : 'unavailable';
       setState({ kind: 'done', result, area });
-      onResult?.(pincode, result, area);
+      onResult?.(code, result, area);
     } catch {
       if (id !== requestId.current) return;
       setState({ kind: 'error' });
     }
   };
+
+  // A pincode saved in the header is checked for this experience right away; no typing needed.
+  useEffect(() => {
+    if (pincode.length === 6) void check(pincode);
+    // Runs once per mount; the booking panel remounts this when the experience or saved pincode changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const result = state.kind === 'done' ? state.result : null;
   const place = state.kind === 'done' ? placeOf(state.area) : '';

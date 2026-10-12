@@ -13,6 +13,7 @@ import { whatsappLink } from '@/features/help/contact';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { openLoginModal } from '@/features/auth/store/authSlice';
+import { setVenuePincode } from '@/features/home/store/actions';
 import { experiencePath } from '@/features/experiences/utils/slug';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
 import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
@@ -172,6 +173,8 @@ function RecapRow({ icon: Icon, label, value, muted }: { icon: typeof Clock; lab
 
 export default function BookingCard({ experience: e, addons, toggleAddon, selectedAddons, totalPrice, onViewReviews }: BookingCardProps) {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  // Venue pincode the guest set in the header (or on an earlier experience); checked automatically below.
+  const savedPincode = useSelector((state: RootState) => state.home?.venuePincode ?? null);
   const dispatch = useDispatch();
 
   const showTag = !!e.tag && !(e.isFeatured && e.tag.trim().toLowerCase() === 'bestseller');
@@ -573,9 +576,16 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               last={addons.length === 0}
             >
               <PincodeChecker
+                // Remount (and re-check) when the experience or the header's saved pincode changes.
+                key={`${e.id}-${savedPincode?.pincode ?? ''}`}
                 experienceId={e.id}
+                defaultPincode={savedPincode?.pincode}
                 onResult={(pincode, result, area) => {
                   setVenue({ pincode, result });
+                  // A pincode we cover is remembered, so the next experience checks it without asking.
+                  if (result === 'available' && pincode !== savedPincode?.pincode) {
+                    dispatch(setVenuePincode({ pincode, areaName: area?.areaName ?? null, locationId: area?.locationId ?? null }));
+                  }
                   // A serviceable pincode in one of this experience's cities picks that city, so its slots show.
                   if (result === 'available' && area && e.locationOptions.some((l) => l.id === area.locationId)) setLocationId(area.locationId);
                 }}

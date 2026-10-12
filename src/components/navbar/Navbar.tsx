@@ -18,13 +18,14 @@ import {
 import { AnimatePresence } from "framer-motion";
 import MegaMenu from "./MegaMenu";
 import NavSearch from "./NavSearch";
+import PincodeField from "./PincodeField";
 import AccountMenu from "./AccountMenu";
 import { accountMenuItems, helpMenuItems } from "./accountMenuItems";
 import CategoryIcon from "./CategoryIcon";
 import { categoryPath, subCategoryPath, type NavCategory } from "./navTypes";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getCategories } from "@/features/header/store/actions";
-import { getLocations, setSelectedLocation } from "@/features/home/store/actions";
+import { getLocations, setSelectedLocation, setVenuePincode } from "@/features/home/store/actions";
 import { CUSTOMER_CONFIG } from "@/config/constants";
 import { openLoginModal, logoutUser } from "@/features/auth/store/authSlice";
 
@@ -132,6 +133,7 @@ const Navbar = () => {
   const locations = useAppSelector((state) => state.home?.locations ?? []) as Location[];
   // Empty until the guest picks a city or the location list loads (no hard-coded default).
   const selectedLocation = useAppSelector((state) => state.home?.selectedLocation ?? "");
+  const venuePincode = useAppSelector((state) => state.home?.venuePincode ?? null);
   
   const isAuthenticated = useAppSelector((state) => state.auth?.isAuthenticated);
   const user = useAppSelector((state) => state.auth?.user);
@@ -157,6 +159,13 @@ const Navbar = () => {
         : decodeURIComponent(pathname) === categoryPath(c),
     )?.id ?? null;
   const activeLocations = locations.filter((loc) => loc.isActive !== false);
+
+  // Choosing another city by hand drops a pincode from a different city, so experience pages never
+  // check a venue that is not in the city being browsed.
+  const chooseCity = (c: Location) => {
+    if (venuePincode?.locationId != null && c.id != null && c.id !== venuePincode.locationId) dispatch(setVenuePincode(null));
+    dispatch(setSelectedLocation(c.name));
+  };
 
   /* ── Hover intent: a short delay before opening and a grace period before
         closing stops the mega menu flickering while the cursor travels. ── */
@@ -353,10 +362,11 @@ const Navbar = () => {
                     Celebrating in
                   </span>
                   <span
-                    className="text-ink capitalize mt-[3px] max-w-[120px] truncate"
+                    className="text-ink capitalize mt-[3px] max-w-[170px] truncate"
                     style={{ ...sans, fontSize: "0.78rem", fontWeight: 500 }}
                   >
                     {selectedLocation || "Select city"}
+                    {venuePincode && <span className="text-gold-dark"> · {venuePincode.pincode}</span>}
                   </span>
                 </span>
                 <ChevronDown
@@ -367,15 +377,26 @@ const Navbar = () => {
 
               {cityOpen && (
                 <div
-                  role="listbox"
-                  className="absolute top-[calc(100%+10px)] left-0 w-[200px] bg-white rounded-2xl border border-sand z-20 overflow-hidden py-1.5"
+                  className="absolute top-[calc(100%+10px)] left-0 w-[280px] bg-white rounded-2xl border border-sand z-20 overflow-hidden py-1.5"
                   style={{ boxShadow: "0 16px 40px color-mix(in srgb, var(--ink) 14%, transparent)" }}
                 >
+                  {/* Venue pincode: set once, checked automatically on every experience */}
+                  <div className="px-4 pt-2.5 pb-2 border-b border-sand">
+                    <p
+                      className="pb-1.5 uppercase text-umber"
+                      style={{ ...sans, fontSize: "0.55rem", letterSpacing: "0.2em" }}
+                    >
+                      Where's the party?
+                    </p>
+                    <PincodeField locations={activeLocations} onSaved={() => setCityOpen(false)} />
+                  </div>
+
+                  <div role="listbox" aria-label="Choose your city">
                   <p
-                    className="px-4 pt-2 pb-1.5 uppercase text-umber"
+                    className="px-4 pt-2.5 pb-1.5 uppercase text-umber"
                     style={{ ...sans, fontSize: "0.55rem", letterSpacing: "0.2em" }}
                   >
-                    Choose your city
+                    Or choose your city
                   </p>
                   {activeLocations.length === 0 && (
                     <p className="px-4 py-2 text-umber" style={{ ...sans, fontSize: "0.75rem" }}>
@@ -391,7 +412,7 @@ const Navbar = () => {
                         role="option"
                         aria-selected={selected}
                         onClick={() => {
-                          dispatch(setSelectedLocation(c.name));
+                          chooseCity(c);
                           setCityOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-4 py-2.5 text-left capitalize transition-colors hover:bg-ivory ${
@@ -404,6 +425,7 @@ const Navbar = () => {
                       </button>
                     );
                   })}
+                  </div>
                 </div>
               )}
             </div>
@@ -617,7 +639,10 @@ const Navbar = () => {
           <select
             aria-label="Choose your city"
             value={selectedLocation}
-            onChange={(e) => dispatch(setSelectedLocation(e.target.value))}
+            onChange={(e) => {
+              const city = activeLocations.find((c) => c.name === e.target.value);
+              if (city) chooseCity(city);
+            }}
             className="ml-auto bg-transparent text-ink capitalize outline-none"
             style={{ ...sans, fontSize: "0.8rem", fontWeight: 500 }}
           >
@@ -632,6 +657,14 @@ const Navbar = () => {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Venue pincode (mobile): set once, checked automatically on every experience */}
+        <div className="px-5 pt-3 pb-2 border-b border-sand bg-ivory">
+          <p className="pb-1.5 uppercase text-umber" style={{ ...sans, fontSize: "0.55rem", letterSpacing: "0.18em" }}>
+            Where's the party?
+          </p>
+          <PincodeField locations={activeLocations} />
         </div>
 
         <div className="flex-1 overflow-y-auto">
