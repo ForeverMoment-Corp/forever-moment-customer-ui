@@ -26,6 +26,7 @@ import type { AddonCatalogueItem, ExperienceAddon } from '@/features/experiences
 import type { AddOn, FaqItem } from '../types';
 import { experiencePath, isNumericId } from '@/features/experiences/utils/slug';
 import { experienceListKey } from '@/features/experiences/store/location';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export interface ExperienceViewProps {
   experience: unknown;
@@ -220,6 +221,8 @@ export default function ExperienceDetails({
       faqs.length > 0 && { id: 'faq', label: 'FAQ' },
     ].filter(Boolean) as SectionNavItem[];
   }, [vm, faqs, extraAddons]);
+
+  useDocumentTitle(isCurrent ? vm?.name : null);
 
   if (error) {
     return (

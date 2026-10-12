@@ -8,6 +8,10 @@ interface Props {
   name: string;
   /** Rendered over the slider: the icon, price pill and title. */
   children?: React.ReactNode;
+  /** Height (or aspect) classes for the cover; cards size it to their grid. */
+  sizeClass?: string;
+  /** `sizes` hint for the image, matching the grid the card sits in. */
+  sizes?: string;
 }
 
 /** Dots are capped so a category with many photos keeps a tidy strip. */
@@ -17,7 +21,13 @@ const MAX_DOTS = 8;
  * Image slider for a category card. It sits inside a card that is itself a link,
  * so every control stops its event rather than navigating away.
  */
-export default function CategoryCover({ images, name, children }: Props) {
+export default function CategoryCover({
+  images,
+  name,
+  children,
+  sizeClass = 'h-48',
+  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+}: Props) {
   const [index, setIndex] = useState(0);
   const count = images.length;
 
@@ -38,14 +48,14 @@ export default function CategoryCover({ images, name, children }: Props) {
   const dots = images.slice(0, MAX_DOTS);
 
   return (
-    <div className="relative h-48 overflow-hidden">
+    <div className={`relative overflow-hidden ${sizeClass}`}>
       {current ? (
         <SmartImage
           key={current.hero}
           src={current.hero}
           placeholderSrc={current.thumbnail !== current.hero ? current.thumbnail : undefined}
           alt={current.alt}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes={sizes}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
         />
       ) : (

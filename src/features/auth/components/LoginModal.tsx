@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MdEmail } from 'react-icons/md';
-import { ArrowLeft, Eye, EyeOff, Loader2, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/store';
 import { closeLoginModal, loginSuccess, fetchProfile } from '../store/authSlice';
@@ -114,7 +114,7 @@ const LoginModal: React.FC = () => {
                             onClick={close}
                             aria-label="Close"
                         >
-                            <X size={20} />
+                            <X size={18} />
                         </button>
 
                         {view === 'email' ? (
@@ -124,12 +124,9 @@ const LoginModal: React.FC = () => {
                                     All sign-in options
                                 </button>
 
-                                <h2 id="login-modal-title" className={styles.title}>
+                                <h2 id="login-modal-title" className={`${styles.title} mb-4`}>
                                     Log in with email
                                 </h2>
-                                <p className={styles.subtitle}>
-                                    Use the email and password for your Forever Moment account.
-                                </p>
 
                                 {error && <p className={`${styles.error} ${styles.errorInline}`} role="alert">{error}</p>}
 
@@ -137,7 +134,7 @@ const LoginModal: React.FC = () => {
                                     <label htmlFor="login-email" className={styles.label}>
                                         Email
                                     </label>
-                                    <div className={`${styles.inputGroup} mb-4`}>
+                                    <div className={`${styles.inputGroup} mb-3`}>
                                         <input
                                             id="login-email"
                                             type="email"
@@ -185,16 +182,10 @@ const LoginModal: React.FC = () => {
                             </>
                         ) : (
                             <>
-                            <div className={styles.eyebrow}>
-                                <Sparkles size={13} />
-                                Forever Moment
-                            </div>
                             <h2 id="login-modal-title" className={styles.title}>
                                 Welcome in
                             </h2>
-                            <p className={styles.subtitle}>
-                                Log in or sign up to track your decor, book faster and unlock member prices.
-                            </p>
+                            <p className={styles.subtitle}>Log in or sign up to book faster.</p>
 
                             <form
                                 onSubmit={(e) => {
@@ -223,7 +214,6 @@ const LoginModal: React.FC = () => {
                                         }}
                                     />
                                 </div>
-                                <p className={styles.hint}>We'll send a one-time code to verify it's you.</p>
 
                                 <button
                                     type="submit"

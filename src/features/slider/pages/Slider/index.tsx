@@ -13,7 +13,7 @@ const mapStateToProps = (state: RootState) => ({
     slides: state.slider?.slides ?? [],
     slidesLoading: state.slider?.slidesLoading ?? false,
     locations: state.home?.locations ?? [],
-    selectedLocation: state.home?.selectedLocation ?? 'Vizag',
+    selectedLocation: state.home?.selectedLocation ?? '',
 });
 
 const mapDispatchToProps = {

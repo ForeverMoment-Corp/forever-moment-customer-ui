@@ -50,17 +50,13 @@ export default function HelpCenterView() {
           </ol>
         </nav>
 
-        {/* Header + search */}
-        <div className="mt-3 border-b border-[var(--border-light)] pb-5">
-          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
-            We are here to help
-          </p>
-          <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
-            How can we <em className="italic text-[var(--burgundy)]">help</em>?
-          </h1>
+        {/* No visible title: the breadcrumb says where you are. The heading stays for screen readers. */}
+        <h1 className="sr-only">Help centre</h1>
 
-          {hasFaqs && (
-          <div className="mt-4 flex h-12 max-w-xl items-center gap-2.5 rounded-full border border-[var(--border-light)] bg-white pl-4 pr-1.5 transition-colors focus-within:border-[var(--charcoal)]">
+        {/* FAQ search (the navbar search does not cover FAQ answers) */}
+        {hasFaqs && (
+        <div className="mt-3 border-b border-[var(--border-light)] pb-4">
+          <div className="flex h-12 max-w-xl items-center gap-2.5 rounded-full border border-[var(--border-light)] bg-white pl-4 pr-1.5 transition-colors focus-within:border-[var(--charcoal)]">
             <Search size={17} className="shrink-0 text-[var(--gold)]" />
             <input
               id="help-search"
@@ -86,18 +82,18 @@ export default function HelpCenterView() {
               </button>
             )}
           </div>
-          )}
         </div>
+        )}
 
         <div className="mt-5 grid gap-6 lg:grid-cols-12">
           {/* Articles */}
           {hasFaqs && (
           <div className="min-w-0 lg:col-span-8">
-            <p style={{ fontFamily: SANS }} className="mb-2 text-[0.8rem] text-[var(--mid)]">
-              {term
-                ? `${results.length} ${results.length === 1 ? 'result' : 'results'} for “${query.trim()}”`
-                : 'Everything people ask us most often'}
-            </p>
+            {term && (
+              <p style={{ fontFamily: SANS }} className="mb-2 text-[0.8rem] text-[var(--mid)]">
+                {results.length} {results.length === 1 ? 'result' : 'results'} for “{query.trim()}”
+              </p>
+            )}
 
             {results.length === 0 ? (
               <div className="rounded-2xl border-2 border-dashed border-[var(--border-light)] bg-white/60 py-14 text-center">

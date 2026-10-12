@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Compass, Home } from 'lucide-react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -13,14 +14,15 @@ const secondaryBtn =
 export default function NotFound() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  useDocumentTitle('Page not found');
 
   return (
     <section className="flex min-h-[70vh] items-center bg-[var(--cream)] px-4 py-14" style={{ fontFamily: SANS }}>
       <div className="mx-auto w-full max-w-lg text-center">
-        <p style={{ fontFamily: SERIF }} className="text-[5.5rem] font-semibold leading-none text-[var(--gold)] sm:text-[7rem]" aria-hidden="true">
+        <p style={{ fontFamily: SERIF }} className="text-[4rem] font-semibold leading-none text-[var(--gold)] sm:text-[5rem]" aria-hidden="true">
           404
         </p>
-        <h1 style={{ fontFamily: SERIF }} className="mt-2 text-[2rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.3rem]">
+        <h1 style={{ fontFamily: SERIF }} className="mt-2 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
           This page took a <em className="text-[var(--burgundy)]">detour</em>
         </h1>
         <p className="mx-auto mt-2 max-w-sm text-[0.9rem] leading-relaxed text-[var(--mid)]">

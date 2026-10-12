@@ -5,7 +5,7 @@ import type { ExperienceVM } from '../types';
 import { FONT_SANS } from '../normalize';
 
 const DROP_CAP =
-  "[&>p:first-child]:first-letter:float-left [&>p:first-child]:first-letter:mr-2.5 [&>p:first-child]:first-letter:mt-1 [&>p:first-child]:first-letter:[font-family:'Cormorant_Garamond',serif] [&>p:first-child]:first-letter:text-[3.4rem] [&>p:first-child]:first-letter:font-semibold [&>p:first-child]:first-letter:leading-[0.8] [&>p:first-child]:first-letter:text-[var(--burgundy)]";
+  "[&>p:first-child]:first-letter:float-left [&>p:first-child]:first-letter:mr-2.5 [&>p:first-child]:first-letter:mt-1 [&>p:first-child]:first-letter:[font-family:'Cormorant_Garamond',serif] [&>p:first-child]:first-letter:text-[2.4rem] [&>p:first-child]:first-letter:font-semibold [&>p:first-child]:first-letter:leading-[0.8] [&>p:first-child]:first-letter:text-[var(--burgundy)]";
 
 /** The short description as a lead, then the long description, with a line of quick facts. Both are CMS HTML. */
 export default function Overview({ experience: e }: { experience: ExperienceVM }) {

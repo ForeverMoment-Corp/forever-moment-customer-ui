@@ -70,7 +70,7 @@ export default function Reviews({ rating, reviewCount }: { rating: number; revie
             className="relative flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-[var(--sand)] bg-white p-5 sm:w-[calc(50%-6px)]"
           >
             {/* Oversized quote mark as the card's signature */}
-            <span aria-hidden style={{ fontFamily: FONT_SERIF }} className="pointer-events-none absolute -top-3 right-3 select-none text-[6rem] leading-none text-[var(--gold-pale)]">
+            <span aria-hidden style={{ fontFamily: FONT_SERIF }} className="pointer-events-none absolute -top-3 right-3 select-none text-[4rem] leading-none text-[var(--gold-pale)]">
               &rdquo;
             </span>
             <div className="relative flex items-center justify-between gap-2">

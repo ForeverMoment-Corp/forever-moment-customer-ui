@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
     AlertCircle,
     CheckCircle2,
@@ -8,6 +8,7 @@ import {
     CircleHelp,
     Edit2,
     Loader2,
+    LogIn,
     LogOut,
     Mail,
     MapPin,
@@ -17,7 +18,7 @@ import {
     User,
 } from 'lucide-react';
 import type { AppDispatch, RootState } from '@/store/store';
-import { fetchProfile, logoutUser, updateProfile } from '@/features/auth/store/authSlice';
+import { fetchProfile, logoutUser, openLoginModal, updateProfile } from '@/features/auth/store/authSlice';
 import Breadcrumbs from '@/features/experiences/pages/ExperienceDetail/components/Breadcrumbs';
 
 const SANS = "'Jost', sans-serif";
@@ -65,7 +66,6 @@ function DetailRow({ icon: Icon, label, value }: { icon: typeof Mail; label: str
 const ProfilePage: React.FC = () => {
     const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
     const dispatch = useDispatch<AppDispatch>();
-    const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -76,10 +76,6 @@ const ProfilePage: React.FC = () => {
     // The profile API returns phoneNumber / preferredCity; a profile update stores phone / location.
     const phone: string = user?.phone || user?.phoneNumber || '';
     const city: string = user?.location || user?.preferredCity || '';
-
-    useEffect(() => {
-        if (!isAuthenticated) navigate('/');
-    }, [isAuthenticated, navigate]);
 
     // Refresh from the server so the page never shows a stale cached profile.
     useEffect(() => {
@@ -98,7 +94,43 @@ const ProfilePage: React.FC = () => {
         return () => window.clearTimeout(t);
     }, [saved]);
 
-    if (!user) return null;
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="flex min-h-[70vh] items-center bg-[var(--cream)] px-4 py-12" style={{ fontFamily: SANS }}>
+                <div className="mx-auto w-full max-w-md rounded-3xl border border-[var(--border-light)] bg-white px-6 py-10 text-center">
+                    {isAuthenticated ? (
+                        // Signed in, profile still loading.
+                        <Loader2 size={26} className="mx-auto animate-spin text-[var(--gold)]" aria-label="Loading your profile" />
+                    ) : (
+                        <>
+                            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--rose-light)] text-[var(--burgundy)]">
+                                <User size={24} />
+                            </span>
+                            <h1 style={{ fontFamily: SERIF }} className="mt-4 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)]">
+                                Sign in to see your profile
+                            </h1>
+                            <p className="mx-auto mt-1.5 max-w-xs text-[0.86rem] leading-relaxed text-[var(--mid)]">
+                                Your details, bookings and support queries, all in one place.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => dispatch(openLoginModal())}
+                                className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-[var(--burgundy)] px-6 text-[0.78rem] font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-[var(--burgundy-dark)]"
+                            >
+                                <LogIn size={15} /> Sign in
+                            </button>
+                            <p className="mt-4 text-[0.78rem] text-[var(--mid)]">
+                                or{' '}
+                                <Link to="/categories" className="font-medium text-[var(--burgundy)] hover:underline">
+                                    browse celebrations
+                                </Link>
+                            </p>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     const completeness = [user.name, user.email, phone, city, user.profilePictureUrl].filter(Boolean).length;
     const completenessPct = Math.round((completeness / 5) * 100);
@@ -147,14 +179,10 @@ const ProfilePage: React.FC = () => {
                 <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'My profile' }]} />
 
                 {/* Page header */}
-                <div className="mt-3 border-b border-[var(--border-light)] pb-5">
-                    <p className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">Account</p>
-                    <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
+                <div className="mt-3 border-b border-[var(--border-light)] pb-4">
+                    <h1 style={{ fontFamily: SERIF }} className="text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
                         Hello, <em className="italic text-[var(--burgundy)]">{user.name?.split(' ')[0] || 'there'}</em>
                     </h1>
-                    <p className="mt-1.5 max-w-xl text-[0.88rem] leading-relaxed text-[var(--mid)]">
-                        Keep your details up to date so our planners can reach you about your celebrations.
-                    </p>
                 </div>
 
                 <div className="mt-6 grid items-start gap-6 lg:grid-cols-12">

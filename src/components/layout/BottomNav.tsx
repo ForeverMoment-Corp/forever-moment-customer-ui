@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import { FiHome, FiCompass, FiShoppingBag, FiCalendar, FiUser } from 'react-icons/fi'
 
-const navItems = [
+const navItems: { label: string; icon: typeof FiHome; to: string; match?: string[] }[] = [
   { label: 'Home', icon: FiHome, to: '/' },
-  { label: 'Explore', icon: FiCompass, to: '/experiences' },
+  // Lit on every browsing page, not just /categories.
+  { label: 'Explore', icon: FiCompass, to: '/categories', match: ['/categories', '/category/', '/subcategor', '/experience/', '/featured-experiences'] },
   { label: 'Cart', icon: FiShoppingBag, to: '/cart' },
   { label: 'Bookings', icon: FiCalendar, to: '/bookings' },
   { label: 'Account', icon: FiUser, to: '/profile' },
@@ -21,7 +22,7 @@ const BottomNav = () => {
         {navItems.map((item) => {
           const isActive = item.to === '/'
             ? location.pathname === '/'
-            : location.pathname.startsWith(item.to)
+            : (item.match ?? [item.to]).some((prefix) => location.pathname.startsWith(prefix))
 
           return (
             <Link

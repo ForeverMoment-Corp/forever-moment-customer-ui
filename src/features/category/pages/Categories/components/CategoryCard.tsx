@@ -11,7 +11,7 @@ const FONT_SANS = "'Jost', sans-serif";
 const FONT_SERIF = "'Cormorant Garamond', serif";
 const formatINR = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
-const MAX_CHIPS = 4;
+const MAX_CHIPS = 3;
 
 export interface CategoryCardStats {
   /** Active experiences in this category (from GET /public/experiences). */
@@ -51,86 +51,70 @@ export default function CategoryCard({ category, index, stats }: CategoryCardPro
             alt: category.name,
           },
         ];
-  const description = category.description?.trim();
   const meta: string[] = [];
   if (subCategories.length > 0) {
-    meta.push(`${subCategories.length} ${subCategories.length === 1 ? "sub-category" : "sub-categories"}`);
+    meta.push(`${subCategories.length} ${subCategories.length === 1 ? "collection" : "collections"}`);
   }
   if (stats.experienceCount > 0) {
-    meta.push(`${stats.experienceCount} ${stats.experienceCount === 1 ? "experience" : "experiences"}`);
+    meta.push(`${stats.experienceCount} ${stats.experienceCount === 1 ? "setup" : "setups"}`);
   }
 
+  // Everything a guest needs to choose sits on the photo; below it, one row of collection shortcuts.
   return (
     <article
-      className="group relative flex h-full flex-col rounded-[26px] border border-[var(--border-light)] bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_color-mix(in_srgb,_var(--burgundy)_12%,_transparent)]"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_-16px_color-mix(in_srgb,_var(--burgundy)_35%,_transparent)]"
       style={{ fontFamily: FONT_SANS }}
     >
-      {/* Cover: slider over the whole category gallery */}
-      <CategoryCover images={images} name={category.name}>
+      <CategoryCover
+        images={images}
+        name={category.name}
+        sizeClass="aspect-[4/3]"
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+      >
         <Link to={to} className="absolute inset-0" aria-label={`Explore ${category.name}`}>
           <span className="sr-only">Explore {category.name}</span>
         </Link>
-        <div className="pointer-events-none absolute top-4 left-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center text-[var(--burgundy)] shadow-sm">
-          <CategoryIcon name={category.name} size={18} strokeWidth={1.8} />
+        <div className="pointer-events-none absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[var(--burgundy)] shadow-sm backdrop-blur">
+          <CategoryIcon name={category.name} size={15} strokeWidth={1.8} />
         </div>
-        {stats.fromPrice !== null && (
-          <div className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-white/92 backdrop-blur px-3 py-1 text-[0.72rem] text-[var(--charcoal)] shadow-sm">
-            From <span className="font-semibold text-[var(--burgundy)]">{formatINR(stats.fromPrice)}</span>
-          </div>
-        )}
-        <h3
-          className="pointer-events-none absolute bottom-4 left-4 right-28 text-white text-[1.55rem] leading-tight font-medium drop-shadow"
-          style={{ fontFamily: FONT_SERIF }}
-        >
-          {category.name}
-        </h3>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
+          <h3 className="text-[1.2rem] font-semibold capitalize leading-tight text-white drop-shadow sm:text-[1.35rem]" style={{ fontFamily: FONT_SERIF }}>
+            {category.name}
+          </h3>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.7rem] text-white/85">
+            {meta.length > 0 && <span>{meta.join(" · ")}</span>}
+            {stats.fromPrice !== null && (
+              <span>
+                From <span className="font-semibold text-white">{formatINR(stats.fromPrice)}</span>
+              </span>
+            )}
+          </p>
+        </div>
       </CategoryCover>
 
-      {/* Body */}
-      <div className="flex flex-col flex-1 p-5">
-        {/* Meta line and description reserve their space so cards in a row line up. */}
-        <p className="min-h-[1.5em] text-[0.7rem] tracking-[0.18em] uppercase text-[var(--gold)] font-medium">
-          {meta.join(" · ")}
-        </p>
-        <p className="mt-2 min-h-[3.25em] text-[0.88rem] leading-relaxed text-[var(--mid)] line-clamp-2">
-          {description || `Curated ${category.name.toLowerCase()} experiences, decor and surprises, set up for you.`}
-        </p>
-
-        {visibleChips.length > 0 && (
-          <ul className="mt-4 flex flex-wrap gap-2" aria-label={`${category.name} sub-categories`}>
-            {visibleChips.map((sub) => (
-              <li key={sub.id}>
-                <Link
-                  to={subCategoryPath(sub)}
-                  className="inline-flex items-center rounded-full border border-[var(--border-light)] bg-[var(--cream)] px-3 py-1 text-[0.76rem] text-[var(--charcoal)] transition-colors hover:border-[var(--burgundy)] hover:text-[var(--burgundy)]"
-                >
-                  {sub.name}
-                </Link>
-              </li>
-            ))}
-            {hiddenChips > 0 && (
-              <li>
-                <Link
-                  to={to}
-                  className="inline-flex items-center rounded-full px-3 py-1 text-[0.76rem] text-[var(--mid)] hover:text-[var(--burgundy)]"
-                >
-                  +{hiddenChips} more
-                </Link>
-              </li>
-            )}
-          </ul>
-        )}
-
-        <div className="mt-auto pt-5">
-          <Link
-            to={to}
-            className="inline-flex items-center gap-2 text-[0.8rem] font-medium uppercase tracking-[0.12em] text-[var(--burgundy)] transition-colors hover:text-[var(--burgundy-dark)]"
-          >
-            Explore {category.name}
-            <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-      </div>
+      {visibleChips.length > 0 && (
+        // One row only: extra chips are clipped rather than wrapping the card taller.
+        <ul className="flex h-11 items-center gap-1.5 overflow-hidden px-2.5" aria-label={`${category.name} collections`}>
+          {visibleChips.map((sub) => (
+            <li key={sub.id} className="shrink-0">
+              <Link
+                to={subCategoryPath(sub)}
+                className="inline-flex max-w-[9.5rem] items-center truncate rounded-full bg-[var(--cream)] px-2.5 py-1 text-[0.72rem] capitalize text-[var(--charcoal)] transition-colors hover:bg-[var(--rose-light)] hover:text-[var(--burgundy)]"
+              >
+                <span className="truncate">{sub.name}</span>
+              </Link>
+            </li>
+          ))}
+          {hiddenChips > 0 && (
+            <li className="shrink-0">
+              <Link to={to} className="inline-flex items-center gap-0.5 px-1.5 py-1 text-[0.72rem] font-medium text-[var(--burgundy)] hover:underline">
+                +{hiddenChips}
+                <ArrowRight size={11} />
+              </Link>
+            </li>
+          )}
+        </ul>
+      )}
     </article>
   );
 }

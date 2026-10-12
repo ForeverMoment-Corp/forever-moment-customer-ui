@@ -21,15 +21,3 @@ export const iconMap: Record<string, React.ReactNode> = {
 };
 
 export const defaultIcon = <StarIcon />;
-
-
-export const dummyCities = [
-    'Vizag',
-    'Hyderabad',
-    'Bangalore',
-    'Mumbai',
-    'Delhi',
-    'Chennai',
-    'Kolkata',
-    'Pune',
-];

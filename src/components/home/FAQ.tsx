@@ -22,7 +22,7 @@ const FAQ = () => {
         <div className="text-center mb-12">
           <h2
             style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-[2rem] md:text-[2.6rem] text-ink font-semibold mb-2"
+            className="text-[1.7rem] md:text-[2.1rem] text-ink font-semibold mb-2"
           >
             Good to Know
           </h2>

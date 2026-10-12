@@ -42,7 +42,7 @@ interface SliderProps {
 
 export default function PremiumHeroSlider({
   locations = [],
-  selectedLocation = "Vizag",
+  selectedLocation = "",
   getLocations,
   setSelectedLocation,
 }: SliderProps) {
@@ -192,7 +192,7 @@ export default function PremiumHeroSlider({
                     className="flex items-center gap-1 px-4 py-3.5 whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors"
                     style={{ fontSize: "0.85rem", color: "var(--mid)", fontFamily: "'Jost', sans-serif" }}
                   >
-                    📍 {selectedLocation} ▾
+                    📍 {selectedLocation || "Select city"} ▾
                   </div>
 
                   {showLocationDropdown && (

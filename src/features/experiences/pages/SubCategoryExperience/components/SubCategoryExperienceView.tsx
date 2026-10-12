@@ -6,6 +6,7 @@ import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
 import { slugify } from "@/features/experiences/utils/slug";
 import { experienceListKey } from "@/features/experiences/store/location";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 interface SubCategoryRef {
   id: number;
@@ -100,6 +101,8 @@ export default function SubCategoryExperienceView({
   const categoryName = parent?.category.name || items[0]?.categoryName || "";
   const categoryHref = categoryName ? `/category/${parent?.category.slug || slugify(categoryName)}` : null;
   const description = parent?.subCategory.description?.trim();
+  // "Name" while loading would be wrong, so the default title shows until the collection is known.
+  useDocumentTitle(isLoading && !parent ? null : categoryName ? `${name} · ${categoryName}` : name);
 
   return (
     <section className="min-h-[60vh] bg-[var(--cream)] pb-12 pt-5">
@@ -124,14 +127,12 @@ export default function SubCategoryExperienceView({
         {/* Header + sort */}
         <div className="mt-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-[var(--border-light)] pb-4">
           <div className="min-w-0">
-            <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
-              {categoryName || "Explore"}
-            </p>
-            <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold capitalize leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
+            <h1 style={{ fontFamily: SERIF }} className="text-[1.7rem] font-semibold capitalize leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
               {name}
             </h1>
             {description && (
-              <p style={{ fontFamily: SANS }} className="mt-1.5 max-w-xl text-[0.86rem] leading-relaxed text-[var(--mid)]">
+              // One line on larger screens only; the breadcrumb already names the parent category.
+              <p style={{ fontFamily: SANS }} className="mt-1 hidden max-w-xl truncate text-[0.84rem] text-[var(--mid)] sm:block" title={description}>
                 {description}
               </p>
             )}
@@ -169,7 +170,15 @@ export default function SubCategoryExperienceView({
           ) : items.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
               {items.map((e, idx) => (
-                <ExperienceTile key={e.id} experience={e} priority={idx < 4} isLiked={liked.includes(e.id)} onToggleLike={toggleLike} />
+                <ExperienceTile
+                  key={e.id}
+                  experience={e}
+                  priority={idx < 4}
+                  isLiked={liked.includes(e.id)}
+                  onToggleLike={toggleLike}
+                  compact
+                  hideCollection
+                />
               ))}
             </div>
           ) : (

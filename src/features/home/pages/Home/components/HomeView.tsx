@@ -1,4 +1,5 @@
 import Hero from "@/components/home/Hero";
+import LogoLoader from "@/components/common/LogoLoader";
 import WhyChooseUs from "@/features/whyChooseUs/pages/WhyChooseUs";
 import FeaturedExperience from "@/features/experiences/pages/FeaturedExperience";
 import { useEffect } from "react";
@@ -47,9 +48,7 @@ const Home = ({ loading, error, getLocations }: HomeProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--cream)" }}>
-        <p style={{ color: "var(--mid)" }}>Loading...</p>
-      </div>
+      <LogoLoader fullScreen />
     );
   }
 

@@ -26,6 +26,13 @@ export interface ExperienceTileProps {
    * Replaces the collection eyebrow, which would otherwise repeat the section heading.
    */
   note?: string;
+  /**
+   * Listing pages: no description line, "From ₹X" on one line, tighter padding. Used where the
+   * grid is the whole page (category / collection), so more cards fit on screen.
+   */
+  compact?: boolean;
+  /** Hide the collection eyebrow, e.g. on a collection's own page where every card would repeat it. */
+  hideCollection?: boolean;
 }
 
 /**
@@ -33,7 +40,15 @@ export interface ExperienceTileProps {
  * (rating, setup time, capacity), a one-line description and the price with its saving.
  * The whole tile is the link; there is no per-card button.
  */
-export default function ExperienceTile({ experience: e, isLiked = false, onToggleLike, priority = false, note }: ExperienceTileProps) {
+export default function ExperienceTile({
+  experience: e,
+  isLiked = false,
+  onToggleLike,
+  priority = false,
+  note,
+  compact = false,
+  hideCollection = false,
+}: ExperienceTileProps) {
   const requireAuth = useRequireAuth();
   const image = getPrimaryImage(e);
   // Pairing the thumbnail with the hero lets the browser fetch the 320px rendition for a card.
@@ -44,7 +59,7 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
   const discount = original > price ? Math.round(((original - price) / original) * 100) : 0;
   // Summaries may carry markup; a card shows one line of readable text.
   const description = toPlainText(e.shortDescription);
-  const showDescription = description.length > 12 && description.toLowerCase() !== (e.name || '').toLowerCase();
+  const showDescription = !compact && description.length > 12 && description.toLowerCase() !== (e.name || '').toLowerCase();
   const duration = Number(e.durationMinutes) || 0;
   // The badge shows the experience's own tag. No tag means no badge.
   const tag = (e.tagName || '').trim();
@@ -109,14 +124,16 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col p-3.5">
-        <p style={{ fontFamily: SANS }} className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-gold-deep">
-          {note && <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--burgundy)]" aria-hidden="true" />}
-          <span className="truncate">{note || e.subCategoryName || e.categoryName || 'Experience'}</span>
-        </p>
+      <div className={`flex flex-1 flex-col ${compact ? 'p-3' : 'p-3.5'}`}>
+        {(note || !hideCollection) && (
+          <p style={{ fontFamily: SANS }} className="mb-1 flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-gold-deep">
+            {note && <span className="h-1 w-1 shrink-0 rounded-full bg-[var(--burgundy)]" aria-hidden="true" />}
+            <span className="truncate">{note || e.subCategoryName || e.categoryName || 'Experience'}</span>
+          </p>
+        )}
         <h3
           style={{ fontFamily: SERIF }}
-          className="mt-1 line-clamp-2 min-h-[2.5em] text-[1.12rem] font-semibold leading-[1.25] text-[var(--charcoal)] transition-colors group-hover:text-[var(--burgundy)]"
+          className="line-clamp-2 min-h-[2.5em] text-[1.12rem] font-semibold leading-[1.25] text-[var(--charcoal)] transition-colors group-hover:text-[var(--burgundy)]"
         >
           {e.name}
         </h3>
@@ -145,10 +162,15 @@ export default function ExperienceTile({ experience: e, isLiked = false, onToggl
           </p>
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+        <div className={`mt-auto flex items-end justify-between gap-2 ${compact ? 'pt-2.5' : 'pt-3'}`}>
           <div>
-            <p style={{ fontFamily: SANS }} className="text-[0.6rem] uppercase tracking-[0.12em] text-[var(--mid)]">From</p>
+            {!compact && (
+              <p style={{ fontFamily: SANS }} className="text-[0.6rem] uppercase tracking-[0.12em] text-[var(--mid)]">From</p>
+            )}
             <p className="flex items-baseline gap-1.5">
+              {compact && (
+                <span style={{ fontFamily: SANS }} className="text-[0.66rem] text-[var(--mid)]">From</span>
+              )}
               <span style={{ fontFamily: SANS }} className="text-[1.05rem] font-semibold leading-none text-[var(--charcoal)] tabular-nums">
                 {formatINR(price)}
               </span>

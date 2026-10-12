@@ -32,7 +32,7 @@ export default function WhyChooseUs() {
 
         <FadeIn>
           <div className="text-center mb-12">
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-ink font-semibold mb-2">
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.7rem] md:text-[2.1rem] text-ink font-semibold mb-2">
               Why Choose Us
             </h2>
             <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase">

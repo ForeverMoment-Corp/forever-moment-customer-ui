@@ -227,7 +227,7 @@ const Hero = () => {
               {slide.label}
             </p>
 
-            <h1 style={{ fontFamily: SERIF }} className="mt-3 text-[2.3rem] sm:text-[3rem] lg:text-[3.5rem] text-white font-semibold leading-[1.08]">
+            <h1 style={{ fontFamily: SERIF }} className="mt-3 text-[2rem] sm:text-[2.6rem] lg:text-[3rem] text-white font-semibold leading-[1.08]">
               {slide.heading}
               {slide.accent && (
                 <>

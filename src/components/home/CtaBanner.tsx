@@ -28,7 +28,7 @@ const CtaBanner = () => {
         {/* Heading */}
         <h2
           style={{ fontFamily: "'Cormorant Garamond', serif" }}
-          className="text-[2.2rem] md:text-[3.4rem] text-white font-semibold leading-tight mb-4 max-w-[700px] mx-auto"
+          className="text-[1.8rem] md:text-[2.6rem] text-white font-semibold leading-tight mb-4 max-w-[700px] mx-auto"
         >
           Ready to Make Your Next Moment{' '}
           <span className="italic text-gold-pale">Iconic?</span>

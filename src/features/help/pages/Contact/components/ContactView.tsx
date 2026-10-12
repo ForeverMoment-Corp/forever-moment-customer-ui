@@ -193,18 +193,11 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
           </ol>
         </nav>
 
-        {/* Header */}
-        <div className="mt-3 border-b border-[var(--border-light)] pb-5">
-          <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
-            Talk to a real person
-          </p>
-          <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
-            Let us plan it <em className="italic text-[var(--burgundy)]">together</em>
-          </h1>
-          <p style={{ fontFamily: SANS }} className="mt-1.5 max-w-xl text-[0.88rem] leading-relaxed text-[var(--mid)]">
-            Tell us the occasion, the date and the budget you have in mind. We reply with ideas, photos of past setups and a quote.
-          </p>
-        </div>
+        {/* No visible title (the breadcrumb says where you are); the one line that helps fill the form stays. */}
+        <h1 className="sr-only">Contact us</h1>
+        <p style={{ fontFamily: SANS }} className="mt-3 max-w-xl border-b border-[var(--border-light)] pb-4 text-[0.88rem] leading-relaxed text-[var(--mid)]">
+          Tell us the occasion, the date and the budget you have in mind. We reply with ideas, photos of past setups and a quote.
+        </p>
 
         <div className="mt-5 grid gap-6 lg:grid-cols-12">
           {/* Form */}

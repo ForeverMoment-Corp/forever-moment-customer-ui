@@ -144,6 +144,10 @@ export interface PincodeServiceability {
     area: PincodeArea | null;
 }
 
+/** GET /public/locations/check-pincode?pincode= — where a pincode is, or null when we do not cover it. */
+export const lookupPincode = (pincode: string) =>
+    getPublic<PincodeArea | null>(`/public/locations/check-pincode?pincode=${encodeURIComponent(pincode.trim())}`, 'Could not look up this pincode', null);
+
 /**
  * GET /public/experiences/{id}/serviceable?pincode= and GET /public/locations/check-pincode?pincode=,
  * in parallel. Both answer 404 for a pincode we do not cover; that is "not serviceable", not an error.

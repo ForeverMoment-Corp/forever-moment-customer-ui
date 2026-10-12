@@ -24,7 +24,44 @@ body {
   color: var(--text-main);
 }
 
+/* ─── NUMBERS ───
+   Cormorant Garamond defaults to old-style figures (digits rise and drop like lowercase, so "404"
+   or "₹4,999" look uneven). Use full-height lining figures everywhere. The variable keeps this when
+   Tailwind's tabular-nums is also applied, since that utility rebuilds font-variant-numeric from it. */
+@layer base {
+  *, ::before, ::after { --tw-numeric-figure: lining-nums; }
+  body { font-variant-numeric: lining-nums; }
+}
+
 /* ─── ANIMATIONS ─── */
+/* Logo loader (LogoLoader.tsx; index.html's first-paint splash has its own copy) */
+@keyframes logo-breathe {
+  0%, 100% { transform: scale(0.96); opacity: 0.75; }
+  50%      { transform: scale(1);    opacity: 1; }
+}
+@keyframes logo-bar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+/* Navbar search hint (NavSearch.tsx): ticker-style change. The old phrase glides up and fades out
+   while the new one rises in from below, both softly blurred mid-move, on an ease-out-expo curve. */
+@keyframes search-hint-in {
+  from { transform: translateY(90%);  opacity: 0; filter: blur(3px); }
+  to   { transform: translateY(0);    opacity: 1; filter: blur(0); }
+}
+@keyframes search-hint-out {
+  from { transform: translateY(0);    opacity: 1; filter: blur(0); }
+  to   { transform: translateY(-90%); opacity: 0; filter: blur(3px); }
+}
+.search-hint-in  { animation: search-hint-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.search-hint-out { animation: search-hint-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.logo-loader-mark { animation: logo-breathe 1.6s ease-in-out infinite; }
+.logo-loader-bar  { animation: logo-bar 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .logo-loader-mark, .logo-loader-bar, .search-hint-in { animation: none; }
+  .search-hint-out { display: none; }
+}
+
 @keyframes goldPulse {
   0%   { box-shadow: 0 0 0 color-mix(in srgb, var(--gold) 40%, transparent); }
   50%  { box-shadow: 0 0 20px color-mix(in srgb, var(--gold) 60%, transparent); }
@@ -308,7 +345,7 @@ body {
   }
   .section-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2.2rem;
+    font-size: 2.1rem;
     font-weight: 400;
     line-height: 1.15;
     color: var(--charcoal);

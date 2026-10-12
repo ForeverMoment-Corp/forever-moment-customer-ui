@@ -1,5 +1,7 @@
 import * as types from './action-types';
 import type { PromotionImage } from './types';
+import { readSavedLocation } from './savedLocation';
+import { readSavedPincode, type SavedPincode } from './savedPincode';
 
 export interface HomeState {
     featuredExperiences: any[];
@@ -7,6 +9,10 @@ export interface HomeState {
     featuredKey: string | null;
     locations: any[];
     selectedLocation: string;
+    /** True when the guest picked the city (now or on an earlier visit), not the app's fallback. */
+    locationChosen: boolean;
+    /** Venue pincode set once (header or an experience page) and checked on every experience page. */
+    venuePincode: SavedPincode | null;
     loading: boolean; // Global loading for initial page load
     locationsLoading: boolean;
     experiencesLoading: boolean;
@@ -16,11 +22,16 @@ export interface HomeState {
     promotionsLoading: Record<string, boolean>;
 }
 
+const savedLocation = readSavedLocation();
+
 const initialState: HomeState = {
     featuredExperiences: [],
     featuredKey: null,
     locations: [],
-    selectedLocation: 'Vizag',
+    // The guest's last pick survives a reload; with none, the first active city is used once locations load.
+    selectedLocation: savedLocation ?? '',
+    locationChosen: savedLocation != null,
+    venuePincode: readSavedPincode(),
     loading: true, // Start with page-level loading
     locationsLoading: false,
     experiencesLoading: false,
@@ -47,10 +58,10 @@ export const homeReducer = (state = initialState, action: any): HomeState => {
             const activeLocations = locations.filter((loc: any) => loc.isActive);
             let nextSelectedLocation = state.selectedLocation;
 
-            // If current selectedLocation is default 'Vizag' or not in active list,
-            // default to the first active location name from the API
+            // Keep the guest's own pick while that city is still active; otherwise (no pick yet, or the
+            // saved city was removed) use the first active location from the API.
             const isCurrentValid = activeLocations.some((loc: any) => loc.name === state.selectedLocation);
-            if ((state.selectedLocation === 'Vizag' || !isCurrentValid) && activeLocations.length > 0) {
+            if ((!state.locationChosen || !isCurrentValid) && activeLocations.length > 0) {
                 nextSelectedLocation = activeLocations[0].name;
             }
 
@@ -60,11 +71,14 @@ export const homeReducer = (state = initialState, action: any): HomeState => {
                 locationsLoading: false,
                 locations: locations,
                 selectedLocation: nextSelectedLocation,
+                locationChosen: state.locationChosen && isCurrentValid,
             };
         case types.GET_LOCATIONS_FAILURE:
             return { ...state, loading: false, locationsLoading: false, error: action.payload };
+        case types.SET_VENUE_PINCODE:
+            return { ...state, venuePincode: action.payload ?? null };
         case types.SET_SELECTED_LOCATION:
-            return { ...state, selectedLocation: action.payload };
+            return { ...state, selectedLocation: action.payload, locationChosen: true };
 
         case types.GET_PROMOTION_IMAGES:
             return { ...state, promotionsLoading: { ...state.promotionsLoading, [action.payload.slot]: true } };

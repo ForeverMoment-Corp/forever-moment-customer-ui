@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
+import { openLoginModal } from '@/features/auth/store/authSlice';
 import { AlertCircle, ChevronRight, Inbox, LogIn, MessageSquarePlus, RefreshCw } from 'lucide-react';
 import { fetchMySupportQueries, getAccessToken, UnauthorizedError, type SupportQuery } from '@/features/support';
 
@@ -87,11 +90,21 @@ function QueryCard({ query }: { query: SupportQuery }) {
 }
 
 export default function MySupportView() {
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
   const [state, setState] = useState<LoadState>(() => (getAccessToken() ? { kind: 'loading' } : { kind: 'signed-out' }));
 
   // Bumped by "Try again"; the effect below refetches whenever it changes.
   const [attempt, setAttempt] = useState(0);
 
+  // Signing in or out on this page: reset to loading / signed-out (render-time adjustment, no effect).
+  const [seenAuth, setSeenAuth] = useState(isAuthenticated);
+  if (seenAuth !== isAuthenticated) {
+    setSeenAuth(isAuthenticated);
+    setState(getAccessToken() ? { kind: 'loading' } : { kind: 'signed-out' });
+  }
+
+  // Also re-runs on sign-in / sign-out, so signing in from this page loads the list.
   useEffect(() => {
     if (!getAccessToken()) return;
     let alive = true;
@@ -105,7 +118,7 @@ export default function MySupportView() {
     return () => {
       alive = false;
     };
-  }, [attempt]);
+  }, [attempt, isAuthenticated]);
 
   const retry = () => {
     setState(getAccessToken() ? { kind: 'loading' } : { kind: 'signed-out' });
@@ -139,20 +152,11 @@ export default function MySupportView() {
           </ol>
         </nav>
 
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border-light)] pb-5">
-          <div>
-            <p style={{ fontFamily: SANS }} className="text-[0.64rem] uppercase tracking-[0.2em] text-gold-deep">
-              Support
-            </p>
-            <h1 style={{ fontFamily: SERIF }} className="mt-1 text-[1.7rem] font-semibold leading-tight text-[var(--charcoal)] sm:text-[2.1rem]">
-              My <em className="italic text-[var(--burgundy)]">queries</em>
-            </h1>
-            <p style={{ fontFamily: SANS }} className="mt-1.5 max-w-xl text-[0.88rem] leading-relaxed text-[var(--mid)]">
-              Everything you have asked us, and where each one stands.
-            </p>
-          </div>
-          {state.kind === 'ready' && state.items.length > 0 && newQueryLink}
-        </div>
+        {/* No visible title (the breadcrumb says where you are); the heading stays for screen readers. */}
+        <h1 className="sr-only">My support queries</h1>
+        {state.kind === 'ready' && state.items.length > 0 && (
+          <div className="mt-3 flex justify-end border-b border-[var(--border-light)] pb-4">{newQueryLink}</div>
+        )}
 
         <div className="mt-5 max-w-3xl">
           {state.kind === 'loading' && (
@@ -173,13 +177,14 @@ export default function MySupportView() {
                 You can still reach us without an account. Every message gets a reference number.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
-                <Link
-                  to="/login"
+                <button
+                  type="button"
+                  onClick={() => dispatch(openLoginModal())}
                   style={{ fontFamily: SANS }}
                   className="inline-flex h-11 items-center rounded-xl border border-[var(--border-light)] bg-white px-5 text-[0.86rem] font-medium text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)]"
                 >
                   Sign in
-                </Link>
+                </button>
                 {newQueryLink}
               </div>
             </div>

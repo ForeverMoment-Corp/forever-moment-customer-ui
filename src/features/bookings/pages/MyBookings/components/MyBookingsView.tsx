@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, CalendarHeart, ChevronDown, Clock, Loader2, LogIn, MapPin, RefreshCw, Users } from 'lucide-react';
 import type { RootState } from '@/store/store';
@@ -7,6 +7,7 @@ import { experiencePath } from '@/features/experiences/utils/slug';
 import { waitForPaymentLink } from '@/features/experiences/store/api';
 import { BookingsUnavailableError, fetchMyBookings, UnauthorizedError, type Booking } from '@/features/bookings/api';
 import { getLoginSession } from '@/utils/storage';
+import { openLoginModal } from '@/features/auth/store/authSlice';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
 import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
 
@@ -311,6 +312,7 @@ const primaryBtn =
   'inline-flex h-10 items-center gap-2 rounded-full bg-[var(--burgundy)] px-5 text-[0.76rem] font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-[var(--burgundy-dark)]';
 
 export default function MyBookingsView() {
+  const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [state, setState] = useState<LoadState>(() => (getLoginSession('access_token') ? { kind: 'loading' } : { kind: 'signed-out' }));
   const [items, setItems] = useState<Booking[]>([]);
@@ -388,7 +390,7 @@ export default function MyBookingsView() {
       <div className="mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8">
         {/* Header: title + tabs on one row */}
         <div className="flex flex-col gap-4 border-b border-[var(--border-light)] sm:flex-row sm:items-end sm:justify-between">
-          <h1 className="section-title pb-3 text-[2rem] md:text-[2.3rem]">
+          <h1 className="section-title pb-3 text-[1.7rem] md:text-[2.1rem]">
             My <em>Bookings</em>
           </h1>
 
@@ -430,9 +432,9 @@ export default function MyBookingsView() {
               icon={LogIn}
               title="Sign in to see your bookings"
               action={
-                <Link to="/login" className={primaryBtn}>
-                  Sign in
-                </Link>
+                <button type="button" onClick={() => dispatch(openLoginModal())} className={primaryBtn}>
+                  <LogIn size={14} /> Sign in
+                </button>
               }
             />
           )}

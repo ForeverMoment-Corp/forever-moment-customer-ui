@@ -12,7 +12,7 @@ const mapStateToProps = (state: RootState) => ({
     categoriesLoading: state.header?.categoriesLoading ?? false,
     categoriesError: state.header?.categoriesError ?? null,
     locations: state.home?.locations ?? [],
-    selectedLocation: state.home?.selectedLocation ?? 'Vizag',
+    selectedLocation: state.home?.selectedLocation ?? '',
 });
 
 const mapDispatchToProps = {

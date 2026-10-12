@@ -34,7 +34,7 @@ export default function CategoryListView({ categories }: CategoryListViewProps) 
               <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase mb-2">
                 Every Occasion
               </p>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[2rem] md:text-[2.6rem] text-ink font-semibold leading-tight">
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.7rem] md:text-[2.1rem] text-ink font-semibold leading-tight">
                 Browse by <em>Category</em>
               </h2>
             </div>

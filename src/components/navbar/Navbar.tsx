@@ -38,6 +38,10 @@ const serif = { fontFamily: "'Cormorant Garamond', serif" } as const;
 
 const TOP_BAR_H = 72;
 const CAT_BAR_H = 48;
+/** Above this scroll position the category bar always shows. */
+const CAT_BAR_PIN_Y = 160;
+/** Ignore scroll jitter smaller than this before hiding / showing the bar. */
+const SCROLL_DELTA = 6;
 const catPillClass = (active: boolean) =>
   `relative flex items-center gap-1.5 h-[30px] pl-2.5 pr-3 rounded-full whitespace-nowrap text-[0.74rem] font-medium capitalize transition-colors shrink-0 ${
     active ? "bg-ivory text-ink" : "text-taupe hover:bg-ivory hover:text-ink"
@@ -107,6 +111,8 @@ const Navbar = () => {
   // Category row scrolls sideways (hidden scrollbar); arrows appear at whichever edge has more.
   const catBarRef = useRef<HTMLDivElement>(null);
   const [catScroll, setCatScroll] = useState({ left: false, right: false });
+  // Desktop: the category bar tucks away while scrolling down and returns on any scroll up.
+  const [catHidden, setCatHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMobileCategory, setActiveMobileCategory] = useState<number | null>(null);
   const [guestOpen, setGuestOpen] = useState(false);
@@ -121,11 +127,11 @@ const Navbar = () => {
   const { pathname } = useLocation();
   const dispatch = useAppDispatch();
 
-  const cartCount = 0;
 
   const apiCategories = useAppSelector((state) => state.header?.categories ?? []) as NavCategory[];
   const locations = useAppSelector((state) => state.home?.locations ?? []) as Location[];
-  const selectedLocation = useAppSelector((state) => state.home?.selectedLocation ?? "Delhi NCR");
+  // Empty until the guest picks a city or the location list loads (no hard-coded default).
+  const selectedLocation = useAppSelector((state) => state.home?.selectedLocation ?? "");
   
   const isAuthenticated = useAppSelector((state) => state.auth?.isAuthenticated);
   const user = useAppSelector((state) => state.auth?.user);
@@ -229,6 +235,31 @@ const Navbar = () => {
 
   useEffect(() => clearTimers, [clearTimers]);
 
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (y < CAT_BAR_PIN_Y) {
+          setCatHidden(false);
+          lastY = y;
+        } else if (Math.abs(dy) > SCROLL_DELTA) {
+          setCatHidden(dy > 0);
+          lastY = y;
+        }
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   const closeMobile = () => {
     setMobileOpen(false);
     setActiveMobileCategory(null);
@@ -325,7 +356,7 @@ const Navbar = () => {
                     className="text-ink capitalize mt-[3px] max-w-[120px] truncate"
                     style={{ ...sans, fontSize: "0.78rem", fontWeight: 500 }}
                   >
-                    {selectedLocation}
+                    {selectedLocation || "Select city"}
                   </span>
                 </span>
                 <ChevronDown
@@ -410,7 +441,8 @@ const Navbar = () => {
                 </AnimatePresence>
               </div>
 
-              <IconAction icon={ShoppingBag} label="Cart" to="/cart" badge={cartCount} />
+              {/* Also listed in the account menu; no count until the cart has real data (see doc/customer-ui-parked.md). */}
+              <IconAction icon={ShoppingBag} label="Cart" to="/cart" />
             </div>
 
             {/* MOBILE RIGHT */}
@@ -430,7 +462,14 @@ const Navbar = () => {
         </div>
 
         {/* ═══════════════════ CATEGORY BAR ═══════════════════ */}
-        <div className="hidden md:block bg-white border-b border-sand">
+        {/* Collapses (grid rows 1fr → 0fr) while scrolling down; never while a menu is open or it has focus. */}
+        <div
+          className={`hidden md:grid bg-white border-b transition-[grid-template-rows,border-color] duration-300 ease-out motion-reduce:transition-none ${
+            catHidden && activeMenu === null ? "grid-rows-[0fr] border-transparent" : "grid-rows-[1fr] border-sand"
+          }`}
+          onFocusCapture={() => setCatHidden(false)}
+        >
+          <div className="min-h-0 overflow-hidden">
           <div className="relative w-full px-4 lg:px-5 flex items-center" style={{ height: CAT_BAR_H }}>
             <div
               ref={catBarRef}
@@ -516,6 +555,7 @@ const Navbar = () => {
               </button>
             )}
           </div>
+          </div>
         </div>
 
         {/* ═══════════════════ MEGA MENU ═══════════════════ */}
@@ -581,6 +621,11 @@ const Navbar = () => {
             className="ml-auto bg-transparent text-ink capitalize outline-none"
             style={{ ...sans, fontSize: "0.8rem", fontWeight: 500 }}
           >
+            {!selectedLocation && (
+              <option value="" disabled>
+                Select city
+              </option>
+            )}
             {activeLocations.map((c) => (
               <option key={c.id ?? c.name} value={c.name}>
                 {c.name}

@@ -221,7 +221,7 @@ export default function CartView() {
     <section className="min-h-[70vh] bg-[var(--cream)] pb-28 pt-6 md:pt-8 lg:pb-14" style={{ fontFamily: SANS }}>
       <div className="mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between gap-4 border-b border-[var(--border-light)] pb-3">
-          <h1 className="section-title text-[2rem] md:text-[2.3rem]">
+          <h1 className="section-title text-[1.7rem] md:text-[2.1rem]">
             My <em>Cart</em>
           </h1>
           {count > 0 && (

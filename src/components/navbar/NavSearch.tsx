@@ -2,11 +2,12 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Search, X } from "lucide-react";
 import CategoryIcon from "./CategoryIcon";
-import { categoryPath, subCategoryPath, type NavCategory } from "./navTypes";
+import { categoryPath, type NavCategory } from "./navTypes";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getData } from "@/features/experiences/store/actions";
 import { experiencePath } from "@/features/experiences/utils/slug";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
+import { normaliseQuery, searchExperiences, searchPath, searchPlaces } from "@/features/search/match";
 
 const sans = { fontFamily: "'Jost', sans-serif" } as const;
 const formatINR = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -14,18 +15,23 @@ const formatINR = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 const MAX_EXPERIENCES = 5;
 const MAX_PLACES = 4;
 
+/** Rotating hint in the empty box: a new idea every HINT_MS. */
+const HINT_MS = 2000;
+/** Short, natural search ideas (3–4 words), the kind of thing a guest would actually type. */
+const HINTS = [
+  "Birthday decor at home",
+  "Romantic candlelight dinner",
+  "Anniversary surprise for her",
+  "Baby shower decoration",
+  "Rooftop proposal setup",
+  "Balloon decor for kids",
+  "Welcome home baby decor",
+  "Surprise party for him",
+];
+
 type Result =
   | { kind: "experience"; key: string; label: string; meta: string; to: string; image?: string; price: number }
   | { kind: "place"; key: string; label: string; meta: string; to: string };
-
-/** 0 = name starts with the query, 1 = a word starts with it, 2 = contains it, -1 = no match. */
-const matchRank = (text: string | null | undefined, q: string) => {
-  const t = (text ?? "").toLowerCase();
-  if (!t) return -1;
-  if (t.startsWith(q)) return 0;
-  if (t.split(/[\s\-&,/]+/).some((w) => w.startsWith(q))) return 1;
-  return t.includes(q) ? 2 : -1;
-};
 
 interface NavSearchProps {
   categories: NavCategory[];
@@ -46,27 +52,22 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
 
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [highlight, setHighlight] = useState(0);
+  const [focused, setFocused] = useState(false);
+  // The phrase showing and the one leaving, so both can animate at once (ticker-style change).
+  const [hintStep, setHintStep] = useState<{ current: number; previous: number | null }>({ current: 0, previous: null });
+  // -1 = nothing picked: Enter opens the full results page.
+  const [highlight, setHighlight] = useState(-1);
   const boxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
 
-  const q = query.trim().toLowerCase();
+  const q = normaliseQuery(query);
 
   const results = useMemo<Result[]>(() => {
     if (!q) return [];
-    const exp = experiences
-      .filter((e) => e && e.isActive !== false)
-      .map((e) => {
-        const ranks = [matchRank(e.name, q), matchRank(e.tagName, q), matchRank(e.subCategoryName, q), matchRank(e.categoryName, q)]
-          .map((r, i) => (r < 0 ? -1 : r + i * 3))
-          .filter((r) => r >= 0);
-        return { e, rank: ranks.length ? Math.min(...ranks) : -1 };
-      })
-      .filter((x) => x.rank >= 0)
-      .sort((a, b) => a.rank - b.rank || a.e.name.localeCompare(b.e.name))
+    const exp = searchExperiences(experiences, q)
       .slice(0, MAX_EXPERIENCES)
-      .map<Result>(({ e }) => ({
+      .map<Result>((e) => ({
         kind: "experience",
         key: `e-${e.id}`,
         label: e.name,
@@ -75,24 +76,22 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
         image: e.thumbnailUrl || e.heroUrl || undefined,
         price: Number(e.basePrice) || 0,
       }));
-
-    const places: { r: Result; rank: number }[] = [];
-    for (const cat of categories) {
-      const rank = matchRank(cat.name, q);
-      if (rank >= 0) places.push({ rank, r: { kind: "place", key: `c-${cat.id}`, label: cat.name, meta: "Category", to: categoryPath(cat) } });
-      for (const sub of cat.subCategories ?? []) {
-        if (sub.isActive === false) continue;
-        const subRank = matchRank(sub.name, q);
-        if (subRank >= 0) places.push({ rank: subRank + 1, r: { kind: "place", key: `s-${sub.id}`, label: sub.name, meta: cat.name, to: subCategoryPath(sub) } });
-      }
-    }
-    const placeResults = places
-      .sort((a, b) => a.rank - b.rank || a.r.label.localeCompare(b.r.label))
+    const places = searchPlaces(categories, q)
       .slice(0, MAX_PLACES)
-      .map((p) => p.r);
-
-    return [...exp, ...placeResults];
+      .map<Result>((p) => ({ kind: "place", ...p }));
+    return [...exp, ...places];
   }, [q, experiences, categories]);
+
+  // Rotate while the box is empty and not being typed in.
+  useEffect(() => {
+    if (query || focused) return;
+    const timer = window.setInterval(
+      () => setHintStep((h) => ({ current: (h.current + 1) % HINTS.length, previous: h.current })),
+      HINT_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [query, focused]);
+
 
   // Close on an outside click.
   useEffect(() => {
@@ -118,6 +117,13 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
       inputRef.current?.blur();
       return;
     }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      // A picked suggestion opens directly; otherwise show every match on the results page.
+      if (highlight >= 0 && highlight < results.length) go(results[highlight].to);
+      else if (q) go(searchPath(query));
+      return;
+    }
     if (!results.length) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -125,16 +131,13 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
       setHighlight((h) => (h + 1) % results.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlight((h) => (h - 1 + results.length) % results.length);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      go(results[Math.min(highlight, results.length - 1)].to);
+      setHighlight((h) => (h <= 0 ? results.length - 1 : h - 1));
     }
   };
 
   const desktop = variant === "desktop";
   const firstPlace = results.findIndex((r) => r.kind === "place");
-  const activeId = open && results.length ? `${listId}-${Math.min(highlight, results.length - 1)}` : undefined;
+  const activeId = open && highlight >= 0 && highlight < results.length ? `${listId}-${highlight}` : undefined;
 
   return (
     <div ref={boxRef} className={`relative ${desktop ? "w-full max-w-[520px]" : "flex-1 max-w-[220px]"}`}>
@@ -147,6 +150,25 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
         }
       >
         <Search size={desktop ? 16 : 14} className="text-gold shrink-0" strokeWidth={1.75} />
+        <div className="relative flex min-w-0 flex-1 items-center">
+        {/* Animated hint over the empty box; screen readers get the input's own label instead. */}
+        {!query && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden whitespace-nowrap text-umber"
+            style={{ ...sans, fontSize: desktop ? "0.82rem" : "0.75rem" }}
+          >
+            {/* Old phrase glides up and out while the new one rises in; keys restart both animations. */}
+            {hintStep.previous !== null && (
+              <span key={`out-${hintStep.previous}-${hintStep.current}`} className="search-hint-out absolute inset-0 flex items-center">
+                <span className="min-w-0 truncate">{HINTS[hintStep.previous]}</span>
+              </span>
+            )}
+            <span key={`in-${hintStep.current}`} className="search-hint-in absolute inset-0 flex items-center">
+              <span className="min-w-0 truncate">{HINTS[hintStep.current]}</span>
+            </span>
+          </span>
+        )}
         <input
           ref={inputRef}
           type="search"
@@ -156,22 +178,24 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
           aria-controls={listId}
           aria-activedescendant={activeId}
           aria-autocomplete="list"
-          placeholder={desktop ? "Search birthdays, dinners, decor…" : "Search…"}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            setHighlight(0);
+            setHighlight(-1);
             setOpen(true);
           }}
           onFocus={() => {
+            setFocused(true);
             setOpen(true);
             dispatch(getData()); // city's experiences; skipped when already loaded
             onFocus?.();
           }}
+          onBlur={() => setFocused(false)}
           onKeyDown={onKeyDown}
-          className="flex-1 min-w-0 bg-transparent outline-none placeholder-umber text-ink [&::-webkit-search-cancel-button]:hidden"
+          className="relative w-full min-w-0 bg-transparent outline-none text-ink [&::-webkit-search-cancel-button]:hidden"
           style={{ ...sans, fontSize: desktop ? "0.82rem" : "0.75rem" }}
         />
+        </div>
         {query && (
           <button
             type="button"
@@ -233,7 +257,7 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
           ) : (
             <ul className="max-h-[min(420px,70vh)] overflow-y-auto">
               {results.map((r, i) => {
-                const active = i === Math.min(highlight, results.length - 1);
+                const active = i === highlight;
                 return (
                   <li key={r.key}>
                     {(i === 0 || i === firstPlace) && (
@@ -277,6 +301,16 @@ export default function NavSearch({ categories, variant, onFocus, onNavigate }: 
                   </li>
                 );
               })}
+              <li className="mt-1 border-t border-sand pt-1">
+                <button
+                  type="button"
+                  onClick={() => go(searchPath(query))}
+                  className="group flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-[0.78rem] font-medium text-gold-dark transition-colors hover:bg-ivory hover:text-ink"
+                >
+                  <span className="truncate">See all results for “{query.trim()}”</span>
+                  <ArrowRight size={14} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </li>
             </ul>
           )}
         </div>

@@ -6,7 +6,7 @@
 }
 
 .modalContent {
-  @apply relative w-full sm:max-w-[440px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain bg-ivory rounded-t-[28px] sm:rounded-[28px] px-6 pt-10 pb-[calc(24px+env(safe-area-inset-bottom))] sm:px-9 sm:pt-11 sm:pb-8 shadow-2xl border border-sand;
+  @apply relative w-full sm:max-w-[380px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain bg-ivory rounded-t-[24px] sm:rounded-[24px] px-5 pt-8 pb-[calc(20px+env(safe-area-inset-bottom))] sm:px-7 sm:pt-8 sm:pb-6 shadow-2xl border border-sand;
   font-family: 'Jost', sans-serif;
 }
 
@@ -20,20 +20,17 @@
   @apply absolute left-1/2 top-3 h-1 w-10 -translate-x-1/2 rounded-full bg-sand sm:hidden;
 }
 
-.eyebrow {
-  @apply flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-gold-deep mb-3;
-}
 
 .title {
-  @apply text-[34px] font-semibold text-ink leading-[1.1] mb-2;
+  @apply text-[26px] font-semibold text-ink leading-[1.15] mb-1 pr-8;
 }
 
 .subtitle {
-  @apply text-[14.5px] text-cocoa mb-7 leading-relaxed;
+  @apply text-[13.5px] text-cocoa mb-5 leading-snug;
 }
 
 .label {
-  @apply block text-[12px] font-medium uppercase tracking-[0.12em] text-taupe mb-2;
+  @apply block text-[11px] font-medium uppercase tracking-[0.12em] text-taupe mb-1.5;
 }
 
 .inputGroup {
@@ -45,19 +42,16 @@
 }
 
 .countryCode {
-  @apply flex items-center gap-1.5 font-medium text-ink px-4 border-r border-sand bg-linen text-[15px];
+  @apply flex items-center gap-1.5 font-medium text-ink px-3.5 border-r border-sand bg-linen text-[14px];
 }
 
 .inputField {
-  @apply flex-1 min-w-0 px-4 py-3.5 bg-transparent outline-none text-ink text-[16px] tracking-wide placeholder:text-umber placeholder:tracking-normal;
+  @apply flex-1 min-w-0 px-3.5 py-2.5 bg-transparent outline-none text-ink text-[16px] tracking-wide placeholder:text-umber placeholder:tracking-normal;
 }
 
-.hint {
-  @apply mt-2 text-[12px] text-umber;
-}
 
 .otpBtn {
-  @apply w-full mt-5 mb-7 py-3.5 px-4 rounded-full font-semibold text-[15px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2 bg-sand text-umber cursor-not-allowed;
+  @apply w-full mt-3.5 mb-5 py-2.5 px-4 rounded-full font-semibold text-[14px] tracking-wide transition-all duration-300 flex items-center justify-center gap-2 bg-sand text-umber cursor-not-allowed;
 }
 
 .otpBtnActive {
@@ -65,7 +59,7 @@
 }
 
 .dividerContainer {
-  @apply flex items-center mb-5;
+  @apply flex items-center mb-4;
 }
 
 .dividerLine {
@@ -73,19 +67,19 @@
 }
 
 .dividerText {
-  @apply px-4 text-[12px] uppercase tracking-[0.14em] text-umber;
+  @apply px-3 text-[11px] uppercase tracking-[0.14em] text-umber;
 }
 
 .googleSlot {
-  @apply flex justify-center min-h-[44px] mb-3;
+  @apply flex justify-center min-h-[40px] mb-2.5;
 }
 
 .emailBtn {
-  @apply w-full mb-7 flex items-center justify-center gap-2 bg-white border border-sand rounded-full py-2.5 text-taupe transition-all hover:border-gold hover:bg-cream hover:text-ink;
+  @apply w-full mb-5 flex items-center justify-center gap-2 bg-white border border-sand rounded-full py-2 text-taupe transition-all hover:border-gold hover:bg-cream hover:text-ink;
 }
 
 .backBtn {
-  @apply -ml-1 mb-4 inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-[13px] font-medium text-taupe transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
+  @apply -ml-1 mb-3 inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-[13px] font-medium text-taupe transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
 }
 
 .passwordToggle {
@@ -101,7 +95,7 @@
 }
 
 .error {
-  @apply -mt-4 mb-5 rounded-xl bg-rose-light px-4 py-2.5 text-center text-[13px] text-burgundy;
+  @apply -mt-2 mb-4 rounded-xl bg-rose-light px-3.5 py-2 text-center text-[12.5px] text-burgundy;
 }
 
 /* In the email form the error sits above the fields, not under a divider */
@@ -110,7 +104,7 @@
 }
 
 .footerText {
-  @apply text-center text-[12px] text-umber leading-relaxed px-2;
+  @apply text-center text-[11px] text-umber leading-snug px-2;
 }
 
 .link {
@@ -118,5 +112,5 @@
 }
 
 .closeBtn {
-  @apply absolute top-4 right-4 p-2 rounded-full text-umber transition-colors hover:bg-linen hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
+  @apply absolute top-3 right-3 p-2 rounded-full text-umber transition-colors hover:bg-linen hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
 }

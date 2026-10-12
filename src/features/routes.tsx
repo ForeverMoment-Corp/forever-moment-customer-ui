@@ -7,6 +7,7 @@ import { authRoutes } from '@/features/auth/pages/routes';
 import { profileRoutes } from '@/features/profile/pages/routes';
 import { bookingRoutes } from '@/features/bookings/pages/routes';
 import { cartRoutes } from '@/features/cart/pages/routes';
+import { searchRoutes } from '@/features/search/pages/routes';
 import { notFoundRoutes } from '@/features/notFound/pages/routes';
 
 export const customerRoutes = [
@@ -19,6 +20,7 @@ export const customerRoutes = [
     ...profileRoutes,
     ...bookingRoutes,
     ...cartRoutes,
+    ...searchRoutes,
     // Keep last: the 404 page for any unknown URL.
     ...notFoundRoutes,
 ];

@@ -3,6 +3,8 @@ import { fetchFeaturedExperiences, fetchLocations, fetchPromotionImages } from '
 import { promotionSlot } from './types';
 import { experienceListKey, selectLocationId } from '@/features/experiences/store/location';
 import type { RootState } from '@/store/store';
+import { saveLocation } from './savedLocation';
+import { savePincode, type SavedPincode } from './savedPincode';
 
 /** GET /public/experiences/location/{locationId}/featured */
 export const getFeaturedExperiences = () => {
@@ -51,10 +53,20 @@ export const getLocations = () => {
     };
 };
 
-export const setSelectedLocation = (location: string) => ({
-    type: types.SET_SELECTED_LOCATION,
-    payload: location,
-});
+/** The guest set (or cleared, with null) their venue pincode: apply it and remember it. */
+export const setVenuePincode = (value: SavedPincode | null) => {
+    savePincode(value);
+    return { type: types.SET_VENUE_PINCODE, payload: value };
+};
+
+/** The guest picked a city: apply it and remember it for the next visit / reload. */
+export const setSelectedLocation = (location: string) => {
+    saveLocation(location);
+    return {
+        type: types.SET_SELECTED_LOCATION,
+        payload: location,
+    };
+};
 
 /** Promotion images for a key + placement, e.g. the home hero: getPromotionImages('hero', 'home'). */
 type PromotionDispatch = (action: { type: string; payload?: unknown }) => void;
