@@ -246,6 +246,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
     setDate(d);
     setDateError(false);
   };
+  
 
   const handleBook = async () => {
     if (!isAuthenticated) {
