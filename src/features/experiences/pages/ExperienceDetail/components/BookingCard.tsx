@@ -15,6 +15,8 @@ import type { RootState } from '@/store/store';
 import { openLoginModal } from '@/features/auth/store/authSlice';
 import { experiencePath } from '@/features/experiences/utils/slug';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
+import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
+import { useNavigate } from 'react-router-dom';
 
 export interface BookingCardProps {
   experience: ExperienceVM;
@@ -186,6 +188,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const [isBooking, setIsBooking] = useState(false);
   // Set once the booking exists: payment retries reuse it instead of booking again.
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [paymentStage, setPaymentStage] = useState<'idle' | 'preparing' | 'redirecting' | 'delayed'>('idle');
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -258,9 +261,12 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       return;
     }
 
+    // Opened now, while the click still counts, and pointed at Stripe once the link is ready.
+    const tab = openPaymentTab();
+
     // The booking already exists (payment link was slow): only fetch the link again.
     if (pendingBookingId) {
-      await goToPayment(pendingBookingId);
+      await goToPayment(pendingBookingId, tab);
       return;
     }
 
@@ -279,29 +285,38 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       const bookingId = String(response.bookingId || response.id || '');
       if (!bookingId) throw new Error('Booking was created but no booking reference came back.');
       setPendingBookingId(bookingId);
-      await goToPayment(bookingId);
+      await goToPayment(bookingId, tab);
     } catch (err: any) {
+      closePaymentTab(tab);
       alert(err.message || 'Failed to create booking');
     } finally {
       setIsBooking(false);
     }
   };
 
-  /** GET /api/payment/bookings/{id}/payment-link (polled), then hand the browser to Stripe Checkout. */
-  const goToPayment = async (bookingId: string) => {
+  /**
+   * GET /api/payment/bookings/{id}/payment-link (polled), then open Stripe Checkout in the new tab
+   * and move this tab to /payment/status, which polls the payment status until it succeeds or fails.
+   */
+  const goToPayment = async (bookingId: string, tab: Window | null) => {
     setIsBooking(true);
     setPaymentError(null);
     setPaymentStage('preparing');
     try {
       const url = await waitForPaymentLink(bookingId, { id: user?.id as string, role: user?.role as string });
       if (!url) {
+        closePaymentTab(tab);
         setPaymentStage('delayed');
         return;
       }
       setPaymentStage('redirecting');
-      savePendingPayment({ bookingId, experienceName: e.name, experiencePath: experiencePath({ id: e.id, slug: e.slug }) });
-      window.location.assign(url);
+      savePendingPayment({ bookingId, experienceName: e.name, experiencePath: experiencePath({ id: e.id, slug: e.slug }), checkoutUrl: url });
+      // A blocked popup is fine: the status page offers an "Open payment page" button.
+      sendTabToCheckout(tab, url);
+      setPaymentStage('idle');
+      navigate(paymentStatusPath(bookingId));
     } catch (err: unknown) {
+      closePaymentTab(tab);
       setPaymentStage('delayed');
       setPaymentError(err instanceof Error && err.message ? err.message : 'We could not open the payment page.');
     } finally {

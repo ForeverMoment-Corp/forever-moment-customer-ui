@@ -7,13 +7,15 @@ export interface PendingPayment {
     bookingId: string;
     experienceName?: string;
     experiencePath?: string;
+    /** Stripe Checkout URL, so the status page can reopen it from a click (no popup blocker). */
+    checkoutUrl?: string;
 }
 
 const KEY = 'fm_pending_payment';
 
 export function savePendingPayment(value: PendingPayment) {
     try {
-        sessionStorage.setItem(KEY, JSON.stringify(value));
+        localStorage.setItem(KEY, JSON.stringify(value));
     } catch {
         // Storage blocked (private mode): the return URL's bookingId is enough.
     }
@@ -21,7 +23,7 @@ export function savePendingPayment(value: PendingPayment) {
 
 export function readPendingPayment(): PendingPayment | null {
     try {
-        const raw = sessionStorage.getItem(KEY);
+        const raw = localStorage.getItem(KEY);
         const value = raw ? (JSON.parse(raw) as PendingPayment) : null;
         return value?.bookingId ? value : null;
     } catch {
@@ -31,7 +33,7 @@ export function readPendingPayment(): PendingPayment | null {
 
 export function clearPendingPayment() {
     try {
-        sessionStorage.removeItem(KEY);
+        localStorage.removeItem(KEY);
     } catch {
         // Nothing to clear.
     }

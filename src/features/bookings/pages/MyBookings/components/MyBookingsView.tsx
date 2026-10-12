@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, CalendarHeart, ChevronDown, Clock, Loader2, LogIn, MapPin, RefreshCw, Users } from 'lucide-react';
 import type { RootState } from '@/store/store';
 import { experiencePath } from '@/features/experiences/utils/slug';
 import { waitForPaymentLink } from '@/features/experiences/store/api';
 import { BookingsUnavailableError, fetchMyBookings, UnauthorizedError, type Booking } from '@/features/bookings/api';
 import { getLoginSession } from '@/utils/storage';
+import { savePendingPayment } from '@/features/bookings/pendingPayment';
+import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -91,6 +93,7 @@ const statusKey = (b: Booking, isPast: boolean) => {
 
 function BookingCard({ booking, today }: { booking: Booking; today: number }) {
   const user = useSelector((state: RootState) => state.auth.user);
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
@@ -105,18 +108,29 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
   const slot = slotText(booking);
   const detailsId = `booking-${booking.bookingId}-details`;
 
+  /** Stripe Checkout opens in a new tab; this tab moves to /payment/status, which polls until paid or failed. */
   const pay = async () => {
     if (!user) return;
+    const tab = openPaymentTab();
     setPaying(true);
     setPayError(null);
     try {
       const url = await waitForPaymentLink(booking.bookingId, { id: user.id, role: user.role }, { timeoutMs: 8_000 });
       if (url) {
-        window.location.assign(url);
+        savePendingPayment({
+          bookingId: booking.bookingId,
+          experienceName: booking.experienceName,
+          experiencePath: experiencePath({ id: booking.experienceId, slug: booking.experienceSlug }),
+          checkoutUrl: url,
+        });
+        sendTabToCheckout(tab, url);
+        navigate(paymentStatusPath(booking.bookingId));
         return;
       }
+      closePaymentTab(tab);
       setPayError('Payment link not ready yet. Try again in a minute.');
     } catch (e) {
+      closePaymentTab(tab);
       setPayError(e instanceof Error ? e.message : 'Could not open the payment page.');
     }
     setPaying(false);

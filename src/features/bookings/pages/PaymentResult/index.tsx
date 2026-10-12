@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useSearchParams } from 'react-router-dom';
-import { AlertCircle, CheckCircle2, Clock, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { AlertCircle, CheckCircle2, Clock, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import type { RootState } from '@/store/store';
 import { checkBookingStatus, waitForPaymentLink } from '@/features/experiences/store/api';
 import { clearPendingPayment, readPendingPayment, savePendingPayment } from '@/features/bookings/pendingPayment';
+import { closePaymentTab, openCheckoutInNewTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
 
-/** How long to wait for the Stripe webhook to mark the payment before calling it "processing". */
-const VERIFY_TIMEOUT_MS = 20_000;
-const VERIFY_INTERVAL_MS = 2_000;
+/**
+ * waiting: Checkout is open in another tab; poll until the guest pays (or gives up).
+ * success: Stripe sent the guest back after paying; the webhook may still be on its way.
+ */
+const POLL = {
+  waiting: { timeoutMs: 15 * 60_000, intervalMs: 3_000 },
+  success: { timeoutMs: 20_000, intervalMs: 2_000 },
+};
 
-type Outcome = 'success' | 'cancel';
-type View = 'checking' | 'paid' | 'processing' | 'failed' | 'cancelled';
+type Outcome = 'waiting' | 'success' | 'cancel';
+type View = 'waiting' | 'checking' | 'paid' | 'processing' | 'timeout' | 'failed' | 'cancelled';
 
 /** The payments service answers `{ status: PROCESSED | FAILED | PENDING }`, possibly inside the platform envelope. */
 const paymentStatusOf = (body: unknown): string => {
@@ -23,6 +29,12 @@ const paymentStatusOf = (body: unknown): string => {
 };
 
 const COPY: Record<View, { title: string; body: string; icon: typeof CheckCircle2; tone: string }> = {
+  waiting: {
+    title: 'Complete your payment',
+    body: 'The secure payment page is open in a new tab. This page updates on its own once you have paid.',
+    icon: Loader2,
+    tone: 'bg-[var(--gold-pale)] text-[var(--gold-dark)]',
+  },
   checking: {
     title: 'Confirming your payment',
     body: 'This takes a few seconds. Please keep this page open.',
@@ -38,6 +50,12 @@ const COPY: Record<View, { title: string; body: string; icon: typeof CheckCircle
   processing: {
     title: 'Payment is being processed',
     body: 'Stripe has your payment and we are confirming it. Your booking will show as confirmed shortly.',
+    icon: Clock,
+    tone: 'bg-[var(--gold-pale)] text-[var(--gold-dark)]',
+  },
+  timeout: {
+    title: "We haven't received your payment yet",
+    body: 'Your booking is saved. Open the payment page to finish, or check again if you have just paid.',
     icon: Clock,
     tone: 'bg-[var(--gold-pale)] text-[var(--gold-dark)]',
   },
@@ -61,27 +79,42 @@ const secondaryBtn =
   'inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--gold-light)] bg-white px-6 text-[0.78rem] font-semibold uppercase tracking-[0.1em] text-[var(--burgundy)] transition-colors hover:border-[var(--burgundy)]';
 
 /**
- * Where Stripe Checkout sends the guest back to: `/payment/success?session_id&bookingId` or
- * `/payment/cancel?bookingId` (URLs set in the payment service's `payment.gateway.*-url`).
+ * /payment/status?bookingId — this tab, while Stripe Checkout is open in a new one.
+ * /payment/success?session_id&bookingId and /payment/cancel?bookingId — where Stripe sends the
+ * guest back (URLs set in the payment service's `payment.gateway.*-url`).
  */
 export default function PaymentResult({ outcome }: { outcome: Outcome }) {
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const user = useSelector((state: RootState) => state.auth.user);
-  const [pending] = useState(readPendingPayment);
+  const [pending, setPending] = useState(readPendingPayment);
   const bookingId = params.get('bookingId') || pending?.bookingId || '';
-  // Details saved before the redirect only apply when they are for this booking.
+  // Details saved before Checkout opened only apply when they are for this booking.
   const saved = pending && pending.bookingId === bookingId ? pending : null;
 
-  const [view, setView] = useState<View>(outcome === 'cancel' ? 'cancelled' : bookingId && user ? 'checking' : 'processing');
+  // What this tab is doing now; a retry turns any outcome into "waiting". `run` restarts the poll.
+  const [mode, setMode] = useState<Outcome>(outcome);
+  const [run, setRun] = useState(0);
+  const [view, setView] = useState<View>('checking');
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState<string | null>(null);
 
-  // Stripe redirects before its webhook reaches us, so poll the payment status for a short while.
+  useEffect(() => setMode(outcome), [outcome]);
+
   useEffect(() => {
-    if (outcome !== 'success' || !bookingId || !user) return;
+    if (mode === 'cancel') {
+      setView('cancelled');
+      return;
+    }
+    if (!bookingId || !user) {
+      setView('processing');
+      return;
+    }
     let alive = true;
-    const deadline = Date.now() + VERIFY_TIMEOUT_MS;
-    const poll = async () => {
+    const { timeoutMs, intervalMs } = POLL[mode];
+    const deadline = Date.now() + timeoutMs;
+    setView(mode === 'waiting' ? 'waiting' : 'checking');
+    (async () => {
       while (alive) {
         try {
           const status = paymentStatusOf(await checkBookingStatus(bookingId, { id: user.id, role: user.role }));
@@ -98,46 +131,69 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
         } catch {
           // A failed check is treated like "not confirmed yet"; the deadline still applies.
         }
-        if (Date.now() + VERIFY_INTERVAL_MS > deadline) {
-          if (alive) setView('processing');
+        if (Date.now() + intervalMs > deadline) {
+          if (alive) setView(mode === 'waiting' ? 'timeout' : 'processing');
           return;
         }
-        await new Promise((resolve) => setTimeout(resolve, VERIFY_INTERVAL_MS));
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
       }
-    };
-    poll();
+    })();
     return () => {
       alive = false;
     };
-  }, [outcome, bookingId, user]);
+  }, [mode, run, bookingId, user]);
 
+  const startWaiting = () => {
+    if (outcome !== 'waiting') navigate(paymentStatusPath(bookingId), { replace: true });
+    setMode('waiting');
+    setRun((n) => n + 1);
+  };
+
+  /** Reopen the Checkout URL saved when the booking was made (synchronous, so no popup blocker). */
+  const openSavedCheckout = () => {
+    if (!saved?.checkoutUrl) return;
+    openCheckoutInNewTab(saved.checkoutUrl);
+    if (view !== 'waiting') startWaiting();
+  };
+
+  /** Fetch the link again (it may have changed after a failure) and open it in a new tab. */
   const retryPayment = async () => {
     if (!user || !bookingId) return;
+    const tab = openPaymentTab();
     setRetrying(true);
     setRetryError(null);
     try {
       const url = await waitForPaymentLink(bookingId, { id: user.id, role: user.role }, { timeoutMs: 15_000 });
-      if (url) {
-        savePendingPayment(saved ?? { bookingId });
-        window.location.assign(url);
+      if (!url) {
+        closePaymentTab(tab);
+        setRetryError('The payment page is not ready yet. Please try again in a minute.');
         return;
       }
-      setRetryError('The payment page is not ready yet. Please try again in a minute.');
+      const next = { ...(saved ?? { bookingId }), checkoutUrl: url };
+      savePendingPayment(next);
+      setPending(next);
+      if (!sendTabToCheckout(tab, url)) openCheckoutInNewTab(url);
+      startWaiting();
     } catch (e) {
+      closePaymentTab(tab);
       setRetryError(e instanceof Error && e.message ? e.message : 'Could not open the payment page.');
+    } finally {
+      setRetrying(false);
     }
-    setRetrying(false);
   };
 
   const copy = COPY[view];
   const Icon = copy.icon;
-  const canRetry = (view === 'cancelled' || view === 'failed') && !!bookingId && !!user;
+  const spinning = view === 'waiting' || view === 'checking';
+  const canPay = (view === 'waiting' || view === 'timeout' || view === 'failed' || view === 'cancelled') && !!bookingId && !!user;
+  // Waiting/timeout reuse the open session; after a failure or cancel, ask for the link again.
+  const reuseSaved = (view === 'waiting' || view === 'timeout') && !!saved?.checkoutUrl;
 
   return (
     <section className="flex min-h-[70vh] items-center bg-[var(--cream)] px-4 py-12" style={{ fontFamily: SANS }}>
       <div className="mx-auto w-full max-w-md rounded-3xl border border-[var(--border-light)] bg-white px-6 py-10 text-center shadow-[var(--shadow-soft)] sm:px-10">
         <span className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${copy.tone}`}>
-          <Icon size={30} className={view === 'checking' ? 'animate-spin' : ''} />
+          <Icon size={30} className={spinning ? 'animate-spin' : ''} />
         </span>
 
         <h1 style={{ fontFamily: SERIF }} className="mt-5 text-[1.9rem] font-semibold leading-tight text-[var(--charcoal)]" aria-live="polite">
@@ -164,17 +220,21 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
 
         {view !== 'checking' && (
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            {canRetry ? (
-              <button type="button" onClick={retryPayment} disabled={retrying} className={primaryBtn}>
-                {retrying ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
-                {retrying ? 'Opening' : 'Try payment again'}
+            {canPay ? (
+              <button type="button" onClick={reuseSaved ? openSavedCheckout : retryPayment} disabled={retrying} className={primaryBtn}>
+                {retrying ? <Loader2 size={15} className="animate-spin" /> : reuseSaved ? <ExternalLink size={15} /> : <RefreshCw size={15} />}
+                {retrying ? 'Opening' : view === 'waiting' ? 'Open payment page' : view === 'timeout' ? 'Pay now' : 'Try payment again'}
               </button>
             ) : (
               <Link to="/bookings" className={primaryBtn}>
                 View my bookings
               </Link>
             )}
-            {canRetry ? (
+            {view === 'timeout' ? (
+              <button type="button" onClick={startWaiting} className={secondaryBtn}>
+                <RefreshCw size={15} /> Check again
+              </button>
+            ) : canPay ? (
               <Link to="/bookings" className={secondaryBtn}>
                 My bookings
               </Link>
@@ -184,6 +244,12 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
               </Link>
             )}
           </div>
+        )}
+
+        {view === 'waiting' && (
+          <p className="mx-auto mt-4 max-w-xs text-[0.74rem] leading-snug text-[var(--mid)]">
+            No new tab? Your browser may have blocked it. Use “Open payment page” above.
+          </p>
         )}
 
         {retryError && (
