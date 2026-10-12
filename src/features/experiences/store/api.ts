@@ -299,13 +299,16 @@ export async function fetchPaymentLink(bookingId: string | number, user: { id: s
 /**
  * Poll fetchPaymentLink until the Checkout URL is ready. Resolves null if it is not ready
  * within `timeoutMs`, so the caller can offer a retry without creating another booking.
+ * The first call waits `initialDelayMs`: the payments service creates the Checkout Session
+ * asynchronously, so asking straight after the booking almost always comes back empty.
  */
 export async function waitForPaymentLink(
     bookingId: string | number,
     user: { id: string | number; role: string },
-    { timeoutMs = 30_000, intervalMs = 1_500 }: { timeoutMs?: number; intervalMs?: number } = {},
+    { timeoutMs = 30_000, intervalMs = 1_500, initialDelayMs = 2_000 }: { timeoutMs?: number; intervalMs?: number; initialDelayMs?: number } = {},
 ): Promise<string | null> {
     const deadline = Date.now() + timeoutMs;
+    if (initialDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, initialDelayMs));
     for (;;) {
         const url = await fetchPaymentLink(bookingId, user);
         if (url) return url;
@@ -314,14 +317,10 @@ export async function waitForPaymentLink(
     }
 }
 
-/** GET /api/payments/admin/bookings/{bookingId}/status */
+/** GET /api/payment/admin/bookings/{bookingId}/status */
 export async function checkBookingStatus(bookingId: string, user: { id: string | number; role: string }): Promise<BookingStatusResponse> {
-    // Replace '/platform' with '/payment' to route to the payments service (as configured in gateway)
-    const paymentsBase = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace('/platform', '/payment') : '/api/payment';
-    
-    // The user explicitly requires this exact path structure: /api/payment/api/payments/admin/bookings/...
-    const url = `${paymentsBase}/api/payments/admin/bookings/${encodeURIComponent(bookingId)}/status`;
-    
+    const url = `${PAYMENTS_BASE}/admin/bookings/${encodeURIComponent(bookingId)}/status`;
+
     const response = await fetch(url, {
         method: 'GET',
         headers: {
