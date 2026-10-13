@@ -14,7 +14,8 @@ const secondaryBtn =
 export default function NotFound() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  useDocumentTitle('Page not found');
+  // Vercel answers unknown URLs with 200, so tell search engines not to index this page.
+  useDocumentTitle('Page not found', { noindex: true });
 
   return (
     <section className="flex min-h-[70vh] items-center bg-[var(--cream)] px-4 py-14" style={{ fontFamily: SANS }}>

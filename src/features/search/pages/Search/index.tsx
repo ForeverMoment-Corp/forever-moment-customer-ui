@@ -81,7 +81,8 @@ export default function SearchPage() {
     setCategoryFilter(null);
   }
 
-  useDocumentTitle(query ? `Search: ${query}` : 'Search');
+  // Search result pages are thin and endless: keep them out of the index (links are still followed).
+  useDocumentTitle(query ? `Search: ${query}` : 'Search', { noindex: true });
 
   // The picked city's experiences; the action skips the call when they are already loaded.
   useEffect(() => {

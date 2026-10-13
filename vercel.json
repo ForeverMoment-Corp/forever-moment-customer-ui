@@ -5,6 +5,61 @@
       "destination": "https://api.15.134.55.225.nip.io/api/$1"
     },
     {
+      "source": "/experience/:param",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|crawling|facebookexternalhit|facebookcatalog|whatsapp|telegram|slack|discord|linkedin|twitter|pinterest|skype|vkshare|embedly|quora|redditbot|applebot|yandex|baidu|duckduck|petalbot|headlesschrome|lighthouse).*"
+        }
+      ],
+      "destination": "/api/seo-page?kind=experience&param=:param"
+    },
+    {
+      "source": "/category/:param",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|crawling|facebookexternalhit|facebookcatalog|whatsapp|telegram|slack|discord|linkedin|twitter|pinterest|skype|vkshare|embedly|quora|redditbot|applebot|yandex|baidu|duckduck|petalbot|headlesschrome|lighthouse).*"
+        }
+      ],
+      "destination": "/api/seo-page?kind=category&param=:param"
+    },
+    {
+      "source": "/collection/:param",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|crawling|facebookexternalhit|facebookcatalog|whatsapp|telegram|slack|discord|linkedin|twitter|pinterest|skype|vkshare|embedly|quora|redditbot|applebot|yandex|baidu|duckduck|petalbot|headlesschrome|lighthouse).*"
+        }
+      ],
+      "destination": "/api/seo-page?kind=subcategory&param=:param"
+    },
+    {
+      "source": "/subcategory/:param",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|crawling|facebookexternalhit|facebookcatalog|whatsapp|telegram|slack|discord|linkedin|twitter|pinterest|skype|vkshare|embedly|quora|redditbot|applebot|yandex|baidu|duckduck|petalbot|headlesschrome|lighthouse).*"
+        }
+      ],
+      "destination": "/api/seo-page?kind=subcategory&param=:param"
+    },
+    {
+      "source": "/:city/:category",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|crawling|facebookexternalhit|facebookcatalog|whatsapp|telegram|slack|discord|linkedin|twitter|pinterest|skype|vkshare|embedly|quora|redditbot|applebot|yandex|baidu|duckduck|petalbot|headlesschrome|lighthouse).*"
+        }
+      ],
+      "destination": "/api/seo-page?kind=city&param=:city&param2=:category"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

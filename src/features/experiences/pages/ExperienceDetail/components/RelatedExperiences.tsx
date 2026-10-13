@@ -4,6 +4,7 @@ import ExperienceTile from '@/components/common/ExperienceTile';
 import ExperienceTileSkeleton from '@/components/common/ExperienceTileSkeleton';
 import type { ExperienceListItem } from '@/features/experiences/store/types';
 import { FONT_SANS, FONT_SERIF } from '../normalize';
+import { subCategoryPath } from '@/components/navbar/navTypes';
 
 /** Shape of an item from the public list endpoints. */
 export type ExperienceSummary = ExperienceListItem;
@@ -79,7 +80,8 @@ export default function RelatedExperiences({
   // The heading names the narrowest group that actually filled the row.
   const inCategory = sameSubCategory.length === 0 && sameCategory.length > 0;
   const heading = sameSubCategory.length > 0 ? subCategoryName : inCategory ? categoryName : 'celebration';
-  const seeAllTo = sameSubCategory.length > 0 && subCategoryId ? `/subcategory/${subCategoryId}` : `/category/${categorySlug}`;
+  const seeAllTo =
+    sameSubCategory.length > 0 && subCategoryId ? subCategoryPath({ id: subCategoryId, name: subCategoryName }) : `/category/${categorySlug}`;
 
   return (
     <section id="related" className="mt-10 border-t border-[var(--border-light)] pt-8">

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 
 import SmartImage from '@/components/common/SmartImage';
 import { getCategoryImage, getCategoryImageOrFallback } from "@/features/category/utils/categoryImage";
+import { categoryPath } from "@/components/navbar/navTypes";
 
 interface Category {
   id: number;
@@ -22,7 +23,7 @@ export default function CategoryListCard({ category, imageIndex }: CategoryListC
 
   return (
     <Link
-      to={`/category/${category.slug || category.name.toLowerCase().replace(/\s+/g, "-")}`}
+      to={categoryPath(category)}
       className="relative rounded-2xl overflow-hidden cursor-pointer group transition-transform duration-300 hover:scale-[1.03]"
       style={{ height: 160 }}
     >

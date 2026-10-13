@@ -1,44 +1,80 @@
-import { useEffect } from 'react';
-import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, ScrollRestoration, useLocation, useNavigation } from 'react-router-dom';
 import Navbar from '@/components/navbar/Navbar';
 import Footer from '@/components/navigation/footer';
 import FloatingBookingCTA from '@/components/FloatingBookingCTA/FloatingBooking';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import BottomNav from '@/components/layout/BottomNav';
 import LoginModal from '@/features/auth/components/LoginModal';
-import { formatTitle } from '@/hooks/useDocumentTitle';
+import { applySeo, type SeoMeta } from '@/lib/seo';
 
 /**
- * Tab titles for fixed pages. Pages named from data (category, collection, experience) and the
- * 404 page set their own with useDocumentTitle, so they are deliberately not listed here.
+ * Metadata for fixed pages. Pages named from data (category, collection, experience), search and
+ * the 404 page set their own with useSeo, so they are deliberately not listed here.
+ * Account, cart and payment pages are private: kept out of search results.
  */
-const PAGE_TITLES: Record<string, string | null> = {
-  '/': null, // default title
-  '/categories': 'All celebrations',
-  '/subcategories': 'All collections',
-  '/featured-experiences': 'Featured experiences',
-  '/help': 'Help centre',
-  '/faqs': 'FAQs',
-  '/contact': 'Contact us',
-  '/support': 'My support queries',
-  '/profile': 'My profile',
-  '/bookings': 'My bookings',
-  '/cart': 'My cart',
-  '/payment/status': 'Complete your payment',
-  '/payment/success': 'Payment',
-  '/payment/cancel': 'Payment not completed',
+const PAGE_SEO: Record<string, SeoMeta> = {
+  '/': {}, // site defaults
+  '/categories': {
+    title: 'All celebrations',
+    description: 'Browse every occasion we set up: birthdays, anniversaries, candlelight dinners, baby showers and more.',
+  },
+  '/subcategories': {
+    title: 'All collections',
+    description: 'Every decor and experience collection in one place. Pick a theme and book a setup at your venue.',
+  },
+  '/featured-experiences': {
+    title: 'Featured experiences',
+    description: 'Our most loved celebration setups and experiences, handpicked for you.',
+  },
+  '/help': { title: 'Help centre', description: 'Answers about booking, payments, setup and cancellations, and how to reach us.' },
+  '/faqs': { title: 'FAQs', description: 'Answers about booking, payments, setup and cancellations.', path: '/help' },
+  '/contact': {
+    title: 'Contact us',
+    description: 'Tell us the occasion, the date and your budget. We reply with ideas, photos of past setups and a quote.',
+  },
+  '/support': { title: 'My support queries', noindex: true },
+  '/profile': { title: 'My profile', noindex: true },
+  '/bookings': { title: 'My bookings', noindex: true },
+  '/cart': { title: 'My cart', noindex: true },
+  '/payment/status': { title: 'Complete your payment', noindex: true },
+  '/payment/success': { title: 'Payment', noindex: true },
+  '/payment/cancel': { title: 'Payment not completed', noindex: true },
 };
+
+/**
+ * Thin gold bar across the top while the next page's code downloads (routes are code-split, and the
+ * router keeps the current page up until the next one is ready). Waits 150 ms so fast loads never flash.
+ */
+function NavigationProgress() {
+  const loading = useNavigation().state === 'loading';
+  const [visible, setVisible] = useState(false);
+  // Hide as soon as the page has arrived (render-time adjustment, no effect).
+  if (!loading && visible) setVisible(false);
+  useEffect(() => {
+    if (!loading) return;
+    const t = window.setTimeout(() => setVisible(true), 150);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+  if (!visible) return null;
+  return (
+    <div role="progressbar" aria-label="Loading page" className="fixed inset-x-0 top-0 z-[1100] h-[3px] overflow-hidden bg-gold/20">
+      <div className="nav-progress-bar h-full w-1/3 bg-gold" />
+    </div>
+  );
+}
 
 const CustomerLayout = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
-    if (path in PAGE_TITLES) document.title = formatTitle(PAGE_TITLES[path]);
+    if (path in PAGE_SEO) applySeo({ path, ...PAGE_SEO[path] });
   }, [pathname]);
 
   return (
     <div className='min-h-screen bg-ivory text-ink flex flex-col pb-[60px] md:pb-0'>
+      <NavigationProgress />
       {/* Navbar manages its own fixed positioning internally */}
       <Navbar />
 

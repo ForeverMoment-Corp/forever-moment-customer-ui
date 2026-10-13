@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import ProfilePage from './ProfilePage';
+import { lazyPage } from '@/router/lazyPage';
 
 export const profileRoutes = [
     {
@@ -7,8 +7,5 @@ export const profileRoutes = [
         path: '/dashboard',
         element: <Navigate to="/bookings" replace />,
     },
-    {
-        path: '/profile',
-        element: <ProfilePage />,
-    }
+    { path: '/profile', lazy: lazyPage(() => import('./ProfilePage')) },
 ];

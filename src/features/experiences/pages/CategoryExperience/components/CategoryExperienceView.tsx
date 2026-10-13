@@ -4,9 +4,12 @@ import { ChevronRight, SlidersHorizontal } from "lucide-react";
 import ExperienceTile from "@/components/common/ExperienceTile";
 import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import { matchesCategorySlug } from "@/features/experiences/utils/slug";
+import { categoryPath } from "@/components/navbar/navTypes";
 import { experienceListKey } from "@/features/experiences/store/location";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useSeo } from "@/hooks/useDocumentTitle";
+import { breadcrumbJsonLd } from "@/lib/seo";
+import { getCategoryImage } from "@/features/category/utils/categoryImage";
 
 interface SubCategoryRef {
   id: number;
@@ -38,6 +41,8 @@ export interface CategoryExperienceViewProps {
   locationReady?: boolean;
   getCategoryExperiences: (categoryId: number) => void;
   getCategories?: () => void;
+  /** City landing page (/delhi/birthday-decoration): titles, canonical URL and breadcrumb name the city. */
+  city?: { name: string; slug: string };
 }
 
 const SANS = "'Jost', sans-serif";
@@ -65,6 +70,7 @@ export default function CategoryExperienceView({
   locationReady,
   getCategoryExperiences,
   getCategories,
+  city,
 }: CategoryExperienceViewProps) {
   const [liked, setLiked] = useState<number[]>([]);
   const [sort, setSort] = useState<SortKey>("recommended");
@@ -139,8 +145,36 @@ export default function CategoryExperienceView({
   // A slug that matches no category is "nothing here", not an endless spinner.
   const unknownCategory = !category && !categoriesLoading && (categories?.length ?? 0) > 0;
   const isLoading = !unknownCategory && (!!loading || !isCurrentList) && inCategory.length === 0;
-  const title = category?.name || (categorySlug ? titleFromSlug(categorySlug) : "Our experiences");
-  useDocumentTitle(title);
+  const categoryName = category?.name?.trim() || (categorySlug ? titleFromSlug(categorySlug) : "Our experiences");
+  // On a city landing page the heading and metadata say where: "Birthday Decoration in Delhi".
+  const title = city ? `${categoryName} in ${city.name}` : categoryName;
+  // Canonical form even when the URL used an older spelling (e.g. "anniversary-&-romantic-decoration").
+  const cleanSlug = category ? categoryPath(category).replace("/category/", "") : categorySlug;
+  const categoryHref = cleanSlug ? `/category/${cleanSlug}` : undefined;
+  const seoPath = city && cleanSlug ? `/${city.slug}/${cleanSlug}` : categoryHref;
+  useSeo(
+    {
+      title,
+      description: city
+        ? `${categoryName} in ${city.name}: decor and experiences set up at your venue by Forever Moment. Pick a setup, choose a date and book online.`
+        : category?.description ||
+          `${title} decor and experiences, set up at your venue by Forever Moment. Pick a setup, choose a date and book online.`,
+      image: category ? getCategoryImage(category) || undefined : undefined,
+      path: seoPath,
+      // A slug that matches no category shows "Nothing here yet": keep it out of the index.
+      // A city page with nothing in it would be a thin page: keep that out too.
+      noindex: unknownCategory || (!!city && !isLoading && inCategory.length === 0),
+    },
+    category && seoPath && categoryHref
+      ? {
+          "ld-breadcrumb": breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: category.name.trim(), path: categoryHref },
+            ...(city ? [{ name: `${category.name.trim()} in ${city.name}`, path: seoPath }] : []),
+          ]),
+        }
+      : undefined,
+  );
 
   const chipClass = (active: boolean) =>
     `shrink-0 rounded-full border px-3 py-1.5 text-[0.78rem] transition-colors ${
@@ -159,7 +193,13 @@ export default function CategoryExperienceView({
               <Link to="/" className="transition-colors hover:text-[var(--burgundy)]">Home</Link>
               <ChevronRight size={12} className="text-[var(--gold)]" />
             </li>
-            <li className="capitalize text-[var(--charcoal)]">{title}</li>
+            {city && categoryHref && (
+              <li className="flex items-center gap-1">
+                <Link to={categoryHref} className="capitalize transition-colors hover:text-[var(--burgundy)]">{categoryName}</Link>
+                <ChevronRight size={12} className="text-[var(--gold)]" />
+              </li>
+            )}
+            <li className="capitalize text-[var(--charcoal)]">{city ? city.name : title}</li>
           </ol>
         </nav>
 

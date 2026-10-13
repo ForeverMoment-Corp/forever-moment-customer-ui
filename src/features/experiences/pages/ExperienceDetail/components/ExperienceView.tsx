@@ -25,8 +25,10 @@ import { normalizeExperience, FONT_SANS, FONT_SERIF } from '../normalize';
 import type { AddonCatalogueItem, ExperienceAddon } from '@/features/experiences/store/types';
 import type { AddOn, FaqItem } from '../types';
 import { experiencePath, isNumericId } from '@/features/experiences/utils/slug';
+import { subCategoryPath } from '@/components/navbar/navTypes';
 import { experienceListKey } from '@/features/experiences/store/location';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useSeo } from '@/hooks/useDocumentTitle';
+import { absoluteUrl, breadcrumbJsonLd, toDescription } from '@/lib/seo';
 
 export interface ExperienceViewProps {
   experience: unknown;
@@ -222,7 +224,56 @@ export default function ExperienceDetails({
     ].filter(Boolean) as SectionNavItem[];
   }, [vm, faqs, extraAddons]);
 
-  useDocumentTitle(isCurrent ? vm?.name : null);
+  // Search / share metadata. Structured data leaves out the placeholder rating and the derived
+  // "original price": Google penalises review or offer markup that is not real.
+  const seoVm = isCurrent ? vm : null;
+  const seoPath = seoVm ? experiencePath({ id: seoVm.id, slug: seoVm.slug }) : undefined;
+  const seoImages = (seoVm?.media ?? []).map((m) => m.heroUrl || m.originalUrl).filter(Boolean).slice(0, 3);
+  useSeo(
+    seoVm
+      ? {
+          title: seoVm.name,
+          description:
+            toDescription(seoVm.shortDescription || seoVm.description) ||
+            `Book ${seoVm.name}${seoVm.categoryName ? `, a ${seoVm.categoryName.toLowerCase()} setup` : ''} by Forever Moment.`,
+          image: seoImages[0],
+          path: seoPath,
+          type: 'product',
+        }
+      : { title: null },
+    seoVm && seoPath
+      ? {
+          'ld-experience': {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: seoVm.name,
+            description: toDescription(seoVm.shortDescription || seoVm.description, 500) || undefined,
+            image: seoImages.length ? seoImages.map(absoluteUrl) : undefined,
+            url: absoluteUrl(seoPath),
+            category: seoVm.subCategoryName || seoVm.categoryName || undefined,
+            brand: { '@type': 'Brand', name: 'Forever Moment' },
+            offers:
+              seoVm.basePrice > 0
+                ? {
+                    '@type': 'Offer',
+                    price: seoVm.basePrice,
+                    priceCurrency: 'INR',
+                    availability: 'https://schema.org/InStock',
+                    url: absoluteUrl(seoPath),
+                  }
+                : undefined,
+          },
+          'ld-breadcrumb': breadcrumbJsonLd([
+            { name: 'Home', path: '/' },
+            ...(seoVm.categoryName ? [{ name: seoVm.categoryName, path: `/category/${seoVm.categorySlug}` }] : []),
+            ...(seoVm.subCategoryId && seoVm.subCategoryName
+              ? [{ name: seoVm.subCategoryName, path: subCategoryPath({ id: seoVm.subCategoryId, name: seoVm.subCategoryName }) }]
+              : []),
+            { name: seoVm.name, path: seoPath },
+          ]),
+        }
+      : undefined,
+  );
 
   if (error) {
     return (
@@ -248,7 +299,7 @@ export default function ExperienceDetails({
   const crumbs = [
     { label: 'Home', to: '/' },
     { label: vm.categoryName, to: `/category/${vm.categorySlug}` },
-    ...(vm.subCategoryId ? [{ label: vm.subCategoryName, to: `/subcategory/${vm.subCategoryId}` }] : []),
+    ...(vm.subCategoryId ? [{ label: vm.subCategoryName, to: subCategoryPath({ id: vm.subCategoryId, name: vm.subCategoryName }) }] : []),
     { label: vm.name },
   ];
 

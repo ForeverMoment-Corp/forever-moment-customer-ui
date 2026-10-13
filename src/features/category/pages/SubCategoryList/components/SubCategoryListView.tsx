@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import SmartImage from "@/components/common/SmartImage";
 import CategoryIcon from "@/components/navbar/CategoryIcon";
+import { subCategoryPath } from "@/components/navbar/navTypes";
 import FadeIn from "@/components/animations/FadeIn";
 import { getSubCategoryImages } from "@/features/category/utils/categoryImage";
 import { experienceListKey } from "@/features/experiences/store/location";
@@ -91,7 +92,7 @@ export default function SubCategoryListView({
             return (
               <li key={sub.id}>
                 <Link
-                  to={`/subcategory/${sub.id}`}
+                  to={subCategoryPath(sub)}
                   className="group flex h-full items-center gap-3 rounded-2xl border border-[var(--border-light)] bg-white p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--gold)] hover:shadow-[0_12px_26px_-14px_color-mix(in_srgb,_var(--burgundy)_35%,_transparent)]"
                 >
                   <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[var(--rose-light)]">

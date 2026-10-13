@@ -29,10 +29,12 @@ async function getPublic<T>(path: string, fallbackMessage: string, emptyOn404?: 
     return (body?.response ?? null) as T;
 }
 
-/** GET /public/locations/{locationId}/experiences — all active experiences for location. */
+/** GET /public/experiences/location/{locationId} — all active experiences in the city (all cities without one). */
 export const fetchData = (locationId?: number) => {
     if (locationId) {
-        return getPublic<ExperienceListItem[]>(`/public/locations/${encodeURIComponent(String(locationId))}/experiences`, 'Failed to fetch experiences', []);
+        // Not /public/locations/{id}/experiences: that returns location-mapper rows (mapperId, address,
+        // timeslots) with no experience id, name or slug. Same endpoint as the mobile app.
+        return getPublic<ExperienceListItem[]>(`/public/experiences/location/${encodeURIComponent(String(locationId))}`, 'Failed to fetch experiences', []);
     }
     return getPublic<ExperienceListItem[]>('/public/experiences', 'Failed to fetch experiences', []);
 };

@@ -1,13 +1,6 @@
-import Categories from './Categories';
-import SubCategories from './SubCategories';
+import { lazyPage } from '@/router/lazyPage';
 
 export const categoryRoutes = [
-    {
-        path: 'categories',
-        element: <Categories />,
-    },
-    {
-        path: 'subcategories',
-        element: <SubCategories />,
-    },
+    { path: 'categories', lazy: lazyPage(() => import('./Categories')) },
+    { path: 'subcategories', lazy: lazyPage(() => import('./SubCategories')) },
 ];

@@ -1,6 +1,6 @@
-import SearchPage from './Search';
+import { lazyPage } from '@/router/lazyPage';
 
 export const searchRoutes = [
     // Navbar search "See all results" / Enter: /search?q=...
-    { path: 'search', element: <SearchPage /> },
+    { path: 'search', lazy: lazyPage(() => import('./Search')) },
 ];

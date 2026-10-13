@@ -4,7 +4,7 @@ import { FiHome, FiCompass, FiShoppingBag, FiCalendar, FiUser } from 'react-icon
 const navItems: { label: string; icon: typeof FiHome; to: string; match?: string[] }[] = [
   { label: 'Home', icon: FiHome, to: '/' },
   // Lit on every browsing page, not just /categories.
-  { label: 'Explore', icon: FiCompass, to: '/categories', match: ['/categories', '/category/', '/subcategor', '/experience/', '/featured-experiences'] },
+  { label: 'Explore', icon: FiCompass, to: '/categories', match: ['/categories', '/category/', '/subcategor', '/collection/', '/experience/', '/featured-experiences'] },
   { label: 'Cart', icon: FiShoppingBag, to: '/cart' },
   { label: 'Bookings', icon: FiCalendar, to: '/bookings' },
   { label: 'Account', icon: FiUser, to: '/profile' },

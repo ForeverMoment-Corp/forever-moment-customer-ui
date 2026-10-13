@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ChevronRight, SlidersHorizontal } from "lucide-react";
 import ExperienceTile from "@/components/common/ExperienceTile";
 import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
 import { slugify } from "@/features/experiences/utils/slug";
 import { experienceListKey } from "@/features/experiences/store/location";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useSeo } from "@/hooks/useDocumentTitle";
+import { collectionIdFromParam, subCategoryPath } from "@/components/navbar/navTypes";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
 interface SubCategoryRef {
   id: number;
@@ -60,7 +62,11 @@ export default function SubCategoryExperienceView({
 }: SubCategoryExperienceViewProps) {
   const [liked, setLiked] = useState<number[]>([]);
   const [sort, setSort] = useState<SortKey>("recommended");
-  const { subCategoryId } = useParams<{ subCategoryId: string }>();
+  // /collection/pre-wedding-shoot-26 (current) or /subcategory/26 (old links): the id is the trailing number.
+  const params = useParams<{ collectionSlug?: string; subCategoryId?: string }>();
+  const subCategoryId = collectionIdFromParam(params.collectionSlug ?? params.subCategoryId);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   // Location-scoped: wait for the city, refetch when it changes.
   const isCurrentList = !!subCategoryId && subCategoryKey === experienceListKey(locationId, subCategoryId);
@@ -102,7 +108,38 @@ export default function SubCategoryExperienceView({
   const categoryHref = categoryName ? `/category/${parent?.category.slug || slugify(categoryName)}` : null;
   const description = parent?.subCategory.description?.trim();
   // "Name" while loading would be wrong, so the default title shows until the collection is known.
-  useDocumentTitle(isLoading && !parent ? null : categoryName ? `${name} · ${categoryName}` : name);
+  const known = !(isLoading && !parent);
+  const seoPath = subCategoryId ? subCategoryPath({ id: subCategoryId, name: parent?.subCategory.name ?? items[0]?.subCategoryName }) : undefined;
+
+  // Old /subcategory/26 links, or a renamed collection: move to the canonical URL once the name is known.
+  const canonicalName = parent?.subCategory.name ?? items[0]?.subCategoryName;
+  useEffect(() => {
+    if (!subCategoryId || !canonicalName) return;
+    const canonical = subCategoryPath({ id: subCategoryId, name: canonicalName });
+    if (decodeURIComponent(pathname) !== canonical) navigate(canonical, { replace: true });
+  }, [subCategoryId, canonicalName, pathname, navigate]);
+  useSeo(
+    known
+      ? {
+          title: categoryName ? `${name} · ${categoryName}` : name,
+          description:
+            description ||
+            `${name}${categoryName ? ` for ${categoryName.toLowerCase()}` : ""}: setups styled and installed at your venue by Forever Moment.`,
+          path: seoPath,
+          // An id that matches no collection and has nothing in it: keep it out of the index.
+          noindex: !parent && !isLoading && items.length === 0,
+        }
+      : { title: null },
+    known && seoPath
+      ? {
+          "ld-breadcrumb": breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            ...(categoryHref ? [{ name: categoryName, path: categoryHref }] : []),
+            { name, path: seoPath },
+          ]),
+        }
+      : undefined,
+  );
 
   return (
     <section className="min-h-[60vh] bg-[var(--cream)] pb-12 pt-5">

@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Mail, MessageCircle, Phone, Plus, Search, Send, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useFaqs } from '@/features/faq';
 import RichText from '@/lib/richText';
+import { setJsonLd } from '@/lib/seo';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -26,6 +27,21 @@ export default function HelpCenterView() {
     () => (term ? faqs.filter((f) => `${f.question} ${plain(f.answer)}`.toLowerCase().includes(term)) : faqs),
     [faqs, term],
   );
+
+  // FAQ structured data for search engines (the questions and plain-text answers on this page).
+  useEffect(() => {
+    if (faqs.length === 0) return;
+    setJsonLd('ld-faq', {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: plain(f.answer).replace(/\s+/g, ' ').trim() },
+      })),
+    });
+    return () => setJsonLd('ld-faq', null);
+  }, [faqs]);
 
   // With no FAQs published the page drops the search and list and keeps only the contact card.
   const hasFaqs = faqs.length > 0;

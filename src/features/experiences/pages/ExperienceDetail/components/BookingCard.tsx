@@ -15,6 +15,7 @@ import type { RootState } from '@/store/store';
 import { openLoginModal } from '@/features/auth/store/authSlice';
 import { setVenuePincode } from '@/features/home/store/actions';
 import { experiencePath } from '@/features/experiences/utils/slug';
+import { selectLocationId } from '@/features/experiences/store/location';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
 import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
 import { useNavigate } from 'react-router-dom';
@@ -182,7 +183,11 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const quickDays = useMemo(() => Array.from({ length: QUICK_DAYS }, (_, i) => new Date(today.getTime() + i * DAY)), [today]);
 
   const [date, setDate] = useState<Date | null>(null);
-  const [locationId, setLocationId] = useState<number | null>(e.locationOptions[0]?.id ?? null);
+  // Start on the city picked in the header when this experience is offered there.
+  const headerLocationId = useSelector(selectLocationId);
+  const [locationId, setLocationId] = useState<number | null>(
+    () => e.locationOptions.find((l) => l.id === headerLocationId)?.id ?? e.locationOptions[0]?.id ?? null,
+  );
   const [slotId, setSlotId] = useState<number | null>(null);
   const [dateError, setDateError] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
@@ -233,13 +238,25 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const effectiveSlotId = slots.some((s) => s.id === slotId) ? slotId : slots[0]?.id ?? null;
   const selectedSlot = slots.find((s) => s.id === effectiveSlotId) ?? null;
   const addedCount = selectedAddons.length;
-  const showCityStep = e.locationOptions.length > 1;
+  // The city only decides which time slots show, so it is asked for only when some city has slots.
+  // (Most experiences have cities but no slots; there the city comes from the header / pincode.)
+  const slotsAnywhere = e.timeslots.length > 0 || e.locationOptions.some((l) => l.timeslots.length > 0);
+  const showCityStep = e.locationOptions.length > 1 && slotsAnywhere;
+  // No cities and no time slots: the team confirms time and venue on WhatsApp, so the card asks for
+  // the date only. (A pincode could not pass the serviceability check anyway: there is no city to check.)
+  const whatsappOnly = e.locationOptions.length === 0 && !hasAnySlots;
 
   // Progress across the required steps (city only when there is a choice to make).
   const dateDone = !!effectiveDate;
   const slotDone = !!selectedSlot || (!hasAnySlots && dateDone);
-  const venueDone = venue.result === 'available';
-  const required = [dateDone, ...(showCityStep ? [!!location] : []), slotDone, venueDone];
+  const venueDone = whatsappOnly || venue.result === 'available';
+  // Only the steps actually shown count towards "x of y done".
+  const required = [
+    dateDone,
+    ...(showCityStep ? [!!location] : []),
+    ...(slotsAnywhere ? [slotDone] : []),
+    ...(whatsappOnly ? [] : [venueDone]),
+  ];
   const doneCount = required.filter(Boolean).length;
 
   const pick = (d: Date | null) => {
@@ -281,7 +298,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         timeSlotMapperId: selectedSlot?.id || 0,
         bookingDate: toISODate(effectiveDate),
         guestCount: e.minGuests || 2, // minimum guests
-        pincode: venue.pincode,
+        // Without a venue step, send the pincode saved in the header (if any); the team confirms it on WhatsApp.
+        pincode: whatsappOnly ? venue.pincode || savedPincode?.pincode || '' : venue.pincode,
         addonMapperIds: selectedAddons.flatMap((a) => (a.mapperId != null ? [a.mapperId] : [])),
         requestedAmount: finalPrice,
       };
@@ -425,11 +443,19 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
             <p className="inline-flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--gold-deep)]">
               <CalendarHeart size={14} /> Plan your celebration
             </p>
-            <p className="text-[0.72rem] text-[var(--mid)] tabular-nums" aria-live="polite">{doneCount} of {required.length} done</p>
+            {required.length > 1 && (
+              <p className="text-[0.72rem] text-[var(--mid)] tabular-nums" aria-live="polite">{doneCount} of {required.length} done</p>
+            )}
           </div>
 
           <ol>
-            <Step n={next()} title="Pick a day" done={dateDone} summary={effectiveDate ? formatDay(effectiveDate) : undefined}>
+            <Step
+              n={next()}
+              title="Pick a day"
+              done={dateDone}
+              summary={effectiveDate ? formatDay(effectiveDate) : undefined}
+              last={whatsappOnly && addons.length === 0}
+            >
               <div ref={dateRef} className="grid grid-cols-3 gap-2">
                 {quickDays.map((d, i) => {
                   const active = sameDay(effectiveDate, d);
@@ -487,6 +513,14 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                   {effectiveDate ? 'Pick a time slot to continue.' : 'Pick a date to continue.'}
                 </p>
               )}
+              {!slotsAnywhere && (
+                <p style={{ fontFamily: FONT_SANS }} className="mt-2.5 flex items-start gap-2 text-[0.78rem] leading-relaxed text-[var(--mid)]">
+                  <MessageCircle size={14} className="mt-0.5 shrink-0 text-whatsapp" />
+                  {whatsappOnly
+                    ? 'Our team confirms the time and venue with you on WhatsApp right after you book.'
+                    : 'Our team confirms the exact time with you on WhatsApp right after you book.'}
+                </p>
+              )}
             </Step>
 
             {showCityStep && (
@@ -513,6 +547,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               </Step>
             )}
 
+            {/* No slots in any city: nothing to pick (the note under the date says the time is confirmed on WhatsApp). */}
+            {slotsAnywhere && (
             <Step
               n={next()}
               title="Pick a time"
@@ -568,7 +604,9 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                 </p>
               )}
             </Step>
+            )}
 
+            {!whatsappOnly && (
             <Step
               n={next()}
               title="Where's the party?"
@@ -592,6 +630,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                 }}
               />
             </Step>
+            )}
 
             {addons.length > 0 && (
               <Step n={next()} title="Make it extra special" optional done={addedCount > 0} summary={addedCount > 0 ? `${addedCount} added` : undefined} last>
@@ -618,10 +657,12 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                 label="Venue"
                 value={
                   <span className="capitalize">
-                    {[location?.name, venueDone ? venue.pincode : null].filter(Boolean).join(' · ') || 'Add your pincode'}
+                    {whatsappOnly
+                      ? 'Confirmed on WhatsApp'
+                      : [location?.name, venueDone ? venue.pincode : null].filter(Boolean).join(' · ') || 'Add your pincode'}
                   </span>
                 }
-                muted={!location && !venueDone}
+                muted={whatsappOnly || (!location && !venueDone)}
               />
               {addedCount > 0 && <RecapRow icon={Sparkles} label="Extras" value={`${addedCount} extra${addedCount === 1 ? '' : 's'} added`} />}
             </dl>

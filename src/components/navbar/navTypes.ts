@@ -31,10 +31,25 @@ export interface NavCategory {
   subCategories: NavSubCategory[];
 }
 
-export const categoryPath = (cat: NavCategory) =>
-  `/category/${cat.slug || cat.name.toLowerCase().replace(/\s+/g, "-")}`;
 
-export const subCategoryPath = (sub: NavSubCategory) => `/subcategory/${sub.id}`;
+/** Same rule as experiences/utils/slug.ts slugify (kept local so navTypes has no feature imports). */
+const slugify = (s: string) =>
+  (s || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+/** `/category/anniversary-romantic-decoration`: the API slug, or one made from the name ("&", spaces, trailing spaces dropped). */
+export const categoryPath = (cat: { slug?: string | null; name: string }) => `/category/${slugify(cat.slug || cat.name)}`;
+
+/**
+ * `/collection/pre-wedding-shoot-26`: readable name, then the id (collection names repeat across
+ * categories and the API has no collection slugs). Old `/subcategory/26` links redirect here.
+ */
+export const subCategoryPath = (sub: { id: number | string; name?: string | null }) => {
+  const slug = slugify(sub.name ?? "");
+  return `/collection/${slug ? `${slug}-` : ""}${sub.id}`;
+};
+
+/** The collection id at the end of `pre-wedding-shoot-26` (or a bare `26` from an old link). */
+export const collectionIdFromParam = (param: string | undefined) => param?.match(/(\d+)$/)?.[1];
 
 /* ───────────────── Icon resolution ─────────────────
    Keyword → icon, checked in order. Matching is case-insensitive and

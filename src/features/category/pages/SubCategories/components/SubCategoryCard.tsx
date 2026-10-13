@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import CategoryIcon from "@/components/navbar/CategoryIcon";
+import { subCategoryPath } from "@/components/navbar/navTypes";
 import CategoryCover from "@/features/category/pages/Categories/components/CategoryCover";
 import { getSubCategoryImages } from "@/features/category/utils/categoryImage";
 
@@ -38,7 +39,7 @@ interface Props {
 }
 
 export default function SubCategoryCard({ subCategory, stats }: Props) {
-  const to = `/subcategory/${subCategory.id}`;
+  const to = subCategoryPath(subCategory);
 
   // Every picture the sub-category carries; an experience photo fills in when it has none.
   const apiImages = getSubCategoryImages(subCategory);
