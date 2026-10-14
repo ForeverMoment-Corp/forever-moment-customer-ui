@@ -244,6 +244,13 @@ const Navbar = () => {
 
   useEffect(() => clearTimers, [clearTimers]);
 
+  // Sticky things below the navbar (experience page tabs and booking panel, cart summary, help card)
+  // sit at var(--nav-h-desktop), so they follow the category bar as it hides and returns.
+  const catCollapsed = catHidden && activeMenu === null;
+  useEffect(() => {
+    document.documentElement.style.setProperty("--nav-h-desktop", `${catCollapsed ? TOP_BAR_H : TOP_BAR_H + CAT_BAR_H}px`);
+  }, [catCollapsed]);
+
   useEffect(() => {
     let lastY = window.scrollY;
     let frame = 0;
@@ -307,14 +314,18 @@ const Navbar = () => {
       >
         {/* ═══════════════════ TOP BAR ═══════════════════ */}
         <div className="border-b border-sand">
-          {/* Same edge padding as the category bar. The two side groups share the leftover width
-              equally (flex-1 basis-0), which keeps the search exactly centred. */}
+          {/* Same edge padding as the category bar. From md up: a 3-column grid (side | search | side).
+              The sides share the leftover width equally, so the search is centred when there is room,
+              but never get narrower than their contents: on tighter screens the search shrinks
+              (down to 220px) instead of the city button sliding under it. */}
           <div
-            className="w-full px-4 lg:px-5 flex items-center gap-4 lg:gap-6"
+            className="w-full px-4 lg:px-5 flex items-center gap-4 lg:gap-6 md:grid md:grid-cols-[1fr_minmax(220px,520px)_1fr]"
             style={{ height: TOP_BAR_H }}
           >
             {/* LEFT: logo + city */}
-            <div className="flex items-center gap-4 lg:gap-6 shrink-0 md:flex-1 md:basis-0 md:min-w-0">
+            {/* md:w-max: the grid sizes this column from the group's width, and the city label's ellipsis
+                would otherwise let the browser think it can squeeze (it then slid under the search). */}
+            <div className="flex items-center gap-4 lg:gap-6 shrink-0 md:w-max">
             {/* LOGO */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0" onClick={closeAll}>
               <img
@@ -322,7 +333,8 @@ const Navbar = () => {
                 alt={CUSTOMER_CONFIG.name}
                 className="w-9 h-9 sm:w-10 sm:h-10 object-contain"
               />
-              <span className="hidden sm:flex flex-col leading-none">
+              {/* nowrap: the header grid sizes this column from its contents, so the name must not wrap */}
+              <span className="hidden sm:flex flex-col leading-none whitespace-nowrap">
                 <span
                   className="text-ink"
                   style={{ ...serif, fontSize: "1.3rem", fontWeight: 600, letterSpacing: "0.01em" }}
@@ -433,12 +445,12 @@ const Navbar = () => {
             </div>
 
             {/* SEARCH (desktop) */}
-            <div className="hidden md:flex flex-[0_1_520px] min-w-0 justify-center">
+            <div className="hidden md:flex min-w-0 justify-center">
               <NavSearch variant="desktop" categories={categories} onFocus={() => setActiveMenu(null)} onNavigate={closeAll} />
             </div>
 
             {/* RIGHT ACTIONS (desktop) */}
-            <div className="hidden md:flex md:flex-1 md:basis-0 justify-end items-center gap-2 lg:gap-3">
+            <div className="hidden md:flex justify-end items-center gap-2 lg:gap-3">
               <IconAction icon={CircleHelp} label="Help" to="/faqs" />
 
               <div className="relative" ref={guestRef}>
@@ -487,7 +499,7 @@ const Navbar = () => {
         {/* Collapses (grid rows 1fr → 0fr) while scrolling down; never while a menu is open or it has focus. */}
         <div
           className={`hidden md:grid bg-white border-b transition-[grid-template-rows,border-color] duration-300 ease-out motion-reduce:transition-none ${
-            catHidden && activeMenu === null ? "grid-rows-[0fr] border-transparent" : "grid-rows-[1fr] border-sand"
+            catCollapsed ? "grid-rows-[0fr] border-transparent" : "grid-rows-[1fr] border-sand"
           }`}
           onFocusCapture={() => setCatHidden(false)}
         >

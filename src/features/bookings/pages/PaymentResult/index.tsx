@@ -4,8 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, Clock, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import type { RootState } from '@/store/store';
 import { checkBookingStatus, waitForPaymentLink } from '@/features/experiences/store/api';
-import { clearPendingPayment, readPendingPayment, savePendingPayment } from '@/features/bookings/pendingPayment';
-import { closePaymentTab, openCheckoutInNewTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
+import { clearPendingPayment, freshCheckoutUrl, readPendingPayment, savePendingPayment } from '@/features/bookings/pendingPayment';
+import { closePaymentTab, goToCheckout, openCheckoutInNewTab, openPaymentTab, paymentStatusPath } from '@/features/bookings/paymentTab';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -151,9 +151,9 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
 
   /** Reopen the Checkout URL saved when the booking was made (synchronous, so no popup blocker). */
   const openSavedCheckout = () => {
-    if (!saved?.checkoutUrl) return;
-    openCheckoutInNewTab(saved.checkoutUrl);
-    if (view !== 'waiting') startWaiting();
+    const url = freshCheckoutUrl(saved);
+    if (!url) return;
+    if (openCheckoutInNewTab(url) === 'new-tab' && view !== 'waiting') startWaiting();
   };
 
   /** Fetch the link again (it may have changed after a failure) and open it in a new tab. */
@@ -163,7 +163,7 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
     setRetrying(true);
     setRetryError(null);
     try {
-      const url = await waitForPaymentLink(bookingId, { id: user.id, role: user.role }, { timeoutMs: 15_000 });
+      const url = await waitForPaymentLink(bookingId, { id: user.id, role: user.role }, { timeoutMs: 15_000, initialDelayMs: 0 });
       if (!url) {
         closePaymentTab(tab);
         setRetryError('The payment page is not ready yet. Please try again in a minute.');
@@ -172,8 +172,9 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
       const next = { ...(saved ?? { bookingId }), checkoutUrl: url };
       savePendingPayment(next);
       setPending(next);
-      if (!sendTabToCheckout(tab, url)) openCheckoutInNewTab(url);
-      startWaiting();
+      // The pre-opened tab, or this tab when popups are blocked (a new window.open here, after the
+      // await, would be blocked too). Stripe returns to /payment/success or /payment/cancel.
+      if (goToCheckout(tab, url) === 'new-tab') startWaiting();
     } catch (e) {
       closePaymentTab(tab);
       setRetryError(e instanceof Error && e.message ? e.message : 'Could not open the payment page.');
@@ -187,7 +188,8 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
   const spinning = view === 'waiting' || view === 'checking';
   const canPay = (view === 'waiting' || view === 'timeout' || view === 'failed' || view === 'cancelled') && !!bookingId && !!user;
   // Waiting/timeout reuse the open session; after a failure or cancel, ask for the link again.
-  const reuseSaved = (view === 'waiting' || view === 'timeout') && !!saved?.checkoutUrl;
+  // Only a link young enough to still open (Stripe sessions expire after 24 h); otherwise fetch a fresh one.
+  const reuseSaved = (view === 'waiting' || view === 'timeout') && !!freshCheckoutUrl(saved);
 
   return (
     <section className="flex min-h-[70vh] items-center bg-[var(--cream)] px-4 py-12" style={{ fontFamily: SANS }}>

@@ -17,7 +17,7 @@ import { setVenuePincode } from '@/features/home/store/actions';
 import { experiencePath } from '@/features/experiences/utils/slug';
 import { selectLocationId } from '@/features/experiences/store/location';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
-import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
+import { closePaymentTab, goToCheckout, openPaymentTab, paymentStatusPath } from '@/features/bookings/paymentTab';
 import { useNavigate } from 'react-router-dom';
 
 export interface BookingCardProps {
@@ -287,7 +287,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
 
     // The booking already exists (payment link was slow): only fetch the link again.
     if (pendingBookingId) {
-      await goToPayment(pendingBookingId, tab);
+      await goToPayment(pendingBookingId, tab, true);
       return;
     }
 
@@ -320,12 +320,17 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
    * GET /api/payment/bookings/{id}/payment-link (polled), then open Stripe Checkout in the new tab
    * and move this tab to /payment/status, which polls the payment status until it succeeds or fails.
    */
-  const goToPayment = async (bookingId: string, tab: Window | null) => {
+  const goToPayment = async (bookingId: string, tab: Window | null, existing = false) => {
     setIsBooking(true);
     setPaymentError(null);
     setPaymentStage('preparing');
     try {
-      const url = await waitForPaymentLink(bookingId, { id: user?.id as string, role: user?.role as string });
+      // A new booking's link takes a moment to be created; an existing booking's is ready, so no wait.
+      const url = await waitForPaymentLink(
+        bookingId,
+        { id: user?.id as string, role: user?.role as string },
+        existing ? { initialDelayMs: 0 } : undefined,
+      );
       if (!url) {
         closePaymentTab(tab);
         setPaymentStage('delayed');
@@ -333,8 +338,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       }
       setPaymentStage('redirecting');
       savePendingPayment({ bookingId, experienceName: e.name, experiencePath: experiencePath({ id: e.id, slug: e.slug }), checkoutUrl: url });
-      // A blocked popup is fine: the status page offers an "Open payment page" button.
-      sendTabToCheckout(tab, url);
+      // New tab when possible (this tab then waits on /payment/status); otherwise Stripe opens here.
+      if (goToCheckout(tab, url) === 'same-tab') return;
       setPaymentStage('idle');
       navigate(paymentStatusPath(bookingId));
     } catch (err: unknown) {

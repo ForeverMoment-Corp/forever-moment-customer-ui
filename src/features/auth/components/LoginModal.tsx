@@ -7,8 +7,47 @@ import type { AppDispatch, RootState } from '@/store/store';
 import { closeLoginModal, loginSuccess, fetchProfile } from '../store/authSlice';
 import styles from './LoginModal.module.scss';
 import { AnimatePresence, motion } from 'framer-motion';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, GoogleLogin, useGoogleOAuth, type CredentialResponse } from '@react-oauth/google';
 import { emailLogin, googleLogin } from '../store/api';
+import { isInAppBrowser } from '@/lib/inAppBrowser';
+
+const GOOGLE_CLIENT_ID = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '');
+
+/** Google's button once its script is ready; a same-size placeholder until then, so there is no dead button. */
+function GoogleButton({
+    width,
+    failed,
+    onSuccess,
+    onError,
+}: {
+    width: number;
+    failed: boolean;
+    onSuccess: (response: CredentialResponse) => void;
+    onError: () => void;
+}) {
+    const { scriptLoadedSuccessfully } = useGoogleOAuth();
+    if (failed) {
+        return <p className={styles.googleNote}>Google sign-in couldn't load (an ad or privacy blocker may be stopping it). Please use email below.</p>;
+    }
+    if (!scriptLoadedSuccessfully) {
+        return (
+            <span className={styles.googlePlaceholder} style={{ width }} aria-live="polite">
+                <Loader2 size={15} className="animate-spin" /> Loading Google sign-in…
+            </span>
+        );
+    }
+    return (
+        <GoogleLogin
+            onSuccess={onSuccess}
+            onError={onError}
+            theme="outline"
+            shape="pill"
+            size="large"
+            text="continue_with"
+            width={width}
+        />
+    );
+}
 
 const LoginModal: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -22,6 +61,12 @@ const LoginModal: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [googleWidth, setGoogleWidth] = useState<number | null>(null);
+    // Google's script loads the first time the popup opens and then stays loaded: one setup per page
+    // visit (re-creating it on every open is what left the button unresponsive at times).
+    const [googleWanted, setGoogleWanted] = useState(false);
+    if (isModalOpen && !googleWanted) setGoogleWanted(true);
+    const [googleFailed, setGoogleFailed] = useState(false);
+    const [inAppBrowser] = useState(isInAppBrowser);
 
     // Google's button only accepts a fixed pixel width (200-400), so match it to the modal
     const measureGoogleSlot = useCallback((el: HTMLDivElement | null) => {
@@ -84,7 +129,7 @@ const LoginModal: React.FC = () => {
     };
 
     // Portal to <body> so the navbar / bottom nav stacking contexts can't sit on top of it
-    return createPortal(
+    const popup = (
         <AnimatePresence>
             {isModalOpen && (
                 <motion.div
@@ -233,33 +278,34 @@ const LoginModal: React.FC = () => {
                             {error && <p className={styles.error} role="alert">{error}</p>}
 
                             <div ref={measureGoogleSlot} className={styles.googleSlot}>
-                                {googleWidth && (
-                                    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID"}>
-                                        <GoogleLogin
+                                {inAppBrowser ? (
+                                    <p className={styles.googleNote}>
+                                        Google sign-in doesn't work inside this app's browser. Open this page in Chrome or Safari to use it, or continue with email.
+                                    </p>
+                                ) : (
+                                    GOOGLE_CLIENT_ID &&
+                                    googleWidth && (
+                                        <GoogleButton
+                                            width={googleWidth}
+                                            failed={googleFailed}
                                             onSuccess={async (credentialResponse) => {
-                                                if (credentialResponse.credential) {
-                                                    try {
-                                                        setError(null);
-                                                        const result = await googleLogin(credentialResponse.credential);
-                                                        dispatch(loginSuccess(result));
-                                                        // Fetch full profile info in background
-                                                        dispatch(fetchProfile());
-                                                    } catch (e) {
-                                                        console.error('Google login error', e);
-                                                        setError(e instanceof Error && e.message ? e.message : "We couldn't sign you in with Google. Please try again.");
-                                                    }
+                                                if (!credentialResponse.credential) return;
+                                                try {
+                                                    setError(null);
+                                                    const result = await googleLogin(credentialResponse.credential);
+                                                    dispatch(loginSuccess(result));
+                                                    // Fetch full profile info in background
+                                                    dispatch(fetchProfile());
+                                                } catch (e) {
+                                                    console.error('Google login error', e);
+                                                    setError(e instanceof Error && e.message ? e.message : "We couldn't sign you in with Google. Please try again.");
                                                 }
                                             }}
                                             onError={() => {
-                                                setError("Google sign-in was cancelled or failed. Please try again.");
+                                                setError('Google sign-in was cancelled or failed. Please try again.');
                                             }}
-                                            theme="outline"
-                                            shape="pill"
-                                            size="large"
-                                            text="continue_with"
-                                            width={googleWidth}
                                         />
-                                    </GoogleOAuthProvider>
+                                    )
                                 )}
                             </div>
 
@@ -283,7 +329,16 @@ const LoginModal: React.FC = () => {
                     </motion.div>
                 </motion.div>
             )}
-        </AnimatePresence>,
+        </AnimatePresence>
+    );
+    return createPortal(
+        googleWanted && GOOGLE_CLIENT_ID && !inAppBrowser ? (
+            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID} onScriptLoadError={() => setGoogleFailed(true)}>
+                {popup}
+            </GoogleOAuthProvider>
+        ) : (
+            popup
+        ),
         document.body
     );
 };

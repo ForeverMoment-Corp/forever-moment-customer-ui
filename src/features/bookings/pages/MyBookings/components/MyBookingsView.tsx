@@ -9,7 +9,7 @@ import { BookingsUnavailableError, fetchMyBookings, UnauthorizedError, type Book
 import { getLoginSession } from '@/utils/storage';
 import { openLoginModal } from '@/features/auth/store/authSlice';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
-import { closePaymentTab, openPaymentTab, paymentStatusPath, sendTabToCheckout } from '@/features/bookings/paymentTab';
+import { closePaymentTab, goToCheckout, openPaymentTab, paymentStatusPath } from '@/features/bookings/paymentTab';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -116,7 +116,8 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
     setPaying(true);
     setPayError(null);
     try {
-      const url = await waitForPaymentLink(booking.bookingId, { id: user.id, role: user.role }, { timeoutMs: 8_000 });
+      // An existing booking's link is already there: no initial wait.
+      const url = await waitForPaymentLink(booking.bookingId, { id: user.id, role: user.role }, { timeoutMs: 8_000, initialDelayMs: 0 });
       if (url) {
         savePendingPayment({
           bookingId: booking.bookingId,
@@ -124,8 +125,8 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
           experiencePath: experiencePath({ id: booking.experienceId, slug: booking.experienceSlug }),
           checkoutUrl: url,
         });
-        sendTabToCheckout(tab, url);
-        navigate(paymentStatusPath(booking.bookingId));
+        // New tab when possible (this tab then waits on /payment/status); otherwise Stripe opens here.
+        if (goToCheckout(tab, url) === 'new-tab') navigate(paymentStatusPath(booking.bookingId));
         return;
       }
       closePaymentTab(tab);

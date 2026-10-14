@@ -63,14 +63,18 @@ const STICKY_GAP = 16;
  * Keeps the booking panel pinned while reading. If it is shorter than the viewport it
  * sticks below the navbar; if taller, it sticks by its bottom edge so "Book now" stays reachable.
  */
+/** Below the navbar at its current height (it shrinks while the category bar is hidden). */
+const BELOW_NAV = `calc(var(--nav-h-desktop) + ${STICKY_GAP}px)`;
+
 function useStickyTop(ref: React.RefObject<HTMLElement | null>, deps: unknown[]) {
-  const [top, setTop] = useState(NAV_HEIGHT_DESKTOP + STICKY_GAP);
+  const [top, setTop] = useState<number | string>(BELOW_NAV);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const update = () => {
       const fits = el.offsetHeight + NAV_HEIGHT_DESKTOP + STICKY_GAP * 2 <= window.innerHeight;
-      setTop(fits ? NAV_HEIGHT_DESKTOP + STICKY_GAP : window.innerHeight - el.offsetHeight - STICKY_GAP);
+      // NAV_HEIGHT_DESKTOP is the tallest the navbar gets, so "fits" holds with the category bar shown.
+      setTop(fits ? BELOW_NAV : window.innerHeight - el.offsetHeight - STICKY_GAP);
     };
     const observer = new ResizeObserver(update);
     observer.observe(el);
@@ -315,7 +319,7 @@ export default function ExperienceDetails({
             <Gallery key={vm.id} media={vm.media} name={vm.name} />
           </div>
 
-          <aside ref={asideRef} style={{ top: stickyTop }} className="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 lg:sticky self-start">
+          <aside ref={asideRef} style={{ top: stickyTop }} className="min-w-0 transition-[top] duration-300 ease-out motion-reduce:transition-none lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 lg:sticky self-start">
             <BookingCard
               experience={vm}
               addons={panelAddons}

@@ -181,7 +181,7 @@ export default function HelpCenterView() {
 
           {/* Contact */}
           <aside className={`min-w-0 ${hasFaqs || loading ? 'lg:col-span-4 lg:col-start-9' : 'lg:col-span-6'}`}>
-            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5 lg:sticky lg:top-[120px]">
+            <div className="rounded-2xl border border-[var(--border-light)] bg-white p-5 lg:sticky lg:top-[calc(var(--nav-h-desktop)+16px)] lg:transition-[top] lg:duration-300">
               <p style={{ fontFamily: SERIF }} className="text-[1.3rem] font-semibold leading-tight text-[var(--charcoal)]">
                 Still stuck?
               </p>

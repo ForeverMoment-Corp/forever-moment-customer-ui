@@ -272,7 +272,7 @@ export default function CartView() {
               ))}
             </ul>
 
-            <aside className="rounded-2xl border border-[var(--border-light)] bg-white p-5 lg:sticky lg:top-28">
+            <aside className="rounded-2xl border border-[var(--border-light)] bg-white p-5 lg:sticky lg:top-[calc(var(--nav-h-desktop)+16px)] lg:transition-[top] lg:duration-300">
               <h2 style={{ fontFamily: SERIF }} className="text-[1.35rem] font-semibold text-[var(--charcoal)]">
                 Order summary
               </h2>

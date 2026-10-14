@@ -59,7 +59,7 @@ export default function SectionNav({ items }: { items: SectionNavItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="Page sections" className="sticky top-[64px] z-30 -mx-4 px-4 py-2 sm:mx-0 sm:px-0 md:top-[112px]">
+    <nav aria-label="Page sections" className="sticky top-[64px] z-30 -mx-4 px-4 py-2 transition-[top] duration-300 ease-out motion-reduce:transition-none sm:mx-0 sm:px-0 md:top-[calc(var(--nav-h-desktop)-8px)]">
       <div className="relative">
         <div
           ref={stripRef}

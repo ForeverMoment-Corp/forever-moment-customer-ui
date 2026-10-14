@@ -33,6 +33,12 @@ body {
   body { font-variant-numeric: lining-nums; }
 }
 
+:root {
+  /* Desktop navbar height: 120px (top bar + category bar), 72px while the category bar is tucked away
+     on scroll. Navbar.tsx keeps it current; sticky elements below the navbar use it. */
+  --nav-h-desktop: 120px;
+}
+
 /* ─── ANIMATIONS ─── */
 /* Logo loader (LogoLoader.tsx; index.html's first-paint splash has its own copy) */
 @keyframes logo-breathe {
