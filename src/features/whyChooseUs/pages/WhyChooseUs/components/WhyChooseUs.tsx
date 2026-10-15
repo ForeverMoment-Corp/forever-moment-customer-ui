@@ -1,72 +1,57 @@
-import { ShieldCheck, Clock, Star, HeartHandshake } from "lucide-react";
+import { ShieldCheck, Clock, ReceiptText, HeartHandshake } from "lucide-react";
 import FadeIn from "@/components/animations/FadeIn";
-import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
+import SectionHeading from '@/components/home/SectionHeading';
+
+const SANS = "'Jost', sans-serif";
+const SERIF = "'Cormorant Garamond', serif";
 
 const features = [
-  {
-    icon: ShieldCheck,
-    title: "Verified Vendors",
-    desc: "Every vendor is background-checked and rated by real clients before joining our network.",
-  },
-  {
-    icon: Clock,
-    title: "On-Time Delivery",
-    desc: "Setup completed well before your event with buffer time for any last-minute changes.",
-  },
-  {
-    icon: Star,
-    title: "Transparent Pricing",
-    desc: "No hidden charges. What you see in the quote is exactly what you pay.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "24/7 Support",
-    desc: "Our dedicated event managers are available round the clock for any assistance.",
-  },
+  { icon: ShieldCheck, title: "Verified vendors", desc: "Every decorator is background-checked and rated by clients." },
+  { icon: Clock, title: "On-time setup", desc: "Ready well before your event, with time to spare." },
+  { icon: ReceiptText, title: "Transparent pricing", desc: "No hidden charges: the price you see is what you pay." },
+  { icon: HeartHandshake, title: "24/7 support", desc: "Event managers on call, day and night." },
 ];
 
+/**
+ * The four promises in one white panel: icon, title and one line each, divided by thin rules.
+ * A row of four on laptops, 2×2 on tablets, a compact list on phones.
+ */
 export default function WhyChooseUs() {
   return (
     <section className="section-padding bg-ivory">
-      <div className="max-w-[1380px] mx-auto px-6">
-
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6">
         <FadeIn>
-          <div className="text-center mb-12">
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.7rem] md:text-[2.1rem] text-ink font-semibold mb-2">
-              Why Choose Us
-            </h2>
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase">
-              The Forever Moment Promise
-            </p>
-            <div className="w-10 h-[1px] bg-gold mx-auto mt-4" />
-          </div>
+          <SectionHeading align="center" eyebrow="The Forever Moment promise" title="Why choose" accent="us" />
         </FadeIn>
 
-        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, i) => {
-            const colors = ['var(--gold)', 'var(--coral)', 'var(--gold)', 'var(--coral)']
-            const color = colors[i % colors.length]
-            const Icon = feature.icon;
-            return (
-              <StaggerItem key={feature.title}>
-                <div className="group text-center p-8 bg-white rounded-2xl shadow-[0_4px_16px_color-mix(in_srgb,_var(--ink)_6%,_transparent)] hover:shadow-[0_16px_40px_color-mix(in_srgb,_var(--gold)_20%,_transparent)] hover:-translate-y-2 transition-all duration-300 h-full">
-                  <div
-                    className="w-16 h-16 rounded-full bg-ivory flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300"
-                    style={{ border: `1.5px solid ${color}40` }}
-                  >
-                    <Icon size={24} style={{ color }} />
-                  </div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.2rem] text-ink font-semibold mb-3">
-                    {feature.title}
-                  </h3>
-                  <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.82rem] text-umber leading-relaxed">
-                    {feature.desc}
-                  </p>
-                </div>
-              </StaggerItem>
-            )
-          })}
-        </StaggerContainer>
+        <FadeIn delay={0.05}>
+          <ul
+            className="grid grid-cols-1 divide-y divide-[var(--border-light)] overflow-hidden rounded-2xl border border-[var(--border-light)] bg-white sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4"
+            style={{ fontFamily: SANS }}
+          >
+            {features.map(({ icon: Icon, title, desc }, i) => (
+              <li
+                key={title}
+                className={`group flex items-start gap-3.5 p-5 transition-colors hover:bg-[var(--cream)] sm:p-6 ${
+                  // Thin dividers between cells: vertical between columns, horizontal between the 2×2 rows.
+                  i % 2 === 1 ? 'sm:border-l sm:border-[var(--border-light)]' : ''
+                } ${i >= 2 ? 'sm:border-t sm:border-[var(--border-light)] lg:border-t-0' : ''} ${
+                  i === 2 ? 'lg:border-l lg:border-[var(--border-light)]' : ''
+                }`}
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--rose-light)] text-[var(--burgundy)] transition-colors duration-300 group-hover:bg-[var(--burgundy)] group-hover:text-white">
+                  <Icon size={20} strokeWidth={1.8} />
+                </span>
+                <span className="min-w-0">
+                  <span style={{ fontFamily: SERIF }} className="block text-[1.15rem] font-semibold leading-tight text-ink">
+                    {title}
+                  </span>
+                  <span className="mt-1 block text-[0.8rem] leading-snug text-[var(--mid)]">{desc}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </FadeIn>
       </div>
     </section>
   );

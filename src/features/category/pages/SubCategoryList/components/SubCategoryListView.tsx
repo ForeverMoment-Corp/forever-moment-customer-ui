@@ -1,15 +1,14 @@
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import SmartImage from "@/components/common/SmartImage";
 import CategoryIcon from "@/components/navbar/CategoryIcon";
 import { subCategoryPath } from "@/components/navbar/navTypes";
-import FadeIn from "@/components/animations/FadeIn";
+import SectionHeading from "@/components/home/SectionHeading";
 import { getSubCategoryImages } from "@/features/category/utils/categoryImage";
 import { experienceListKey } from "@/features/experiences/store/location";
+import type { ExperienceListItem } from "@/features/experiences/store/types";
 
 const FONT_SANS = "'Jost', sans-serif";
-const FONT_SERIF = "'Cormorant Garamond', serif";
 
 interface SubCategory {
   id: number;
@@ -28,100 +27,114 @@ export interface SubCategoryListViewProps {
   /** False until the header's location list has settled. */
   locationReady?: boolean;
   getSubCategories: () => void;
+  /** The city's experiences (GET /public/experiences/location/{id}), for a stand-in photo. */
+  experiences?: ExperienceListItem[];
+  getData?: () => void;
   /** How many to show on the home page before "View all". */
   limit?: number;
 }
 
 const DEFAULT_LIMIT = 12;
 
-/** Home strip of collections, linking into each sub-category listing. */
+interface Photo {
+  src: string;
+  placeholder?: string;
+}
+
+/**
+ * Home strip of collections as round "story" bubbles: a photo whenever one exists (the collection's
+ * own image, else a photo from one of its experiences in the city), otherwise its icon on a soft tint.
+ * One swipeable row on phones, a grid on larger screens. Collections with a photo lead, so the first
+ * row is never a wall of icons; within each group the admin's display order holds.
+ */
 export default function SubCategoryListView({
   subCategories,
   subCategoriesKey,
   locationId,
   locationReady,
   getSubCategories,
+  experiences,
+  getData,
   limit = DEFAULT_LIMIT,
 }: SubCategoryListViewProps) {
   // Collections are per city: fetch once the city is known, again when it changes.
   const isCurrentList = subCategoriesKey === experienceListKey(locationId, "subcategories");
   useEffect(() => {
     if (locationReady && !isCurrentList) getSubCategories();
+    // The action skips the call when this city's experiences are already loaded.
+    if (locationReady) getData?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationReady, locationId]);
 
-  const active = useMemo(
-    () =>
-      (isCurrentList ? subCategories ?? [] : [])
-        .filter((s) => s && s.isActive !== false)
-        .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name)),
-    [subCategories, isCurrentList],
-  );
+  // First photo among each collection's experiences in this city.
+  const experiencePhoto = useMemo(() => {
+    const map = new Map<number, Photo>();
+    for (const e of experiences ?? []) {
+      if (!e || e.isActive === false || e.subCategoryId == null || map.has(e.subCategoryId)) continue;
+      const src = e.thumbnailUrl || e.heroUrl || e.originalUrl;
+      if (src) map.set(e.subCategoryId, { src });
+    }
+    return map;
+  }, [experiences]);
 
-  if (active.length === 0) return null;
+  const items = useMemo(() => {
+    const list = (isCurrentList ? subCategories ?? [] : [])
+      .filter((s) => s && s.isActive !== false)
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.name.localeCompare(b.name))
+      .map((sub) => {
+        const [own] = getSubCategoryImages(sub);
+        const photo: Photo | undefined = own
+          ? { src: own.thumbnail || own.hero, placeholder: undefined }
+          : experiencePhoto.get(sub.id);
+        return { sub, photo };
+      });
+    // Photos first (stable sort keeps the display order inside each group).
+    return [...list].sort((a, b) => Number(!!b.photo) - Number(!!a.photo));
+  }, [subCategories, isCurrentList, experiencePhoto]);
 
-  const visible = active.slice(0, limit);
+  if (items.length === 0) return null;
+
+  const visible = items.slice(0, limit);
 
   return (
-    <section className="bg-white py-10 md:py-14">
+    // Compact strip right under the hero.
+    <section className="bg-ivory py-8 md:py-10" style={{ fontFamily: FONT_SANS }}>
       <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
-        <FadeIn>
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p style={{ fontFamily: FONT_SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-umber">
-                Shop by collection
-              </p>
-              <h2 style={{ fontFamily: FONT_SERIF }} className="text-[1.7rem] font-semibold leading-tight text-ink md:text-[2.1rem]">
-                Find your <em className="italic text-[var(--burgundy)]">occasion</em>
-              </h2>
-            </div>
-            <Link
-              to="/subcategories"
-              style={{ fontFamily: FONT_SANS }}
-              className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-gold transition-colors hover:text-ink"
-            >
-              View all
-              <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-        </FadeIn>
+        <SectionHeading size="sm" title="Popular" accent="collections" link={{ to: "/subcategories", label: "View all" }} />
 
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {visible.map((sub) => {
-            const [image] = getSubCategoryImages(sub);
-            return (
-              <li key={sub.id}>
-                <Link
-                  to={subCategoryPath(sub)}
-                  className="group flex h-full items-center gap-3 rounded-2xl border border-[var(--border-light)] bg-white p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--gold)] hover:shadow-[0_12px_26px_-14px_color-mix(in_srgb,_var(--burgundy)_35%,_transparent)]"
+        {/* One row on every screen: swipe / scroll sideways when it does not fit (snaps per bubble). */}
+        <ul className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-1 overflow-x-auto px-4 pb-1 sm:mx-0 sm:gap-2 sm:px-0">
+          {visible.map(({ sub, photo }) => (
+            <li key={sub.id} className="w-[76px] shrink-0 snap-start sm:w-[100px]">
+              <Link to={subCategoryPath(sub)} title={sub.categoryName ? `${sub.name} · ${sub.categoryName.trim()}` : sub.name} className="group flex flex-col items-center text-center">
+                <span
+                  className={`relative block h-16 w-16 overflow-hidden rounded-full p-[2px] ring-1 transition-all duration-300 sm:h-[84px] sm:w-[84px] ${
+                    photo
+                      ? "bg-gradient-to-br from-[var(--gold-light)] via-[var(--rose-light)] to-[var(--gold-light)] ring-transparent group-hover:from-[var(--gold)] group-hover:to-[var(--burgundy)]"
+                      : "bg-[var(--rose-light)] ring-[var(--border-light)] group-hover:ring-[var(--gold)]"
+                  }`}
                 >
-                  <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[var(--rose-light)]">
-                    {image ? (
+                  {photo ? (
+                    <span className="block h-full w-full overflow-hidden rounded-full border-2 border-white">
                       <SmartImage
-                        src={image.hero || image.thumbnail}
-                        placeholderSrc={image.thumbnail || undefined}
-                        alt={sub.name}
-                        sizes="48px"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={photo.src}
+                        alt=""
+                        sizes="(max-width: 640px) 64px, 84px"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center text-[var(--burgundy)]">
-                        <CategoryIcon name={sub.name} size={18} strokeWidth={1.8} />
-                      </span>
-                    )}
-                  </span>
-                  <span className="min-w-0" style={{ fontFamily: FONT_SANS }}>
-                    <span className="block truncate text-[0.84rem] font-medium capitalize leading-tight text-[var(--charcoal)] transition-colors group-hover:text-[var(--burgundy)]">
-                      {sub.name}
                     </span>
-                    {sub.categoryName && (
-                      <span className="block truncate text-[0.68rem] capitalize text-[var(--mid)]">{sub.categoryName}</span>
-                    )}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-white to-[var(--rose-light)] text-[var(--burgundy)] transition-colors group-hover:text-[var(--gold-dark)]">
+                      <CategoryIcon name={sub.name} size={22} strokeWidth={1.6} />
+                    </span>
+                  )}
+                </span>
+                <span className="mt-1.5 w-full truncate text-[0.72rem] font-medium capitalize leading-tight text-[var(--charcoal)] transition-colors group-hover:text-[var(--burgundy)] sm:text-[0.78rem]">
+                  {sub.name}
+                </span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </div>
     </section>

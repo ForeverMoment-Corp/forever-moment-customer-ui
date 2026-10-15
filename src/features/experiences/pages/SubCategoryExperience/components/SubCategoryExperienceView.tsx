@@ -60,7 +60,6 @@ export default function SubCategoryExperienceView({
   getSubCategoryExperiences,
   getCategories,
 }: SubCategoryExperienceViewProps) {
-  const [liked, setLiked] = useState<number[]>([]);
   const [sort, setSort] = useState<SortKey>("recommended");
   // /collection/pre-wedding-shoot-26 (current) or /subcategory/26 (old links): the id is the trailing number.
   const params = useParams<{ collectionSlug?: string; subCategoryId?: string }>();
@@ -99,8 +98,6 @@ export default function SubCategoryExperienceView({
     return sorted;
   }, [experiences, isCurrentList, sort]);
 
-  const toggleLike = (id: number) =>
-    setLiked((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
   const isLoading = (!!loading || !isCurrentList) && items.length === 0;
   const name = parent?.subCategory.name || items[0]?.subCategoryName || "Experiences";
@@ -211,8 +208,6 @@ export default function SubCategoryExperienceView({
                   key={e.id}
                   experience={e}
                   priority={idx < 4}
-                  isLiked={liked.includes(e.id)}
-                  onToggleLike={toggleLike}
                   compact
                   hideCollection
                 />

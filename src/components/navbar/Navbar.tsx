@@ -44,7 +44,7 @@ const CAT_BAR_PIN_Y = 160;
 /** Ignore scroll jitter smaller than this before hiding / showing the bar. */
 const SCROLL_DELTA = 6;
 const catPillClass = (active: boolean) =>
-  `relative flex items-center gap-1.5 h-[30px] pl-2.5 pr-3 rounded-full whitespace-nowrap text-[0.74rem] font-medium capitalize transition-colors shrink-0 ${
+  `relative flex items-center gap-1.5 h-[30px] pl-2.5 pr-3 rounded-full whitespace-nowrap text-[0.8rem] font-medium capitalize transition-colors shrink-0 ${
     active ? "bg-ivory text-ink" : "text-taupe hover:bg-ivory hover:text-ink"
   }`;
 

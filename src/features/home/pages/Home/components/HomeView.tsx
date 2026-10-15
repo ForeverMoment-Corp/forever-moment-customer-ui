@@ -1,4 +1,5 @@
 import Hero from "@/components/home/Hero";
+import CategoryExperienceRows from "@/components/home/CategoryExperienceRows";
 import LogoLoader from "@/components/common/LogoLoader";
 import WhyChooseUs from "@/features/whyChooseUs/pages/WhyChooseUs";
 import FeaturedExperience from "@/features/experiences/pages/FeaturedExperience";
@@ -83,6 +84,10 @@ const Home = ({ loading, error, getLocations }: HomeProps) => {
       {/* <CategorySlider /> */}
       <div className="defer-paint">
         <CategoryList />
+      </div>
+      {/* Each category that has experiences in this city, up to 8 each */}
+      <div className="defer-paint">
+        <CategoryExperienceRows />
       </div>
 
       {/* <ComboDeals /> */}

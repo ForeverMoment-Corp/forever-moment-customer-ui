@@ -1,6 +1,7 @@
 import { FiStar } from 'react-icons/fi'
 import FadeIn from '@/components/animations/FadeIn'
 import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerContainer'
+import SectionHeading from '@/components/home/SectionHeading';
 
 const testimonials = [
   { name: 'Ananya Sharma', location: 'Wedding, Delhi', review: 'The proposal setup was beyond what I could have imagined. Truly a once in a lifetime experience.', rating: 5, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100' },
@@ -10,19 +11,11 @@ const testimonials = [
 
 export default function TestimonialsView() {
   return (
-    <section className="section-padding bg-white">
+    <section className="section-padding bg-ivory">
       <div className="max-w-[1380px] mx-auto px-6">
 
         <FadeIn>
-          <div className="text-center mb-12">
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[1.7rem] md:text-[2.1rem] text-ink font-semibold mb-2">
-              Client Whispers
-            </h2>
-            <p style={{ fontFamily: "'Jost', sans-serif" }} className="text-[0.7rem] text-umber tracking-[0.25em] uppercase">
-              Luxury Experiences Shared
-            </p>
-            <div className="w-10 h-[1px] bg-gold mx-auto mt-4" />
-          </div>
+          <SectionHeading align="center" eyebrow="Luxury experiences shared" title="Client" accent="whispers" />
         </FadeIn>
 
         <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6">

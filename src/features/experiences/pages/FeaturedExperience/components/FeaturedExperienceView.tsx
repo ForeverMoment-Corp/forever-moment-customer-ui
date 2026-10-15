@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import ExperienceTile from "@/components/common/ExperienceTile";
 import FadeIn from "@/components/animations/FadeIn";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 import ExperienceTileSkeleton from "@/components/common/ExperienceTileSkeleton";
 import type { ExperienceListItem } from "@/features/experiences/store/types";
 import { experienceListKey } from "@/features/experiences/store/location";
+import SectionHeading, { Accent } from "@/components/home/SectionHeading";
 
 export interface FeaturedExperienceProps {
   /** GET /public/experiences/location/{locationId}/featured */
@@ -22,7 +21,6 @@ export interface FeaturedExperienceProps {
 }
 
 const SANS = "'Jost', sans-serif";
-const SERIF = "'Cormorant Garamond', serif";
 
 export default function FeaturedExperienceView({ experiences, featuredKey, loading, locationId, locationReady, getFeaturedExperiences, limit }: FeaturedExperienceProps) {
   const [liked, setLiked] = useState<number[]>([]);
@@ -48,26 +46,11 @@ export default function FeaturedExperienceView({ experiences, featuredKey, loadi
     <section className="bg-ivory py-10 md:py-14">
       <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
         <FadeIn>
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p style={{ fontFamily: SANS }} className="mb-1.5 text-[0.66rem] uppercase tracking-[0.22em] text-umber">
-                Handpicked for you
-              </p>
-              <h2 style={{ fontFamily: SERIF }} className="text-[1.7rem] font-semibold leading-tight text-ink md:text-[2.1rem]">
-                Most <em className="italic text-[var(--burgundy)]">loved</em> experiences
-              </h2>
-            </div>
-            {(showViewAll || limit !== undefined) && (
-              <Link
-                to="/featured-experiences"
-                style={{ fontFamily: SANS }}
-                className="group inline-flex shrink-0 items-center gap-1.5 text-[0.78rem] font-medium uppercase tracking-[0.1em] text-gold transition-colors hover:text-ink"
-              >
-                View all
-                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            )}
-          </div>
+          <SectionHeading
+            eyebrow="Handpicked for you"
+            title={<>Most <Accent>loved</Accent> experiences</>}
+            link={showViewAll || limit !== undefined ? { to: "/featured-experiences", label: "View all" } : undefined}
+          />
         </FadeIn>
 
         {isLoading ? (

@@ -72,7 +72,6 @@ export default function CategoryExperienceView({
   getCategories,
   city,
 }: CategoryExperienceViewProps) {
-  const [liked, setLiked] = useState<number[]>([]);
   const [sort, setSort] = useState<SortKey>("recommended");
   const [subFilter, setSubFilter] = useState<number | null>(null);
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -139,8 +138,6 @@ export default function CategoryExperienceView({
     return sorted;
   }, [inCategory, subFilter, sort]);
 
-  const toggleLike = (id: number) =>
-    setLiked((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
   // A slug that matches no category is "nothing here", not an endless spinner.
   const unknownCategory = !category && !categoriesLoading && (categories?.length ?? 0) > 0;
@@ -267,8 +264,6 @@ export default function CategoryExperienceView({
                   key={e.id}
                   experience={e}
                   priority={idx < 4}
-                  isLiked={liked.includes(e.id)}
-                  onToggleLike={toggleLike}
                   compact
                   // Filtered to one collection, every card would repeat its name.
                   hideCollection={subFilter != null}
