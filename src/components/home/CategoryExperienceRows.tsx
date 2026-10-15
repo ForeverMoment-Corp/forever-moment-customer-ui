@@ -59,7 +59,7 @@ export default function CategoryExperienceRows() {
     <>
       {rows.map(({ category, total, items }) => (
         <section key={category.id} className="bg-ivory py-8 md:py-10">
-          <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
+          <div className="mx-auto max-w-[1380px] px-4 sm:px-6 2xl:max-w-none 2xl:px-5">
             <FadeIn>
               <SectionHeading
                 title={category.name.trim()}
@@ -67,7 +67,7 @@ export default function CategoryExperienceRows() {
                 link={total > items.length ? { to: categoryPath(category), label: `View all ${total}` } : undefined}
               />
             </FadeIn>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4 2xl:grid-cols-[repeat(auto-fill,minmax(270px,1fr))]">
               {items.map((e) => (
                 <ExperienceTile key={e.id} experience={e} />
               ))}

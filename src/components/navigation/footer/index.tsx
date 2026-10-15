@@ -81,7 +81,7 @@ export default function Footer() {
     <footer className="border-t border-white/10 bg-ink text-white" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
 
-      <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
+      <div className="mx-auto max-w-[1380px] px-4 sm:px-6 2xl:max-w-none 2xl:px-5">
         <div className="grid gap-0 py-8 md:grid-cols-2 md:gap-10 md:py-14 lg:grid-cols-12">
           {/* Brand */}
           <div className="pb-6 md:pb-0 lg:col-span-4">

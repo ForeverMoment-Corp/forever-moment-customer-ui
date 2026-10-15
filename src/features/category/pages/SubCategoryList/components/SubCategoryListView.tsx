@@ -99,7 +99,7 @@ export default function SubCategoryListView({
   return (
     // Compact strip right under the hero.
     <section className="bg-ivory py-8 md:py-10" style={{ fontFamily: FONT_SANS }}>
-      <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
+      <div className="mx-auto max-w-[1380px] px-4 sm:px-6 2xl:max-w-none 2xl:px-5">
         <SectionHeading size="sm" title="Popular" accent="collections" link={{ to: "/subcategories", label: "View all" }} />
 
         {/* One row on every screen: swipe / scroll sideways when it does not fit (snaps per bubble). */}

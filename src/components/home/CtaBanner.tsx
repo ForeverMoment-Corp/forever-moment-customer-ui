@@ -15,7 +15,7 @@ const CtaBanner = () => {
       />
 
       {/* Content */}
-      <div className="max-w-[1380px] mx-auto px-6 relative z-10 text-center">
+      <div className="max-w-[1380px] mx-auto px-6 2xl:max-w-none 2xl:px-5 relative z-10 text-center">
 
         {/* Small label */}
         <div className="inline-flex items-center gap-2 border border-gold-bright/40 px-4 py-1.5 mb-6">

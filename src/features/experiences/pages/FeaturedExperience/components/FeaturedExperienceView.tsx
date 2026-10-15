@@ -44,7 +44,7 @@ export default function FeaturedExperienceView({ experiences, featuredKey, loadi
 
   return (
     <section className="bg-ivory py-10 md:py-14">
-      <div className="mx-auto max-w-[1380px] px-4 sm:px-6">
+      <div className="mx-auto max-w-[1380px] px-4 sm:px-6 2xl:max-w-none 2xl:px-5">
         <FadeIn>
           <SectionHeading
             eyebrow="Handpicked for you"
@@ -54,7 +54,7 @@ export default function FeaturedExperienceView({ experiences, featuredKey, loadi
         </FadeIn>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4 2xl:grid-cols-[repeat(auto-fill,minmax(270px,1fr))]">
             {Array.from({ length: Math.min(limit ?? 8, 8) }, (_, i) => (
               <ExperienceTileSkeleton key={i} />
             ))}
@@ -64,7 +64,7 @@ export default function FeaturedExperienceView({ experiences, featuredKey, loadi
             No featured experiences yet. Check back soon.
           </p>
         ) : (
-          <StaggerContainer className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+          <StaggerContainer className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4 2xl:grid-cols-[repeat(auto-fill,minmax(270px,1fr))]">
             {list.map((e, idx) => (
               <StaggerItem key={e.id} className="h-full">
                 <ExperienceTile experience={e} priority={idx < 4} isLiked={liked.includes(e.id)} onToggleLike={toggleLike} />

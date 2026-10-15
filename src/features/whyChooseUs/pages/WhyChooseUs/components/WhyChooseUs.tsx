@@ -19,7 +19,7 @@ const features = [
 export default function WhyChooseUs() {
   return (
     <section className="section-padding bg-ivory">
-      <div className="max-w-[1380px] mx-auto px-4 sm:px-6">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 2xl:max-w-none 2xl:px-5">
         <FadeIn>
           <SectionHeading align="center" eyebrow="The Forever Moment promise" title="Why choose" accent="us" />
         </FadeIn>

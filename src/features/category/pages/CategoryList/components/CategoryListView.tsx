@@ -25,7 +25,7 @@ export default function CategoryListView({ categories }: CategoryListViewProps) 
 
   return (
     <section className="section-padding bg-ivory">
-      <div className="max-w-[1380px] mx-auto px-6">
+      <div className="max-w-[1380px] mx-auto px-6 2xl:max-w-none 2xl:px-5">
 
         <FadeIn>
           <SectionHeading eyebrow="Every occasion" title="Browse by" accent="category" link={{ to: "/categories", label: "All categories" }} />
