@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { storage, setLoginSession, removeLoginSession } from '@/utils/storage';
 import axios from '@/utils/Http';
+import { googleSignOut } from '../googleIdentity';
 
 export interface User {
   id: string | number;
@@ -70,6 +71,8 @@ export const logoutUser = createAsyncThunk(
     } catch (error) {
       console.error('Logout API failed:', error);
     } finally {
+      // Tell Google too, or its "Continue as <name>" button stays in a stale auto-select state.
+      googleSignOut();
       dispatch(logout());
     }
   }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MdEmail } from 'react-icons/md';
 import { ArrowLeft, Eye, EyeOff, Loader2, X } from 'lucide-react';
@@ -7,7 +7,8 @@ import type { AppDispatch, RootState } from '@/store/store';
 import { closeLoginModal, loginSuccess, fetchProfile } from '../store/authSlice';
 import styles from './LoginModal.module.scss';
 import { AnimatePresence, motion } from 'framer-motion';
-import { GoogleOAuthProvider, GoogleLogin, useGoogleOAuth, type CredentialResponse } from '@react-oauth/google';
+import { GoogleOAuthProvider, useGoogleOAuth } from '@react-oauth/google';
+import { ensureGoogleInitialized, renderGoogleButton, setGoogleCredentialHandler, type GoogleCredential } from '../googleIdentity';
 import { emailLogin, googleLogin } from '../store/api';
 import { isInAppBrowser } from '@/lib/inAppBrowser';
 
@@ -22,10 +23,24 @@ function GoogleButton({
 }: {
     width: number;
     failed: boolean;
-    onSuccess: (response: CredentialResponse) => void;
+    onSuccess: (response: GoogleCredential) => void;
     onError: () => void;
 }) {
-    const { scriptLoadedSuccessfully } = useGoogleOAuth();
+    const { scriptLoadedSuccessfully, clientId } = useGoogleOAuth();
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Fresh handlers on every render; Google's one callback (set up once) forwards to them.
+    useEffect(() => {
+        setGoogleCredentialHandler((response) => (response.credential ? onSuccess(response) : onError()));
+        return () => setGoogleCredentialHandler(null);
+    }, [onSuccess, onError]);
+
+    // Initialise Google once per page, then just (re)draw the button each time the popup opens.
+    useEffect(() => {
+        if (!scriptLoadedSuccessfully || !containerRef.current) return;
+        if (ensureGoogleInitialized(clientId)) renderGoogleButton(containerRef.current, width);
+    }, [scriptLoadedSuccessfully, clientId, width]);
+
     if (failed) {
         return <p className={styles.googleNote}>Google sign-in couldn't load (an ad or privacy blocker may be stopping it). Please use email below.</p>;
     }
@@ -36,17 +51,7 @@ function GoogleButton({
             </span>
         );
     }
-    return (
-        <GoogleLogin
-            onSuccess={onSuccess}
-            onError={onError}
-            theme="outline"
-            shape="pill"
-            size="large"
-            text="continue_with"
-            width={width}
-        />
-    );
+    return <div ref={containerRef} style={{ minHeight: 40 }} />;
 }
 
 const LoginModal: React.FC = () => {
