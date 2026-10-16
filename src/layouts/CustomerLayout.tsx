@@ -6,12 +6,13 @@ import FloatingBookingCTA from '@/components/FloatingBookingCTA/FloatingBooking'
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
 import BottomNav from '@/components/layout/BottomNav';
 import LoginModal from '@/features/auth/components/LoginModal';
+import LogoutConfirmModal from '@/features/auth/components/LogoutConfirmModal';
 import { applySeo, type SeoMeta } from '@/lib/seo';
 
 /**
  * Metadata for fixed pages. Pages named from data (category, collection, experience), search and
  * the 404 page set their own with useSeo, so they are deliberately not listed here.
- * Account, cart and payment pages are private: kept out of search results.
+ * Account and payment pages are private: kept out of search results.
  */
 const PAGE_SEO: Record<string, SeoMeta> = {
   '/': {}, // site defaults
@@ -36,7 +37,6 @@ const PAGE_SEO: Record<string, SeoMeta> = {
   '/support': { title: 'My support queries', noindex: true },
   '/profile': { title: 'My profile', noindex: true },
   '/bookings': { title: 'My bookings', noindex: true },
-  '/cart': { title: 'My cart', noindex: true },
   '/payment/status': { title: 'Complete your payment', noindex: true },
   '/payment/success': { title: 'Payment', noindex: true },
   '/payment/cancel': { title: 'Payment not completed', noindex: true },
@@ -81,8 +81,8 @@ const CustomerLayout = () => {
       {/* CONTENT */}
       <main className="relative z-0 flex-1">
         <Outlet />
-        {/* Experience detail and cart pages ship their own price + action bar; payment results need no upsell */}
-        {!pathname.startsWith('/experience/') && pathname !== '/cart' && !pathname.startsWith('/payment/') && <FloatingBookingCTA />}
+        {/* Experience detail pages ship their own price + action bar; payment results need no upsell */}
+        {!pathname.startsWith('/experience/') && !pathname.startsWith('/payment/') && <FloatingBookingCTA />}
       </main>
 
       <WhatsAppButton />
@@ -91,6 +91,7 @@ const CustomerLayout = () => {
       
       {/* Global Modals */}
       <LoginModal />
+      <LogoutConfirmModal />
 
       {/* New pages open at the top; Back / Forward return to where the guest was on the page. */}
       <ScrollRestoration />

@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
     AlertCircle,
+    CalendarHeart,
     CheckCircle2,
     ChevronRight,
     CircleHelp,
@@ -18,8 +19,11 @@ import {
     User,
 } from 'lucide-react';
 import type { AppDispatch, RootState } from '@/store/store';
-import { fetchProfile, logoutUser, openLoginModal, updateProfile } from '@/features/auth/store/authSlice';
+import { fetchProfile, openLoginModal, openLogoutConfirm, updateProfile } from '@/features/auth/store/authSlice';
 import Breadcrumbs from '@/features/experiences/pages/ExperienceDetail/components/Breadcrumbs';
+import { AccountSettings, MyReviews } from './AccountSections';
+import PhoneInput from '@/components/common/PhoneInput';
+import { formatPhone, isValidMobile, toLocalDigits, withCountryCode } from '@/lib/phone';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -31,6 +35,7 @@ interface ProfileForm {
 }
 
 const QUICK_LINKS = [
+    { icon: CalendarHeart, label: 'My bookings', hint: 'Upcoming and past celebrations', to: '/bookings' },
     { icon: MessageSquare, label: 'My queries', hint: 'Support requests and replies', to: '/support' },
     { icon: Sparkles, label: 'Browse experiences', hint: 'Find your next celebration', to: '/categories' },
     { icon: CircleHelp, label: 'Help centre', hint: 'FAQs, policies and contact', to: '/help' },
@@ -84,7 +89,7 @@ const ProfilePage: React.FC = () => {
 
     useEffect(() => {
         if (user && !isEditing) {
-            setForm({ fullName: user.name || '', phoneNumber: phone, preferredCity: city });
+            setForm({ fullName: user.name || '', phoneNumber: toLocalDigits(phone), preferredCity: city });
         }
     }, [user, phone, city, isEditing]);
 
@@ -152,6 +157,10 @@ const ProfilePage: React.FC = () => {
             setError('Please enter your name.');
             return;
         }
+        if (form.phoneNumber && !isValidMobile(form.phoneNumber)) {
+            setError('Please enter a valid 10-digit mobile number.');
+            return;
+        }
         setSaving(true);
         setError(null);
         try {
@@ -159,7 +168,7 @@ const ProfilePage: React.FC = () => {
                 updateProfile({
                     fullName: form.fullName.trim(),
                     email: user.email,
-                    phoneNumber: form.phoneNumber.trim(),
+                    phoneNumber: withCountryCode(form.phoneNumber),
                     preferredCity: form.preferredCity.trim(),
                     profilePictureUrl: user.profilePictureUrl || '',
                 }),
@@ -267,7 +276,7 @@ const ProfilePage: React.FC = () => {
                                 <li>
                                     <button
                                         type="button"
-                                        onClick={() => dispatch(logoutUser())}
+                                        onClick={() => dispatch(openLogoutConfirm())}
                                         className="group flex w-full items-center gap-3.5 px-5 py-3.5 text-left transition-colors hover:bg-[var(--cream)]"
                                     >
                                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--cream)] text-[var(--mid)] group-hover:text-[var(--burgundy)]">
@@ -280,8 +289,9 @@ const ProfilePage: React.FC = () => {
                         </nav>
                     </aside>
 
+                    <div className="grid gap-6 lg:col-span-8">
                     {/* Personal details */}
-                    <section className="rounded-[22px] border border-[var(--border-light)] bg-white p-5 sm:p-7 lg:col-span-8" aria-labelledby="personal-details">
+                    <section className="rounded-[22px] border border-[var(--border-light)] bg-white p-5 sm:p-7" aria-labelledby="personal-details">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h2 id="personal-details" style={{ fontFamily: SERIF }} className="text-[1.45rem] font-semibold leading-tight text-[var(--charcoal)]">
@@ -323,14 +333,11 @@ const ProfilePage: React.FC = () => {
                                     </label>
                                     <label className="block">
                                         <span className="mb-1.5 block text-[0.78rem] font-medium text-[var(--charcoal)]">Phone number</span>
-                                        <input
-                                            type="tel"
-                                            autoComplete="tel"
-                                            inputMode="tel"
+                                        <PhoneInput
                                             value={form.phoneNumber}
-                                            onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
-                                            className={inputClass}
-                                            placeholder="+91 98765 43210"
+                                            onChange={(digits) => setForm({ ...form, phoneNumber: digits })}
+                                            placeholder="98765 43210"
+                                            invalid={!!form.phoneNumber && !isValidMobile(form.phoneNumber)}
                                         />
                                     </label>
                                     <label className="block">
@@ -380,11 +387,14 @@ const ProfilePage: React.FC = () => {
                             <dl className="mt-3 grid divide-y divide-[var(--border-light)] sm:grid-cols-2 sm:gap-x-8 sm:divide-y-0">
                                 <DetailRow icon={User} label="Full name" value={user.name} />
                                 <DetailRow icon={Mail} label="Email" value={user.email} />
-                                <DetailRow icon={Phone} label="Phone number" value={phone} />
+                                <DetailRow icon={Phone} label="Phone number" value={formatPhone(phone)} />
                                 <DetailRow icon={MapPin} label="City" value={city} />
                             </dl>
                         )}
                     </section>
+                    <MyReviews />
+                    <AccountSettings />
+                    </div>
                 </div>
             </div>
         </div>

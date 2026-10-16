@@ -31,6 +31,7 @@ const HELP_LINKS = [
   { label: "FAQs", to: "/faqs" },
   { label: "Contact us", to: "/contact" },
   { label: "My support queries", to: "/support" },
+  { label: "Become a partner", to: "/partner" },
 ];
 
 const linkBase =

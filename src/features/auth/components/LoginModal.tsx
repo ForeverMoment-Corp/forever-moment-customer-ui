@@ -9,8 +9,9 @@ import styles from './LoginModal.module.scss';
 import { AnimatePresence, motion } from 'framer-motion';
 import { GoogleOAuthProvider, useGoogleOAuth } from '@react-oauth/google';
 import { ensureGoogleInitialized, renderGoogleButton, setGoogleCredentialHandler, type GoogleCredential } from '../googleIdentity';
-import { emailLogin, googleLogin } from '../store/api';
+import { emailLogin, googleLogin, registerUser } from '../store/api';
 import { isInAppBrowser } from '@/lib/inAppBrowser';
+import { isValidMobile, withCountryCode } from '@/lib/phone';
 
 const GOOGLE_CLIENT_ID = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '');
 
@@ -63,6 +64,10 @@ const LoginModal: React.FC = () => {
     const [view, setView] = useState<'options' | 'email'>('options');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    // Email form: log in to an existing account, or create one.
+    const [emailMode, setEmailMode] = useState<'login' | 'signup'>('login');
+    const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [googleWidth, setGoogleWidth] = useState<number | null>(null);
@@ -97,6 +102,7 @@ const LoginModal: React.FC = () => {
             // Start fresh next time the popup opens
             setError(null);
             setView('options');
+            setEmailMode('login');
             setPassword('');
             setShowPassword(false);
             setSubmitting(false);
@@ -108,7 +114,10 @@ const LoginModal: React.FC = () => {
     };
 
     const isInputValid = mobileNumber.length === 10;
-    const isEmailFormValid = /^\S+@\S+\.\S+$/.test(email.trim()) && password.length > 0;
+    const isSignup = emailMode === 'signup';
+    const isEmailFormValid =
+        /^\S+@\S+\.\S+$/.test(email.trim()) &&
+        (isSignup ? password.length >= 8 && fullName.trim().length >= 2 && (phone === '' || isValidMobile(phone)) : password.length > 0);
 
     const switchView = (next: 'options' | 'email') => {
         setError(null);
@@ -122,12 +131,22 @@ const LoginModal: React.FC = () => {
         setSubmitting(true);
         setError(null);
         try {
+            // Sign up returns no token, so log straight in with the same details.
+            if (isSignup) {
+                await registerUser({ fullName, email, password, phoneNumber: withCountryCode(phone) || undefined });
+            }
             const result = await emailLogin(email.trim(), password);
             dispatch(loginSuccess(result));
             // The login response only carries the email; the profile fills in name / id
             dispatch(fetchProfile());
         } catch (err) {
-            setError(err instanceof Error && err.message ? err.message : "We couldn't log you in. Please try again.");
+            setError(
+                err instanceof Error && err.message
+                    ? err.message
+                    : isSignup
+                      ? "We couldn't create your account. Please try again."
+                      : "We couldn't log you in. Please try again.",
+            );
         } finally {
             setSubmitting(false);
         }
@@ -175,12 +194,31 @@ const LoginModal: React.FC = () => {
                                 </button>
 
                                 <h2 id="login-modal-title" className={`${styles.title} mb-4`}>
-                                    Log in with email
+                                    {isSignup ? 'Create your account' : 'Log in with email'}
                                 </h2>
 
                                 {error && <p className={`${styles.error} ${styles.errorInline}`} role="alert">{error}</p>}
 
                                 <form onSubmit={handleEmailLogin} noValidate>
+                                    {isSignup && (
+                                        <>
+                                            <label htmlFor="signup-name" className={styles.label}>
+                                                Full name
+                                            </label>
+                                            <div className={`${styles.inputGroup} mb-3`}>
+                                                <input
+                                                    id="signup-name"
+                                                    autoComplete="name"
+                                                    autoFocus
+                                                    className={styles.inputField}
+                                                    placeholder="Your name"
+                                                    value={fullName}
+                                                    maxLength={100}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                     <label htmlFor="login-email" className={styles.label}>
                                         Email
                                     </label>
@@ -189,7 +227,7 @@ const LoginModal: React.FC = () => {
                                             id="login-email"
                                             type="email"
                                             autoComplete="email"
-                                            autoFocus
+                                            autoFocus={!isSignup}
                                             className={styles.inputField}
                                             placeholder="you@example.com"
                                             value={email}
@@ -197,6 +235,29 @@ const LoginModal: React.FC = () => {
                                         />
                                     </div>
 
+                                    {isSignup && (
+                                        <>
+                                            <label htmlFor="signup-phone" className={styles.label}>
+                                                Mobile number <span className="font-normal normal-case tracking-normal opacity-70">(optional)</span>
+                                            </label>
+                                            <div className={`${styles.inputGroup} mb-3`}>
+                                                <span className={styles.countryCode}>+91</span>
+                                                <input
+                                                    id="signup-phone"
+                                                    type="tel"
+                                                    inputMode="numeric"
+                                                    autoComplete="tel-national"
+                                                    className={styles.inputField}
+                                                    placeholder="98765 43210"
+                                                    value={phone}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length <= 10) setPhone(val);
+                                                    }}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                     <label htmlFor="login-password" className={styles.label}>
                                         Password
                                     </label>
@@ -204,9 +265,9 @@ const LoginModal: React.FC = () => {
                                         <input
                                             id="login-password"
                                             type={showPassword ? 'text' : 'password'}
-                                            autoComplete="current-password"
+                                            autoComplete={isSignup ? 'new-password' : 'current-password'}
                                             className={styles.inputField}
-                                            placeholder="Your password"
+                                            placeholder={isSignup ? 'At least 8 characters' : 'Your password'}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                         />
@@ -226,9 +287,23 @@ const LoginModal: React.FC = () => {
                                         disabled={!isEmailFormValid || submitting}
                                     >
                                         {submitting && <Loader2 size={18} className="animate-spin" />}
-                                        {submitting ? 'Logging in…' : 'Log in'}
+                                        {submitting ? (isSignup ? 'Creating account…' : 'Logging in…') : isSignup ? 'Create account' : 'Log in'}
                                     </button>
                                 </form>
+
+                                <p className={styles.switchText}>
+                                    {isSignup ? 'Already have an account?' : 'New to Forever Moment?'}{' '}
+                                    <button
+                                        type="button"
+                                        className={styles.link}
+                                        onClick={() => {
+                                            setError(null);
+                                            setEmailMode(isSignup ? 'login' : 'signup');
+                                        }}
+                                    >
+                                        {isSignup ? 'Log in' : 'Create an account'}
+                                    </button>
+                                </p>
                             </>
                         ) : (
                             <>

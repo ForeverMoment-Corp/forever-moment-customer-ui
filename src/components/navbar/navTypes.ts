@@ -17,6 +17,8 @@ export interface NavSubCategory {
   id: number;
   name: string;
   description?: string | null;
+  /** Admin-set URL slug; only present once one has been set. */
+  slug?: string | null;
   displayOrder: number;
   isActive: boolean;
 }
@@ -40,12 +42,15 @@ const slugify = (s: string) =>
 export const categoryPath = (cat: { slug?: string | null; name: string }) => `/category/${slugify(cat.slug || cat.name)}`;
 
 /**
- * `/collection/pre-wedding-shoot-26`: readable name, then the id (collection names repeat across
- * categories and the API has no collection slugs). Old `/subcategory/26` links redirect here.
+ * `/collection/mehandi` when the admin has set a slug (like categories), otherwise the name plus the
+ * id: `/collection/pre-wedding-shoot-26`. Both resolve (see SubCategoryExperienceView), as do old
+ * `/subcategory/26` links, and every form redirects to this canonical one.
  */
-export const subCategoryPath = (sub: { id: number | string; name?: string | null }) => {
-  const slug = slugify(sub.name ?? "");
-  return `/collection/${slug ? `${slug}-` : ""}${sub.id}`;
+export const subCategoryPath = (sub: { id: number | string; name?: string | null; slug?: string | null }) => {
+  const slug = slugify(sub.slug || "");
+  if (slug) return `/collection/${slug}`;
+  const name = slugify(sub.name || "");
+  return `/collection/${name ? `${name}-` : ""}${sub.id}`;
 };
 
 /** The collection id at the end of `pre-wedding-shoot-26` (or a bare `26` from an old link). */

@@ -27,10 +27,6 @@ const richText = (value: unknown) => (typeof value === 'string' && toPlainText(v
 const titleCase = (s: string) =>
   s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 
-// Reviews are not served by the API yet; these summary numbers stand in until they are.
-const PLACEHOLDER_RATING = 4.8;
-const PLACEHOLDER_REVIEW_COUNT = 124;
-
 const to12h = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
   if (Number.isNaN(h)) return hhmm;
@@ -150,7 +146,8 @@ export function normalizeExperience(raw: any): ExperienceVM {
     timeslots: unionSlots(locationOptions),
     locations,
     locationOptions,
-    rating: PLACEHOLDER_RATING,
-    reviewCount: PLACEHOLDER_REVIEW_COUNT,
+    // Filled from GET /public/reviews/experience/{id}/summary (ExperienceView).
+    rating: 0,
+    reviewCount: 0,
   };
 }

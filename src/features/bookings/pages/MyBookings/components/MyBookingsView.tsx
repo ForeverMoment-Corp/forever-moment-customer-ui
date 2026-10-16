@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertCircle, CalendarHeart, ChevronDown, Clock, Loader2, LogIn, MapPin, RefreshCw, Users } from 'lucide-react';
+import { AlertCircle, CalendarHeart, ChevronDown, Clock, Loader2, LogIn, MapPin, RefreshCw, Sparkles, Star, Users } from 'lucide-react';
 import type { RootState } from '@/store/store';
 import { experiencePath } from '@/features/experiences/utils/slug';
 import { waitForPaymentLink } from '@/features/experiences/store/api';
-import { BookingsUnavailableError, fetchMyBookings, UnauthorizedError, type Booking } from '@/features/bookings/api';
+import { BookingsUnavailableError, cancelMyBooking, fetchMyBookings, UnauthorizedError, type Booking, type BookingQuery } from '@/features/bookings/api';
 import { getLoginSession } from '@/utils/storage';
 import { openLoginModal } from '@/features/auth/store/authSlice';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
@@ -18,12 +18,7 @@ const DAY_MS = 86_400_000;
 
 const formatINR = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 
-type Tab = 'upcoming' | 'past' | 'cancelled';
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'upcoming', label: 'Upcoming' },
-  { key: 'past', label: 'Past' },
-  { key: 'cancelled', label: 'Cancelled' },
-];
+type Group = 'upcoming' | 'past' | 'cancelled';
 
 type LoadState =
   | { kind: 'loading' }
@@ -43,7 +38,7 @@ const bookingTime = (b: Booking) => {
   return Number.isNaN(t) ? 0 : t;
 };
 
-const tabOf = (b: Booking, today: number): Tab => {
+const groupOf = (b: Booking, today: number): Group => {
   if (b.status === 'CANCELLED' || b.status === 'FAILED') return 'cancelled';
   return bookingTime(b) >= today ? 'upcoming' : 'past';
 };
@@ -92,19 +87,25 @@ const statusKey = (b: Booking, isPast: boolean) => {
   return STATUS[b.status] ? b.status : 'PENDING';
 };
 
-function BookingCard({ booking, today }: { booking: Booking; today: number }) {
+function BookingCard({ booking, today, onChange, highlight }: { booking: Booking; today: number; onChange: (b: Booking) => void; highlight?: boolean }) {
   const user = useSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const date = new Date(booking.bookingDate);
   const validDate = !Number.isNaN(date.getTime());
   const isPast = bookingTime(booking) < today;
-  const tab = tabOf(booking, today);
+  const tab = groupOf(booking, today);
   const muted = tab !== 'upcoming';
   const canPay = booking.status === 'PENDING' && !isPast && !!user;
+  // The booking service cancels only PENDING or CONFIRMED bookings; past ones are left alone.
+  const canCancel = (booking.status === 'PENDING' || booking.status === 'CONFIRMED') && !isPast;
   const status = STATUS[statusKey(booking, isPast)];
   const slot = slotText(booking);
   const detailsId = `booking-${booking.bookingId}-details`;
@@ -138,6 +139,20 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
     setPaying(false);
   };
 
+  const cancel = async () => {
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      const updated = await cancelMyBooking(booking.bookingId, cancelReason);
+      onChange(
+        updated ?? { ...booking, status: 'CANCELLED', cancelReason: cancelReason.trim() || null, cancelledAt: new Date().toISOString() },
+      );
+    } catch (e) {
+      setCancelError(e instanceof Error && e.message ? e.message : 'Could not cancel this booking.');
+      setCancelling(false);
+    }
+  };
+
   return (
     <li
       className={`flex flex-col overflow-hidden rounded-2xl border bg-white transition-shadow duration-300 hover:shadow-[0_14px_34px_-20px_color-mix(in_srgb,_var(--burgundy)_45%,_transparent)] ${
@@ -145,6 +160,11 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
       }`}
       style={{ fontFamily: SANS }}
     >
+      {highlight && (
+        <p className="flex items-center gap-1.5 bg-[var(--gold-pale)] px-4 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-[var(--burgundy)]">
+          <Sparkles size={11} /> Next celebration
+        </p>
+      )}
       <div className="flex flex-1 gap-4 p-4">
         {/* Date tile */}
         <div
@@ -202,6 +222,12 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
           {booking.status === 'FAILED' && booking.failureReason && (
             <p className="mt-2 text-[0.78rem] leading-snug text-[var(--burgundy)]">{booking.failureReason}</p>
           )}
+          {booking.status === 'CANCELLED' && (booking.cancelledAt || booking.cancelReason) && (
+            <p className="mt-2 text-[0.78rem] leading-snug text-[var(--mid)]">
+              {booking.cancelledAt ? `Cancelled ${formatDate(booking.cancelledAt)}` : 'Cancelled'}
+              {booking.cancelReason && ` · ${booking.cancelReason}`}
+            </p>
+          )}
         </div>
       </div>
 
@@ -224,6 +250,14 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
               {formatINR(booking.grandTotal)}
             </span>
           </span>
+          {isPast && booking.status === 'CONFIRMED' && (
+            <Link
+              to={`${experiencePath({ id: booking.experienceId, slug: booking.experienceSlug })}#reviews`}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--gold-light)] px-3.5 text-[0.74rem] font-semibold uppercase tracking-[0.08em] text-[var(--burgundy)] transition-colors hover:border-[var(--burgundy)]"
+            >
+              <Star size={13} /> Rate it
+            </Link>
+          )}
           {canPay && (
             <button
               type="button"
@@ -241,6 +275,55 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
         <p role="alert" className="px-4 pb-3 text-[0.76rem] text-[var(--burgundy)]">
           {payError}
         </p>
+      )}
+
+      {confirmingCancel && (
+        <div className="border-t border-[var(--border-light)] bg-[var(--rose-light)]/40 px-4 py-3.5 text-[0.8rem]">
+          <p className="font-medium text-[var(--charcoal)]">Cancel this booking?</p>
+          <p className="mt-0.5 text-[0.76rem] leading-snug text-[var(--mid)]">
+            {booking.status === 'CONFIRMED'
+              ? 'Your payment will be refunded by our team. You will get an email once it is processed.'
+              : 'Nothing has been charged. The date will be released for others.'}
+          </p>
+          <label htmlFor={`${detailsId}-reason`} className="sr-only">
+            Reason (optional)
+          </label>
+          <input
+            id={`${detailsId}-reason`}
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            maxLength={250}
+            placeholder="Reason (optional)"
+            className="mt-2.5 h-9 w-full rounded-lg border border-[var(--border-light)] bg-white px-3 text-[0.8rem] text-[var(--charcoal)] outline-none focus:border-[var(--burgundy)]"
+          />
+          {cancelError && (
+            <p role="alert" className="mt-2 text-[0.76rem] text-[var(--burgundy)]">
+              {cancelError}
+            </p>
+          )}
+          <div className="mt-3 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmingCancel(false);
+                setCancelError(null);
+              }}
+              disabled={cancelling}
+              className="inline-flex h-9 items-center rounded-full border border-[var(--border-light)] bg-white px-4 text-[0.74rem] font-semibold uppercase tracking-[0.08em] text-[var(--charcoal)] transition-colors hover:border-[var(--charcoal)] disabled:opacity-60"
+            >
+              Keep booking
+            </button>
+            <button
+              type="button"
+              onClick={cancel}
+              disabled={cancelling}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--burgundy)] px-4 text-[0.74rem] font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[var(--burgundy-dark)] disabled:opacity-70"
+            >
+              {cancelling && <Loader2 size={14} className="animate-spin" />}
+              {cancelling ? 'Cancelling' : 'Cancel booking'}
+            </button>
+          </div>
+        </div>
       )}
 
       {open && (
@@ -271,9 +354,16 @@ function BookingCard({ booking, today }: { booking: Booking; today: number }) {
               Ref <span className="font-medium text-[var(--charcoal)]">{booking.bookingId}</span>
               {booking.createdAt && ` · Booked ${formatDate(booking.createdAt)}`}
             </span>
-            <Link to="/contact" className="font-medium text-[var(--burgundy)] hover:underline">
-              Get help
-            </Link>
+            <span className="flex items-center gap-3">
+              {canCancel && !confirmingCancel && (
+                <button type="button" onClick={() => setConfirmingCancel(true)} className="font-medium text-[var(--mid)] hover:text-[var(--burgundy)] hover:underline">
+                  Cancel booking
+                </button>
+              )}
+              <Link to="/contact" className="font-medium text-[var(--burgundy)] hover:underline">
+                Get help
+              </Link>
+            </span>
           </div>
         </div>
       )}
@@ -312,16 +402,66 @@ function StateMessage({
 const primaryBtn =
   'inline-flex h-10 items-center gap-2 rounded-full bg-[var(--burgundy)] px-5 text-[0.76rem] font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-[var(--burgundy-dark)]';
 
+/** Active bookings by celebration date (latest first), so everything upcoming arrives before the past. */
+const ACTIVE_QUERY: BookingQuery = { status: ['PENDING', 'CONFIRMED'], sort: 'bookingDate,desc' };
+const INACTIVE_QUERY: BookingQuery = { status: ['CANCELLED', 'FAILED'], sort: 'createdAt,desc' };
+
+interface Paged {
+  items: Booking[];
+  page: number;
+  last: boolean;
+  total: number;
+}
+const EMPTY_PAGED: Paged = { items: [], page: 0, last: true, total: 0 };
+
+const mergeUnique = (prev: Booking[], next: Booking[]) => {
+  const seen = new Set(prev.map((b) => b.bookingId));
+  return [...prev, ...next.filter((b) => !seen.has(b.bookingId))];
+};
+
+function SectionHeader({ title, count, children }: { title: string; count?: number; children?: React.ReactNode }) {
+  return (
+    <div className="mb-3 flex items-end justify-between gap-3">
+      <h2 style={{ fontFamily: SERIF }} className="text-[1.35rem] font-semibold leading-tight text-[var(--charcoal)]">
+        {title}
+        {!!count && <span className="ml-2 align-middle text-[0.8rem] font-medium text-[var(--gold)]" style={{ fontFamily: SANS }}>{count}</span>}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function LoadMore({ onClick, loading, error, label }: { onClick: () => void; loading: boolean; error: string | null; label: string }) {
+  return (
+    <div className="mt-4 text-center">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={loading}
+        className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--gold-light)] bg-white px-5 text-[0.76rem] font-semibold uppercase tracking-[0.1em] text-[var(--burgundy)] transition-colors hover:border-[var(--burgundy)] disabled:opacity-60"
+      >
+        {loading && <Loader2 size={14} className="animate-spin" />}
+        {loading ? 'Loading' : label}
+      </button>
+      {error && <p role="alert" className="mt-2 text-[0.78rem] text-[var(--burgundy)]">{error}</p>}
+    </div>
+  );
+}
+
+/**
+ * My Bookings, one page instead of tabs: what's coming up first (the next one highlighted), then
+ * past celebrations, then cancelled / failed bookings folded away. Two server-filtered lists:
+ * active (PENDING + CONFIRMED, by celebration date) and inactive (CANCELLED + FAILED).
+ */
 export default function MyBookingsView() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [state, setState] = useState<LoadState>(() => (getLoginSession('access_token') ? { kind: 'loading' } : { kind: 'signed-out' }));
-  const [items, setItems] = useState<Booking[]>([]);
-  const [page, setPage] = useState(0);
-  const [last, setLast] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [moreError, setMoreError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('upcoming');
+  const [active, setActive] = useState<Paged>(EMPTY_PAGED);
+  const [inactive, setInactive] = useState<Paged>(EMPTY_PAGED);
+  const [moreLoading, setMoreLoading] = useState<'active' | 'inactive' | null>(null);
+  const [moreError, setMoreError] = useState<{ which: 'active' | 'inactive'; message: string } | null>(null);
+  const [showCancelled, setShowCancelled] = useState(false);
   // Bumped by "Try again"; the effect below refetches whenever it changes.
   const [attempt, setAttempt] = useState(0);
 
@@ -334,16 +474,12 @@ export default function MyBookingsView() {
     }
     let alive = true;
     setState({ kind: 'loading' });
-    fetchMyBookings(0, PAGE_SIZE)
-      .then((res) => {
+    Promise.all([fetchMyBookings(0, PAGE_SIZE, ACTIVE_QUERY), fetchMyBookings(0, PAGE_SIZE, INACTIVE_QUERY)])
+      .then(([a, c]) => {
         if (!alive) return;
-        setItems(res.items);
-        setPage(res.page);
-        setLast(res.last);
+        setActive({ items: a.items, page: a.page, last: a.last, total: a.totalElements });
+        setInactive({ items: c.items, page: c.page, last: c.last, total: c.totalElements });
         setState({ kind: 'ready' });
-        // Land on the first tab that has something in it.
-        const present = new Set(res.items.map((b) => tabOf(b, today)));
-        if (!present.has('upcoming')) setTab(present.has('past') ? 'past' : present.has('cancelled') ? 'cancelled' : 'upcoming');
       })
       .catch((e) => {
         if (!alive) return;
@@ -354,69 +490,63 @@ export default function MyBookingsView() {
     return () => {
       alive = false;
     };
-  }, [attempt, isAuthenticated, today]);
+  }, [attempt, isAuthenticated]);
 
-  const loadMore = async () => {
-    setLoadingMore(true);
+  const loadMore = async (which: 'active' | 'inactive') => {
+    const current = which === 'active' ? active : inactive;
+    const setter = which === 'active' ? setActive : setInactive;
+    setMoreLoading(which);
     setMoreError(null);
     try {
-      const res = await fetchMyBookings(page + 1, PAGE_SIZE);
-      setItems((prev) => {
-        const seen = new Set(prev.map((b) => b.bookingId));
-        return [...prev, ...res.items.filter((b) => !seen.has(b.bookingId))];
-      });
-      setPage(res.page);
-      setLast(res.last);
+      const res = await fetchMyBookings(current.page + 1, PAGE_SIZE, which === 'active' ? ACTIVE_QUERY : INACTIVE_QUERY);
+      setter((prev) => ({ items: mergeUnique(prev.items, res.items), page: res.page, last: res.last, total: res.totalElements }));
     } catch (e) {
-      setMoreError(e instanceof Error ? e.message : 'Could not load more bookings');
+      setMoreError({ which, message: e instanceof Error ? e.message : 'Could not load more bookings' });
     } finally {
-      setLoadingMore(false);
+      setMoreLoading(null);
     }
   };
 
-  const grouped = useMemo(() => {
-    const groups: Record<Tab, Booking[]> = { upcoming: [], past: [], cancelled: [] };
-    for (const b of items) groups[tabOf(b, today)].push(b);
-    // Soonest first for upcoming; most recent first otherwise.
-    groups.upcoming.sort((a, b) => bookingTime(a) - bookingTime(b));
-    groups.past.sort((a, b) => bookingTime(b) - bookingTime(a));
-    groups.cancelled.sort((a, b) => bookingTime(b) - bookingTime(a));
-    return groups;
-  }, [items, today]);
+  /** After a cancel the booking leaves the active list and joins the cancelled ones. */
+  const replaceBooking = useCallback((updated: Booking) => {
+    if (updated.status === 'CANCELLED' || updated.status === 'FAILED') {
+      let moved: Booking | undefined;
+      setActive((prev) => {
+        moved = prev.items.find((b) => b.bookingId === updated.bookingId);
+        return { ...prev, items: prev.items.filter((b) => b.bookingId !== updated.bookingId), total: Math.max(0, prev.total - 1) };
+      });
+      setInactive((prev) => ({ ...prev, items: [{ ...(moved ?? {}), ...updated } as Booking, ...prev.items], total: prev.total + 1 }));
+      return;
+    }
+    const patch = (prev: Paged) => ({ ...prev, items: prev.items.map((b) => (b.bookingId === updated.bookingId ? { ...b, ...updated } : b)) });
+    setActive(patch);
+    setInactive(patch);
+  }, []);
 
-  const visible = grouped[tab];
+  const { upcoming, past } = useMemo(() => {
+    const up: Booking[] = [];
+    const done: Booking[] = [];
+    for (const b of active.items) (groupOf(b, today) === 'upcoming' ? up : done).push(b);
+    up.sort((a, b) => bookingTime(a) - bookingTime(b)); // soonest first
+    done.sort((a, b) => bookingTime(b) - bookingTime(a)); // most recent first
+    return { upcoming: up, past: done };
+  }, [active.items, today]);
+
+  const [next, ...laterUpcoming] = upcoming;
+  const nothingAtAll = state.kind === 'ready' && active.items.length === 0 && inactive.items.length === 0;
+  const summary =
+    state.kind === 'ready' && !nothingAtAll
+      ? [upcoming.length && `${upcoming.length} upcoming`, past.length && `${past.length}${active.last ? '' : '+'} past`].filter(Boolean).join(' · ')
+      : '';
 
   return (
     <section className="min-h-[70vh] bg-[var(--cream)] pb-14 pt-6 md:pt-8" style={{ fontFamily: SANS }}>
       <div className="mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8">
-        {/* Header: title + tabs on one row */}
-        <div className="flex flex-col gap-4 border-b border-[var(--border-light)] sm:flex-row sm:items-end sm:justify-between">
-          <h1 className="section-title pb-3 text-[1.7rem] md:text-[2.1rem]">
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[var(--border-light)] pb-3">
+          <h1 className="section-title text-[1.7rem] md:text-[2.1rem]">
             My <em>Bookings</em>
           </h1>
-
-          {state.kind === 'ready' && (
-            <div role="tablist" aria-label="Filter bookings" className="-mb-px flex gap-6">
-              {TABS.map(({ key, label }) => {
-                const active = key === tab;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setTab(key)}
-                    className={`border-b-2 pb-3 text-[0.78rem] font-medium uppercase tracking-[0.14em] transition-colors ${
-                      active ? 'border-[var(--burgundy)] text-[var(--burgundy)]' : 'border-transparent text-[var(--mid)] hover:text-[var(--charcoal)]'
-                    }`}
-                  >
-                    {label}
-                    {grouped[key].length > 0 && <span className="ml-1.5 text-[var(--gold)]">{grouped[key].length}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {summary && <p className="pb-1 text-[0.8rem] text-[var(--mid)]">{summary}</p>}
         </div>
 
         <div className="mt-6">
@@ -457,40 +587,100 @@ export default function MyBookingsView() {
             />
           )}
 
-          {state.kind === 'ready' &&
-            (visible.length > 0 ? (
-              <ul role="tabpanel" className="grid items-start gap-4 lg:grid-cols-2">
-                {visible.map((b) => (
-                  <BookingCard key={b.bookingId} booking={b} today={today} />
-                ))}
-              </ul>
-            ) : (
-              <StateMessage
-                dashed
-                icon={CalendarHeart}
-                title={tab === 'upcoming' ? 'No upcoming celebrations' : tab === 'past' ? 'No past bookings' : 'Nothing cancelled'}
-                action={
-                  tab === 'upcoming' && (
-                    <Link to="/categories" className={primaryBtn}>
+          {nothingAtAll && (
+            <StateMessage
+              dashed
+              icon={CalendarHeart}
+              title="No bookings yet"
+              body="When you book a celebration, it shows up here with its date, details and payment."
+              action={
+                <Link to="/categories" className={primaryBtn}>
+                  Plan a celebration
+                </Link>
+              }
+            />
+          )}
+
+          {state.kind === 'ready' && !nothingAtAll && (
+            <div className="grid gap-10">
+              {/* Coming up */}
+              <div>
+                <SectionHeader title="Coming up" count={upcoming.length} />
+                {next ? (
+                  <ul className="grid items-start gap-4 lg:grid-cols-2">
+                    <BookingCard key={next.bookingId} booking={next} today={today} onChange={replaceBooking} highlight />
+                    {laterUpcoming.map((b) => (
+                      <BookingCard key={b.bookingId} booking={b} today={today} onChange={replaceBooking} />
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-[var(--border-light)] bg-white/60 px-5 py-4">
+                    <p className="text-[0.86rem] text-[var(--mid)]">Nothing planned right now.</p>
+                    <Link to="/categories" className="text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-[var(--burgundy)] hover:underline">
                       Plan a celebration
                     </Link>
-                  )
-                }
-              />
-            ))}
+                  </div>
+                )}
+              </div>
 
-          {state.kind === 'ready' && !last && (
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--gold-light)] bg-white px-5 text-[0.76rem] font-semibold uppercase tracking-[0.1em] text-[var(--burgundy)] transition-colors hover:border-[var(--burgundy)] disabled:opacity-60"
-              >
-                {loadingMore && <Loader2 size={14} className="animate-spin" />}
-                {loadingMore ? 'Loading' : 'Load older bookings'}
-              </button>
-              {moreError && <p role="alert" className="mt-2 text-[0.78rem] text-[var(--burgundy)]">{moreError}</p>}
+              {/* Past */}
+              {(past.length > 0 || !active.last) && (
+                <div>
+                  <SectionHeader title="Past celebrations" count={past.length} />
+                  {past.length > 0 && (
+                    <ul className="grid items-start gap-4 lg:grid-cols-2">
+                      {past.map((b) => (
+                        <BookingCard key={b.bookingId} booking={b} today={today} onChange={replaceBooking} />
+                      ))}
+                    </ul>
+                  )}
+                  {!active.last && (
+                    <LoadMore
+                      onClick={() => loadMore('active')}
+                      loading={moreLoading === 'active'}
+                      error={moreError?.which === 'active' ? moreError.message : null}
+                      label="Load older bookings"
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Cancelled & failed, folded away */}
+              {inactive.items.length > 0 && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelled((v) => !v)}
+                    aria-expanded={showCancelled}
+                    className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--border-light)] bg-white px-5 py-3.5 text-left transition-colors hover:border-[var(--gold-light)]"
+                  >
+                    <span>
+                      <span className="block text-[0.92rem] font-medium text-[var(--charcoal)]">Cancelled &amp; unsuccessful</span>
+                      <span className="block text-[0.76rem] text-[var(--mid)]">
+                        {inactive.total || inactive.items.length} booking{(inactive.total || inactive.items.length) === 1 ? '' : 's'}
+                      </span>
+                    </span>
+                    <ChevronDown size={18} className={`shrink-0 text-[var(--mid)] transition-transform duration-200 ${showCancelled ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showCancelled && (
+                    <>
+                      <ul className="mt-4 grid items-start gap-4 lg:grid-cols-2">
+                        {inactive.items.map((b) => (
+                          <BookingCard key={b.bookingId} booking={b} today={today} onChange={replaceBooking} />
+                        ))}
+                      </ul>
+                      {!inactive.last && (
+                        <LoadMore
+                          onClick={() => loadMore('inactive')}
+                          loading={moreLoading === 'inactive'}
+                          error={moreError?.which === 'inactive' ? moreError.message : null}
+                          label="Load more"
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

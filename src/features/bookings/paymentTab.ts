@@ -26,13 +26,28 @@ export function openPaymentTab(): Window | null {
     return tab;
 }
 
-/** Sends the pre-opened tab to Stripe; false when it was blocked or the guest closed it. */
+/**
+ * Sends the pre-opened tab to Stripe; false when it was blocked, closed, or cannot be navigated.
+ *
+ * `opener` is cut BEFORE navigating, while the tab is still our blank page. Setting it after the tab
+ * has switched to Stripe throws a SecurityError (another site's window), and some browsers (Edge)
+ * switch fast enough that the old order threw, the payment flow treated it as a failure and closed
+ * the Stripe tab it had just opened.
+ */
 export function sendTabToCheckout(tab: Window | null, url: string): boolean {
     if (!tab || tab.closed) return false;
-    tab.location.href = url;
-    // Stripe has no business with this page.
-    tab.opener = null;
-    return true;
+    try {
+        // Stripe has no business with this page.
+        tab.opener = null;
+    } catch {
+        // Already another site's window: nothing to cut.
+    }
+    try {
+        tab.location.replace(url);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -56,12 +71,13 @@ export function closePaymentTab(tab: Window | null) {
  * when possible; this tab when the popup is blocked or in an in-app browser.
  */
 export function openCheckoutInNewTab(url: string): 'new-tab' | 'same-tab' {
-    const tab = isInAppBrowser() ? null : window.open(url, '_blank');
-    if (!tab) {
+    // Blank tab first (same click), then the same safe order as sendTabToCheckout.
+    const tab = isInAppBrowser() ? null : window.open('', '_blank');
+    if (!sendTabToCheckout(tab, url)) {
+        if (tab && !tab.closed) tab.close();
         window.location.assign(url);
         return 'same-tab';
     }
-    tab.opener = null;
     return 'new-tab';
 }
 

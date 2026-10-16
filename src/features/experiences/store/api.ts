@@ -29,6 +29,14 @@ async function getPublic<T>(path: string, fallbackMessage: string, emptyOn404?: 
     return (body?.response ?? null) as T;
 }
 
+/** GET /public/subcategories/slug/{slug} — the collection a /collection/<slug> URL points at, or null when none has it. */
+export const fetchSubCategoryBySlug = (slug: string) =>
+    getPublic<{ id: number; name: string; slug?: string | null; description?: string | null } | null>(
+        `/public/subcategories/slug/${encodeURIComponent(slug)}`,
+        'Failed to load collection',
+        null,
+    );
+
 /** GET /public/experiences/location/{locationId} — all active experiences in the city (all cities without one). */
 export const fetchData = (locationId?: number) => {
     if (locationId) {
@@ -348,4 +356,32 @@ export async function checkBookingStatus(bookingId: string, user: { id: string |
     }
     
     return body;
+}
+
+/**
+ * POST /api/payment/bookings/{bookingId}/retry — issues a new Stripe Checkout link after a failed
+ * payment. Only allowed when the latest attempt is FAILED; returns the new URL when the response
+ * carries it, otherwise null (poll waitForPaymentLink for it).
+ */
+export async function retryPayment(bookingId: string | number, user: { id: string | number; role: string }): Promise<string | null> {
+    const response = await fetch(`${PAYMENTS_BASE}/bookings/${encodeURIComponent(String(bookingId))}/retry`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': String(user.id),
+            'X-User-Roles': user.role,
+            'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        },
+    });
+    let body: unknown = null;
+    try {
+        body = await response.json();
+    } catch {
+        body = null;
+    }
+    if (!response.ok) {
+        const msg = (body as { msg?: string; message?: string } | null);
+        throw new Error(msg?.msg || msg?.message || `Could not restart the payment: ${response.statusText || response.status}`);
+    }
+    return pickPaymentUrl(body);
 }

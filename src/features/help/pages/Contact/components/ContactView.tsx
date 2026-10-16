@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, ChevronRight, Clock, Loader2, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import { EMAIL, HOURS, OCCASIONS, OFFICE, PHONE, whatsappLink } from '@/features/help/contact';
 import { getAccessToken, submitSupportQuery } from '@/features/support';
+import PhoneInput from '@/components/common/PhoneInput';
+import { formatPhone, isValidMobile, withCountryCode } from '@/lib/phone';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -27,23 +29,6 @@ interface FormState {
   date: string;
   message: string;
 }
-
-/**
- * Turn whatever the guest typed into a number we can store (backend column is 20 chars).
- * Indian mobiles may come as "98765 43210", "098765-43210" or "+91 98765 43210"; they all
- * become the 10 digits. Other countries need a leading "+" and 8–15 digits (E.164).
- * Returns '' when the input is not a usable number.
- */
-const normalizePhone =(raw: string): string => {
-  const trimmed = raw.trim();
-  const digits = trimmed.replace(/\D/g, '');
-  const indian = digits.length === 12 && digits.startsWith('91') ? digits.slice(2)
-    : digits.length === 11 && digits.startsWith('0') ? digits.slice(1)
-    : digits;
-  if (/^[6-9]\d{9}$/.test(indian) && (!trimmed.startsWith('+') || digits.startsWith('91'))) return indian;
-  if (trimmed.startsWith('+') && digits.length >= 8 && digits.length <= 15) return `+${digits}`;
-  return '';
-};
 
 const EMPTY: FormState = { name: '', email: '', phone: '', city: '', occasion: '', date: '', message: '' };
 
@@ -73,7 +58,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
   const errors = {
     name: form.name.trim().length < 2 ? 'Tell us your name' : '',
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Enter an email we can reply to',
-    phone: normalizePhone(form.phone) ? '' : 'Enter a 10-digit mobile number, or include the country code (e.g. +31 6 1234 5678)',
+    phone: isValidMobile(form.phone) ? '' : 'Enter your 10-digit mobile number',
     message: form.message.trim().length < 10 ? 'A line or two about what you need' : '',
   };
   const isValid = !errors.name && !errors.email && !errors.phone && !errors.message;
@@ -112,7 +97,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
       'Hi Forever Moment, I would like to enquire.',
       '',
       `Name: ${form.name.trim()}`,
-      `Phone: ${normalizePhone(form.phone) || form.phone.trim()}`,
+      `Phone: ${formatPhone(form.phone)}`,
       ...(form.city ? [`City: ${form.city}`] : []),
       ...(form.occasion ? [`Occasion: ${form.occasion}`] : []),
       ...(form.date ? [`Date: ${formatDate(form.date)}`] : []),
@@ -133,7 +118,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
       const saved = await submitSupportQuery({
         name: form.name,
         email: form.email,
-        phone: normalizePhone(form.phone),
+        phone: withCountryCode(form.phone),
         subject: apiSubject(),
         message: apiMessage(),
       });
@@ -211,7 +196,7 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
                   Thank you, we have your message
                 </p>
                 <p style={{ fontFamily: SANS }} className="mx-auto mt-1.5 max-w-md text-[0.88rem] leading-relaxed text-[var(--mid)]">
-                  Our team will get back to you on {form.email.trim() || 'your email'} or {normalizePhone(form.phone) || form.phone}, usually within a few hours.
+                  Our team will get back to you on {form.email.trim() || 'your email'} or {formatPhone(form.phone)}, usually within a few hours.
                 </p>
                 {referenceId && (
                   <p style={{ fontFamily: SANS }} className="mx-auto mt-4 inline-flex flex-col rounded-xl bg-[var(--cream)] px-5 py-3 text-[0.78rem] text-[var(--mid)]">
@@ -265,18 +250,14 @@ export default function ContactView({ locations, getLocations }: ContactViewProp
 
                 <div className="sm:col-span-1">
                   <Label htmlFor="contact-phone">Mobile number</Label>
-                  <input
+                  <PhoneInput
                     id="contact-phone"
-                    type="tel"
-                    inputMode="tel"
-                    maxLength={20}
                     value={form.phone}
-                    onChange={(ev) => set('phone', ev.target.value.replace(/[^\d+\s()-]/g, ''))}
+                    onChange={(digits) => set('phone', digits)}
                     placeholder="98765 43210"
-                    autoComplete="tel"
-                    aria-invalid={touched && !!errors.phone}
+                    invalid={touched && !!errors.phone}
                     style={{ fontFamily: SANS }}
-                    className={fieldClass(touched && !!errors.phone)}
+                    boxClassName="h-[46px] rounded-xl"
                   />
                   {touched && errors.phone && (
                     <p style={{ fontFamily: SANS }} className="mt-1 text-[0.76rem] text-[var(--rose)]">{errors.phone}</p>

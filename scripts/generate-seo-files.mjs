@@ -25,12 +25,17 @@ if (!SITE) {
 
 /** Pages only signed-in guests use, plus search results: not for crawling. */
 const PRIVATE = ['/bookings', '/profile', '/cart', '/support', '/payment/', '/search'];
-const STATIC = ['/', '/categories', '/subcategories', '/featured-experiences', '/help', '/contact'];
+const STATIC = ['/', '/categories', '/subcategories', '/featured-experiences', '/help', '/contact', '/partner'];
 
 // Same as the app: navTypes.categoryPath, subCategoryPath and experiencePath.
 const slugify = (s) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 const categoryPath = (c) => `/category/${slugify(c.slug || c.name)}`;
-const subCategoryPath = (s) => `/collection/${slugify(s.name) ? `${slugify(s.name)}-` : ''}${s.id}`;
+const subCategoryPath = (s) => {
+    const slug = slugify(s.slug || '');
+    if (slug) return `/collection/${slug}`;
+    const name = slugify(s.name || '');
+    return `/collection/${name ? `${name}-` : ''}${s.id}`;
+};
 const experiencePath = (e) => `/experience/${e.slug && String(e.slug).trim() ? encodeURIComponent(String(e.slug).trim()) : e.id}`;
 
 async function getList(path) {

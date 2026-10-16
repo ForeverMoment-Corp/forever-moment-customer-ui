@@ -5,4 +5,5 @@ export const helpRoutes = [
     // The navbar and guest menu already link here; both land on the same page.
     { path: 'faqs', lazy: lazyPage(() => import('./HelpCenter')) },
     { path: 'contact', lazy: lazyPage(() => import('./Contact')) },
+    { path: 'partner', lazy: lazyPage(() => import('./Partner')) },
 ];

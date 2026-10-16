@@ -2,7 +2,8 @@
 import axios from "axios";
 // import store from '../store/index'
 // import { authLogout } from '../modules/auth/store/actions'
-import { removeLoginSession, getLoginSession } from "./storage";
+import { getLoginSession } from "./storage";
+import { endSession, refreshSession } from "@/features/auth/session";
 import {
     decryptData,
     /* encryptData, */ decryptHeader,
@@ -124,17 +125,20 @@ axios.interceptors.response.use(
                 }
             }
         }
-        if (error.response?.status === 401) {
-            removeLoginSession("access_token");
-            location.href = "/unauthorized?redirect=true";
-        } else if (
-            error.response?.status === 412 ||
-            (error.response?.status === 403 &&
-                error.response?.data?.message !==
-                "You do not have permission. Please contact admin!")
-        ) {
-            removeLoginSession("access_token");
-            location.href = "/denied?redirect=true";
+        // Expired access token: renew it once and replay the request before giving up.
+        const original = error.config;
+        if (error.response?.status === 401 && original && !original._retried && !String(original.url || '').includes('/auth/')) {
+            original._retried = true;
+            const token = await refreshSession();
+            if (token) {
+                original.headers = { ...original.headers, Authorization: `Bearer ${token}`, accessToken: token };
+                return axios(original);
+            }
+        }
+        // Still 401 after a refresh attempt: the session is over. Sign out and offer the login popup
+        // (this used to redirect to /unauthorized and /denied, which the customer site doesn't have).
+        if (error.response?.status === 401 && getLoginSession("access_token")) {
+            endSession({ promptLogin: true });
         }
         return Promise.reject(error);
     },

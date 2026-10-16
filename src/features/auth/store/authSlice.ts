@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { storage, setLoginSession, removeLoginSession } from '@/utils/storage';
 import axios from '@/utils/Http';
 import { googleSignOut } from '../googleIdentity';
+import { revokeSession, tokenClaims } from '../session';
 
 export interface User {
   id: string | number;
@@ -14,6 +15,8 @@ export interface User {
 
 export interface AuthState {
   isLoginModalOpen: boolean;
+  /** "Are you sure you want to log out?" popup (LogoutConfirmModal). */
+  isLogoutConfirmOpen: boolean;
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
@@ -21,11 +24,29 @@ export interface AuthState {
   error: string | null;
 }
 
+/**
+ * Who the token belongs to. The login responses don't reliably carry the user id (email login sends
+ * only email + tokens), but the token always does: `userId` is exactly what the gateway forwards as
+ * X-User-Id, so bookings / payments / reviews must use it.
+ */
+function identityFrom(token: string | null | undefined, payload: Record<string, any> = {}) {
+  const claims = tokenClaims(token);
+  return {
+    id: claims.userId ?? payload.userId ?? payload.id,
+    role: claims.roles || payload.roles || 'USER',
+    email: payload.email || claims.username,
+  };
+}
+
 const token = storage.getToken();
-const user = storage.getUser();
+const storedUser = storage.getUser();
+// Sessions saved before the id came from the token may lack it: fill it in.
+const user = storedUser && token ? { ...storedUser, ...identityFrom(token, storedUser), email: storedUser.email || tokenClaims(token).username } : storedUser;
+if (user && user !== storedUser) storage.setUser(user);
 
 const initialState: AuthState = {
   isLoginModalOpen: false,
+  isLogoutConfirmOpen: false,
   isAuthenticated: !!token,
   user: user,
   token: token,
@@ -63,13 +84,41 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+/** DELETE /user/profile?confirmPassword= — permanently deletes the account, then signs out. */
+export const deleteAccount = createAsyncThunk(
+  'auth/deleteAccount',
+  async (confirmPassword: string | undefined, { dispatch, rejectWithValue }) => {
+    try {
+      await axios.delete('/user/profile', { params: confirmPassword ? { confirmPassword } : undefined });
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Could not delete your account');
+    }
+    googleSignOut();
+    dispatch(logout());
+  }
+);
+
+/** POST /user/profile/deactivate — switches the account off (it can be reactivated by support), then signs out. */
+export const deactivateAccount = createAsyncThunk(
+  'auth/deactivateAccount',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      await axios.post('/user/profile/deactivate');
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.msg || error.response?.data?.message || 'Could not deactivate your account');
+    }
+    await revokeSession();
+    googleSignOut();
+    dispatch(logout());
+  }
+);
+
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { dispatch }) => {
     try {
-      await axios.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout API failed:', error);
+      // Revokes the refresh token (the endpoint expects it, not the access token).
+      await revokeSession();
     } finally {
       // Tell Google too, or its "Continue as <name>" button stays in a stale auto-select state.
       googleSignOut();
@@ -88,14 +137,19 @@ const authSlice = createSlice({
     closeLoginModal: (state) => {
       state.isLoginModalOpen = false;
     },
+    openLogoutConfirm: (state) => {
+      state.isLogoutConfirmOpen = true;
+    },
+    closeLogoutConfirm: (state) => {
+      state.isLogoutConfirmOpen = false;
+    },
     loginSuccess: (state, action: PayloadAction<any>) => {
       const payload = action.payload;
       
+      const identity = identityFrom(payload.token, payload);
       const newUser = {
-        id: payload.userId || payload.id,
-        email: payload.email,
-        name: payload.fullName || payload.name,
-        role: payload.roles || 'USER',
+        ...identity,
+        name: payload.fullName || payload.name || '',
       };
 
       // Store in local storage
@@ -111,6 +165,15 @@ const authSlice = createSlice({
       state.token = payload.token;
       state.isLoginModalOpen = false; // close modal on success
     },
+    /** A refreshed access token (features/auth/session). */
+    tokenRefreshed: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;
+      if (state.user) {
+        const { id, role } = identityFrom(action.payload, state.user);
+        state.user = { ...state.user, id, role };
+        storage.setUser(state.user);
+      }
+    },
     logout: (state) => {
       storage.clearToken();
       storage.clearUser();
@@ -119,6 +182,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
+      state.isLogoutConfirmOpen = false;
     },
   },
   extraReducers: (builder) => {
@@ -149,5 +213,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { openLoginModal, closeLoginModal, loginSuccess, logout } = authSlice.actions;
+export const { openLoginModal, closeLoginModal, openLogoutConfirm, closeLogoutConfirm, loginSuccess, logout, tokenRefreshed } = authSlice.actions;
 export const authReducer = authSlice.reducer;

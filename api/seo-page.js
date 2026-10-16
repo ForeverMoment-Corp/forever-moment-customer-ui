@@ -2,7 +2,7 @@
  * Vercel function: index.html with the page's own title, description, image and structured data,
  * for link-preview bots and crawlers that do not run JavaScript (WhatsApp, Facebook, LinkedIn, X,
  * Slack, Bing, Google …). vercel.json routes only bot user-agents here, and only for
- *   /experience/:slugOrId   /category/:slug   /collection/:name-id   (old /subcategory/:id)
+ *   /experience/:slugOrId   /category/:slug   /collection/:slug or :name-id   (old /subcategory/:id)
  *   /:city/:category        (city landing pages, e.g. /delhi/birthday-decoration)
  * People get the static index.html as before; the app then sets the same tags itself (src/lib/seo.ts).
  *
@@ -26,8 +26,13 @@ const escapeHtml = (s) =>
 const slugify = (s) =>
     String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-/** Same as navTypes.subCategoryPath: /collection/pre-wedding-shoot-26 */
-const collectionPath = (s) => `/collection/${slugify(s.name) ? `${slugify(s.name)}-` : ''}${s.id}`;
+/** Same as navTypes.subCategoryPath: /collection/<slug> when set, else /collection/pre-wedding-shoot-26 */
+const collectionPath = (s) => {
+    const slug = slugify(s.slug || '');
+    if (slug) return `/collection/${slug}`;
+    const name = slugify(s.name || '');
+    return `/collection/${name ? `${name}-` : ''}${s.id}`;
+};
 
 const SMALL_WORDS = new Set(['a', 'an', 'and', 'as', 'at', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']);
 /** Title case without capitalising small words: "Birthday Decoration in Delhi" (same as src/lib/seo.ts). */
@@ -143,11 +148,12 @@ async function categoryMeta(origin, slug) {
 }
 
 async function subCategoryMeta(origin, param) {
-    // "pre-wedding-shoot-26" or a bare "26" from an old /subcategory/ link.
-    const id = String(param).match(/(\d+)$/)?.[1];
-    if (!id) return null;
-    const subs = await getApi('/public/subcategories');
-    const s = (Array.isArray(subs) ? subs : []).find((x) => x && String(x.id) === id && x.isActive !== false);
+    // "mehandi" (admin slug), "pre-wedding-shoot-26" or a bare "26" from an old /subcategory/ link.
+    const subs = (await getApi('/public/subcategories')) || [];
+    const list = (Array.isArray(subs) ? subs : []).filter((x) => x && x.isActive !== false);
+    const want = String(param).toLowerCase();
+    const id = want.match(/(\d+)$/)?.[1];
+    const s = list.find((x) => x.slug && String(x.slug).toLowerCase() === want) || (id && list.find((x) => String(x.id) === id));
     if (!s) return null;
     const path = collectionPath(s);
     const name = s.categoryName ? `${s.name} · ${s.categoryName.trim()}` : s.name;

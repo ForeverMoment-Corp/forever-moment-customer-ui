@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Clock, Heart, ImageOff, Star, Users } from 'lucide-react';
+import { ArrowUpRight, Clock, Heart, ImageOff, Users } from 'lucide-react';
 import SmartImage from '@/components/common/SmartImage';
 import { getPrimaryImage, getPrimaryThumbnail } from '@/features/experiences/utils/primaryImage';
 import { experiencePath } from '@/features/experiences/utils/slug';
@@ -11,9 +11,6 @@ import { useRequireAuth } from '@/features/auth/hooks/useRequireAuth';
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
 
-// Reviews are not served by the API yet; mirrors the placeholder used on the detail page.
-const PLACEHOLDER_RATING = 4.8;
-const PLACEHOLDER_REVIEWS = 124;
 
 export interface ExperienceTileProps {
   experience: ExperienceListItem;
@@ -37,7 +34,7 @@ export interface ExperienceTileProps {
 
 /**
  * Compact catalogue card: 4:3 photo, collection, name, the facts a guest compares on
- * (rating, setup time, capacity), a one-line description and the price with its saving.
+ * (setup time, capacity), a one-line description and the price with its saving.
  * The whole tile is the link; there is no per-card button.
  */
 export default function ExperienceTile({
@@ -139,11 +136,6 @@ export default function ExperienceTile({
         </h3>
 
         <ul style={{ fontFamily: SANS }} className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.72rem] text-[var(--mid)]">
-          <li className="inline-flex items-center gap-1">
-            <Star size={11} className="fill-[var(--gold)] text-[var(--gold)]" />
-            <span className="font-semibold text-[var(--charcoal)]">{PLACEHOLDER_RATING}</span>
-            <span>({PLACEHOLDER_REVIEWS})</span>
-          </li>
           {duration > 0 && (
             <li className="inline-flex items-center gap-1">
               <Clock size={11} className="text-[var(--gold)]" /> {formatDuration(duration)}

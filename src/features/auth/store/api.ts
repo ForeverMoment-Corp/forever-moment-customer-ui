@@ -36,3 +36,33 @@ export function googleLogin(idToken: string) {
 export function emailLogin(email: string, password: string) {
     return postAuth('/auth/login', { email, password }, 'Login failed');
 }
+
+/**
+ * Role given to customers who sign up. The register endpoint takes a role id; "USER" is the second
+ * role the platform seeds (after SUPER_ADMIN). Override with VITE_CUSTOMER_ROLE_ID if it differs.
+ */
+const CUSTOMER_ROLE_ID = Number(import.meta.env.VITE_CUSTOMER_ROLE_ID) || 2;
+
+export interface RegisterInput {
+    fullName: string;
+    email: string;
+    password: string;
+    phoneNumber?: string;
+    preferredCity?: string;
+}
+
+/** POST /auth/register — creates a customer account. Returns no token: log in afterwards. */
+export function registerUser(input: RegisterInput) {
+    return postAuth(
+        '/auth/register',
+        {
+            fullName: input.fullName.trim(),
+            email: input.email.trim(),
+            password: input.password,
+            phoneNumber: input.phoneNumber?.trim() || undefined,
+            preferredCity: input.preferredCity?.trim() || undefined,
+            roleId: CUSTOMER_ROLE_ID,
+        },
+        'Sign up failed',
+    );
+}

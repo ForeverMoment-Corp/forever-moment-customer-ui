@@ -1,4 +1,4 @@
-import { CircleHelp, MessageSquare, Package, Phone, ShoppingBag, User } from "lucide-react";
+import { CircleHelp, MessageSquare, Package, Phone, User } from "lucide-react";
 
 /** Links in the navbar account dropdown and the mobile drawer. */
 export interface AccountMenuItem {
@@ -11,8 +11,6 @@ export interface AccountMenuItem {
 }
 
 export const accountMenuItems: AccountMenuItem[] = [
-  // The cart lives here instead of its own navbar icon; guests can open it without signing in.
-  { icon: ShoppingBag, label: "My Cart", hint: "Experiences ready to book", to: "/cart" },
   { icon: Package, label: "My Bookings", hint: "Upcoming and past celebrations", to: "/bookings", requiresAuth: true },
   { icon: User, label: "My Profile", hint: "Your details and preferences", to: "/profile", requiresAuth: true },
   { icon: MessageSquare, label: "My Queries", hint: "Support requests and replies", to: "/support", requiresAuth: true },

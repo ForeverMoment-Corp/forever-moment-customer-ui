@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, Clock, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import type { RootState } from '@/store/store';
-import { checkBookingStatus, waitForPaymentLink } from '@/features/experiences/store/api';
+import { checkBookingStatus, retryPayment as requestNewPaymentLink, waitForPaymentLink } from '@/features/experiences/store/api';
+import { fetchMyBooking, type Booking } from '@/features/bookings/api';
 import { clearPendingPayment, freshCheckoutUrl, readPendingPayment, savePendingPayment } from '@/features/bookings/pendingPayment';
 import { closePaymentTab, goToCheckout, openCheckoutInNewTab, openPaymentTab, paymentStatusPath } from '@/features/bookings/paymentTab';
 
@@ -101,6 +102,25 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
 
   useEffect(() => setMode(outcome), [outcome]);
 
+  // The booking itself (GET /user/bookings/{id}) for the summary: date, guests and amount.
+  const [booking, setBooking] = useState<Booking | null>(null);
+  // Fetched again once paid, so the status shown is the confirmed one.
+  const paid = view === 'paid';
+  useEffect(() => {
+    if (!bookingId || !user) return;
+    let alive = true;
+    fetchMyBooking(bookingId)
+      .then((b) => alive && setBooking(b))
+      .catch(() => {
+        // The summary falls back to what was saved before Checkout opened.
+      });
+    return () => {
+      alive = false;
+    };
+  }, [bookingId, user, paid]);
+  const experienceName = booking?.experienceName || saved?.experienceName;
+  const celebrationDate = booking?.bookingDate ? new Date(booking.bookingDate) : null;
+
   useEffect(() => {
     if (mode === 'cancel') {
       setView('cancelled');
@@ -156,14 +176,17 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
     if (openCheckoutInNewTab(url) === 'new-tab' && view !== 'waiting') startWaiting();
   };
 
-  /** Fetch the link again (it may have changed after a failure) and open it in a new tab. */
+  /** Fetch the link again (after a failed payment, ask for a new one) and open it in a new tab. */
   const retryPayment = async () => {
     if (!user || !bookingId) return;
     const tab = openPaymentTab();
     setRetrying(true);
     setRetryError(null);
     try {
-      const url = await waitForPaymentLink(bookingId, { id: user.id, role: user.role }, { timeoutMs: 15_000, initialDelayMs: 0 });
+      const who = { id: user.id, role: user.role };
+      // A FAILED attempt's link is dead: the payments service issues a new one on /retry.
+      const issued = view === 'failed' ? await requestNewPaymentLink(bookingId, who) : null;
+      const url = issued ?? (await waitForPaymentLink(bookingId, who, { timeoutMs: 15_000, initialDelayMs: 0 }));
       if (!url) {
         closePaymentTab(tab);
         setRetryError('The payment page is not ready yet. Please try again in a minute.');
@@ -203,12 +226,27 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
         </h1>
         <p className="mx-auto mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--mid)]">{copy.body}</p>
 
-        {(bookingId || saved?.experienceName) && (
+        {(bookingId || experienceName) && (
           <dl className="mt-6 grid gap-1.5 rounded-xl bg-[var(--cream)] px-4 py-3 text-left text-[0.8rem]">
-            {saved?.experienceName && (
+            {experienceName && (
               <div className="flex justify-between gap-4">
                 <dt className="text-[var(--mid)]">Experience</dt>
-                <dd className="text-right font-medium text-[var(--charcoal)]">{saved.experienceName}</dd>
+                <dd className="text-right font-medium text-[var(--charcoal)]">{experienceName}</dd>
+              </div>
+            )}
+            {celebrationDate && !Number.isNaN(celebrationDate.getTime()) && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-[var(--mid)]">Date</dt>
+                <dd className="text-right font-medium text-[var(--charcoal)]">
+                  {celebrationDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                  {booking?.timeSlotLabel ? ` · ${booking.timeSlotLabel}` : ''}
+                </dd>
+              </div>
+            )}
+            {!!booking?.grandTotal && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-[var(--mid)]">Amount</dt>
+                <dd className="text-right font-medium tabular-nums text-[var(--charcoal)]">₹{Math.round(booking.grandTotal).toLocaleString('en-IN')}</dd>
               </div>
             )}
             {bookingId && (

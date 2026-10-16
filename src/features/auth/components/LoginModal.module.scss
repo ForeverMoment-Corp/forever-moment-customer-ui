@@ -124,3 +124,7 @@
 .closeBtn {
   @apply absolute top-3 right-3 p-2 rounded-full text-umber transition-colors hover:bg-linen hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
 }
+
+.switchText {
+  @apply mt-3 text-center text-[12.5px] text-umber;
+}

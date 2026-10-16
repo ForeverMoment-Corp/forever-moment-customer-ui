@@ -9,11 +9,13 @@ import { experienceListKey } from "@/features/experiences/store/location";
 import { useSeo } from "@/hooks/useDocumentTitle";
 import { collectionIdFromParam, subCategoryPath } from "@/components/navbar/navTypes";
 import { breadcrumbJsonLd } from "@/lib/seo";
+import { fetchSubCategoryBySlug } from "@/features/experiences/store/api";
 
 interface SubCategoryRef {
   id: number;
   name: string;
   description?: string | null;
+  slug?: string | null;
 }
 interface CategoryRef {
   id: number;
@@ -61,9 +63,33 @@ export default function SubCategoryExperienceView({
   getCategories,
 }: SubCategoryExperienceViewProps) {
   const [sort, setSort] = useState<SortKey>("recommended");
-  // /collection/pre-wedding-shoot-26 (current) or /subcategory/26 (old links): the id is the trailing number.
+  // /collection/mehandi (slug), /collection/pre-wedding-shoot-26 (name + id) or /subcategory/26 (old links).
   const params = useParams<{ collectionSlug?: string; subCategoryId?: string }>();
-  const subCategoryId = collectionIdFromParam(params.collectionSlug ?? params.subCategoryId);
+  const param = params.collectionSlug ?? params.subCategoryId ?? "";
+  const known = useMemo(() => (categories ?? []).flatMap((c) => c.subCategories ?? []), [categories]);
+  // 1. a collection whose slug is exactly this; 2. a bare id; 3. name-id whose id we know.
+  const localId = useMemo(() => {
+    const p = param.toLowerCase();
+    const bySlug = known.find((s) => s.slug && s.slug.toLowerCase() === p);
+    if (bySlug) return String(bySlug.id);
+    if (/^\d+$/.test(p)) return p;
+    const trailing = collectionIdFromParam(p);
+    if (trailing && known.some((s) => String(s.id) === trailing)) return trailing;
+    return undefined;
+  }, [param, known]);
+  // 4. otherwise ask the API by slug (a slug not in the loaded menu yet), falling back to a trailing id.
+  const [remote, setRemote] = useState<{ param: string; id?: string; slug?: string | null } | null>(null);
+  useEffect(() => {
+    if (localId || !param) return;
+    let alive = true;
+    fetchSubCategoryBySlug(param)
+      .then((sub) => alive && setRemote({ param, id: sub ? String(sub.id) : collectionIdFromParam(param), slug: sub?.slug }))
+      .catch(() => alive && setRemote({ param, id: collectionIdFromParam(param) }));
+    return () => {
+      alive = false;
+    };
+  }, [param, localId]);
+  const subCategoryId = localId ?? (remote?.param === param ? remote.id : undefined);
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -105,18 +131,20 @@ export default function SubCategoryExperienceView({
   const categoryHref = categoryName ? `/category/${parent?.category.slug || slugify(categoryName)}` : null;
   const description = parent?.subCategory.description?.trim();
   // "Name" while loading would be wrong, so the default title shows until the collection is known.
-  const known = !(isLoading && !parent);
-  const seoPath = subCategoryId ? subCategoryPath({ id: subCategoryId, name: parent?.subCategory.name ?? items[0]?.subCategoryName }) : undefined;
-
-  // Old /subcategory/26 links, or a renamed collection: move to the canonical URL once the name is known.
+  const isKnown = !(isLoading && !parent);
   const canonicalName = parent?.subCategory.name ?? items[0]?.subCategoryName;
+  const canonicalSlug = parent?.subCategory.slug ?? (remote?.param === param ? remote.slug : undefined);
+  const seoPath = subCategoryId ? subCategoryPath({ id: subCategoryId, name: canonicalName, slug: canonicalSlug }) : undefined;
+
+  // Old /subcategory/26 or name-id links, or a renamed collection: move to the canonical URL
+  // (the slug one when a slug is set) once the collection is known.
   useEffect(() => {
     if (!subCategoryId || !canonicalName) return;
-    const canonical = subCategoryPath({ id: subCategoryId, name: canonicalName });
+    const canonical = subCategoryPath({ id: subCategoryId, name: canonicalName, slug: canonicalSlug });
     if (decodeURIComponent(pathname) !== canonical) navigate(canonical, { replace: true });
-  }, [subCategoryId, canonicalName, pathname, navigate]);
+  }, [subCategoryId, canonicalName, canonicalSlug, pathname, navigate]);
   useSeo(
-    known
+    isKnown
       ? {
           title: categoryName ? `${name} · ${categoryName}` : name,
           description:
@@ -127,7 +155,7 @@ export default function SubCategoryExperienceView({
           noindex: !parent && !isLoading && items.length === 0,
         }
       : { title: null },
-    known && seoPath
+    isKnown && seoPath
       ? {
           "ld-breadcrumb": breadcrumbJsonLd([
             { name: "Home", path: "/" },

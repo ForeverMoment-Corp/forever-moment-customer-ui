@@ -405,6 +405,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
           {e.name}
         </h1>
         <ul style={{ fontFamily: FONT_SANS }} className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.78rem] text-[var(--mid)]">
+          {/* Only real ratings: nothing until the experience has an approved review. */}
+          {e.reviewCount > 0 && (
           <li>
             <button type="button" onClick={onViewReviews} className="group inline-flex items-center gap-1">
               <Star size={13} className="fill-[var(--gold)] text-[var(--gold)]" />
@@ -412,6 +414,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
               <span className="underline decoration-[var(--sand)] underline-offset-4 transition-colors group-hover:text-[var(--burgundy)]">({e.reviewCount})</span>
             </button>
           </li>
+          )}
           {e.isFeatured && (
             <li className="inline-flex items-center gap-1 rounded-full bg-[var(--burgundy)] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white">
               <Sparkles size={10} /> Bestseller

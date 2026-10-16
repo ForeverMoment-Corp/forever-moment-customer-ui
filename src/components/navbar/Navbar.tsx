@@ -10,8 +10,8 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  Handshake,
   Menu,
-  ShoppingBag,
   User,
   X,
 } from "lucide-react";
@@ -27,7 +27,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { getCategories } from "@/features/header/store/actions";
 import { getLocations, setSelectedLocation, setVenuePincode } from "@/features/home/store/actions";
 import { CUSTOMER_CONFIG } from "@/config/constants";
-import { openLoginModal, logoutUser } from "@/features/auth/store/authSlice";
+import { openLoginModal, openLogoutConfirm } from "@/features/auth/store/authSlice";
 
 /* ────────────────────────────────────────────────────────────────
    Colours come from the app palette in src/styles/theme.scss
@@ -451,6 +451,18 @@ const Navbar = () => {
 
             {/* RIGHT ACTIONS (desktop) */}
             <div className="hidden md:flex justify-end items-center gap-2 lg:gap-3">
+              {/* Vendors: a labelled button on laptops, an icon where the bar is tight (tablets). */}
+              <Link
+                to="/partner"
+                className="hidden lg:inline-flex shrink-0 items-center gap-1.5 rounded-full border border-gold/60 px-3.5 py-2 text-gold-dark transition-colors hover:border-gold hover:bg-gold hover:text-white"
+                style={{ ...sans, fontSize: "0.68rem", letterSpacing: "0.12em", fontWeight: 600 }}
+              >
+                <Handshake size={14} strokeWidth={1.8} />
+                <span className="uppercase whitespace-nowrap">Join as partner</span>
+              </Link>
+              <span className="lg:hidden">
+                <IconAction icon={Handshake} label="Partner" to="/partner" />
+              </span>
               <IconAction icon={CircleHelp} label="Help" to="/faqs" />
 
               <div className="relative" ref={guestRef}>
@@ -469,14 +481,12 @@ const Navbar = () => {
                       user={user ?? null}
                       onClose={() => setGuestOpen(false)}
                       onLogin={() => dispatch(openLoginModal())}
-                      onLogout={() => dispatch(logoutUser())}
+                      onLogout={() => dispatch(openLogoutConfirm())}
                     />
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Also listed in the account menu; no count until the cart has real data (see doc/customer-ui-parked.md). */}
-              <IconAction icon={ShoppingBag} label="Cart" to="/cart" />
             </div>
 
             {/* MOBILE RIGHT */}
@@ -775,7 +785,7 @@ const Navbar = () => {
                     <button
                       onClick={() => {
                         closeMobile();
-                        dispatch(logoutUser());
+                        dispatch(openLogoutConfirm());
                       }}
                       className="w-full text-left flex items-center gap-3 px-5 py-3 hover:bg-rose-light transition-colors text-burgundy"
                       style={{ ...sans, fontSize: "0.8rem" }}
@@ -787,7 +797,16 @@ const Navbar = () => {
                 )}
               </ul>
 
-              <div className="px-5 pb-6">
+              <div className="grid gap-2.5 px-5 pb-6">
+                <Link
+                  to="/partner"
+                  onClick={closeMobile}
+                  className="flex items-center justify-center gap-2 rounded-full border border-gold py-3 text-gold-dark transition-colors hover:bg-gold hover:text-white"
+                  style={{ ...sans, fontSize: "0.72rem", letterSpacing: "0.14em", fontWeight: 600 }}
+                >
+                  <Handshake size={15} />
+                  <span className="uppercase">Join as partner</span>
+                </Link>
                 <Link
                   to="/categories"
                   onClick={closeMobile}
