@@ -33,9 +33,16 @@ function ga(command: string, ...args: unknown[]) {
 /**
  * Associate subsequent events with a logged-in user.
  * Call on login / page load when the session is already active.
+ * Guarantees that PII (emails, phone numbers, names) is never sent as user_id.
  */
 export function identifyUser(userId: string | number) {
-  ga('set', 'user_id', String(userId));
+  const idStr = String(userId).trim();
+  // Never send emails, phone numbers, or invalid IDs as GA4 User-ID
+  if (!idStr || idStr.includes('@') || /^\+?\d{10,}$/.test(idStr)) {
+    console.warn('[Analytics] identifyUser: PII detected or invalid user_id. Blocked for privacy compliance.');
+    return;
+  }
+  ga('set', 'user_id', idStr);
   ga('set', 'user_properties', { user_type: 'authenticated' });
 }
 
@@ -113,11 +120,33 @@ export function trackViewItem(experience: ExperienceAnalyticsItem) {
 
 // ─── Booking funnel ──────────────────────────────────────────────
 
-/** Step 1 — guest picks a date; start of the checkout funnel. */
-export function trackBeginCheckout(experience: ExperienceAnalyticsItem, totalPrice: number) {
+/** Guest selects a date on the experience card. */
+export function trackSelectDate(date: string, experience: ExperienceAnalyticsItem) {
+  ga('event', 'select_date', {
+    selected_date: date,
+    currency: 'INR',
+    value: experience.price,
+    items: [
+      {
+        item_id: String(experience.id),
+        item_name: experience.name,
+        item_category: experience.category ?? '',
+        price: experience.price,
+        quantity: 1,
+      },
+    ],
+  });
+}
+
+/**
+ * Customer actually starts checkout (e.g. clicks Book button after selecting options).
+ * This starts the official checkout funnel.
+ */
+export function trackBeginCheckout(experience: ExperienceAnalyticsItem, totalPrice: number, couponCode?: string) {
   ga('event', 'begin_checkout', {
     currency: 'INR',
     value: totalPrice,
+    coupon: couponCode ?? undefined,
     items: [
       {
         item_id: String(experience.id),
@@ -164,13 +193,20 @@ export function trackRemoveFromCart(addon: { id: number; name: string; price: nu
   });
 }
 
-/** "Book" button clicked — payment flow is about to begin. */
-export function trackAddPaymentInfo(experience: ExperienceAnalyticsItem, totalPrice: number, couponCode?: string) {
+/**
+ * Payment step reached / payment session handed off to payment gateway.
+ */
+export function trackAddPaymentInfo(
+  experience: ExperienceAnalyticsItem,
+  totalPrice: number,
+  couponCode?: string,
+  paymentProvider: string = 'stripe',
+) {
   ga('event', 'add_payment_info', {
     currency: 'INR',
     value: totalPrice,
     coupon: couponCode ?? undefined,
-    payment_type: 'stripe',
+    payment_type: paymentProvider,
     items: [
       {
         item_id: String(experience.id),
@@ -184,14 +220,40 @@ export function trackAddPaymentInfo(experience: ExperienceAnalyticsItem, totalPr
   });
 }
 
-/** Booking created + payment link obtained — revenue event. */
+const PURCHASED_KEY_PREFIX = 'fm_ga_purchased_';
+
+function hasTrackedPurchase(transactionId: string): boolean {
+  try {
+    return sessionStorage.getItem(PURCHASED_KEY_PREFIX + transactionId) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markPurchaseTracked(transactionId: string): void {
+  try {
+    sessionStorage.setItem(PURCHASED_KEY_PREFIX + transactionId, '1');
+  } catch {
+    // swallow
+  }
+}
+
+/**
+ * Booking confirmed & paid — revenue event.
+ * Deduped per transaction_id so duplicate page renders or reloads never fire twice.
+ */
 export function trackPurchase(
   bookingId: string,
-  experience: ExperienceAnalyticsItem,
+  experience: { id: number | string; name: string; category?: string; price: number },
   totalPrice: number,
   couponCode?: string,
   couponDiscount?: number,
 ) {
+  if (!bookingId || hasTrackedPurchase(bookingId)) {
+    return;
+  }
+  markPurchaseTracked(bookingId);
+
   ga('event', 'purchase', {
     transaction_id: bookingId,
     currency: 'INR',
@@ -226,7 +288,7 @@ export function trackCouponApplied(code: string, discountAmount: number, experie
 
 // ─── Pincode / serviceability ─────────────────────────────────────
 
-/** Serviceability check results. */
+/** Serviceability check results with explicit serviceability_status parameter. */
 export function trackPincodeChecked(
   pincode: string,
   result: 'available' | 'not_available' | 'error',
@@ -234,6 +296,7 @@ export function trackPincodeChecked(
 ) {
   ga('event', 'pincode_checked', {
     pincode,
+    serviceability_status: result === 'available' ? 'available' : 'not_available',
     result,
     experience_id: experienceId ? String(experienceId) : undefined,
   });
@@ -241,11 +304,34 @@ export function trackPincodeChecked(
 
 // ─── Payment errors ───────────────────────────────────────────────
 
-/** Payment link delayed or failed. */
-export function trackPaymentError(bookingId: string, reason: string) {
+export type PaymentErrorType =
+  | 'link_timeout'
+  | 'link_unavailable'
+  | 'gateway_error'
+  | 'payment_failed'
+  | 'payment_cancelled'
+  | 'unknown';
+
+/** Payment link delayed, failed, or cancelled. Avoids passing raw sensitive error strings. */
+export function trackPaymentError(
+  bookingId: string,
+  errorType: PaymentErrorType | string,
+  paymentProvider: string = 'stripe',
+) {
+  const controlledTypes: Record<string, PaymentErrorType> = {
+    link_timeout: 'link_timeout',
+    link_unavailable: 'link_unavailable',
+    payment_link_unavailable: 'link_unavailable',
+    gateway_error: 'gateway_error',
+    payment_failed: 'payment_failed',
+    payment_cancelled: 'payment_cancelled',
+  };
+  const sanitizedErrorType = controlledTypes[errorType] ?? 'gateway_error';
+
   ga('event', 'payment_error', {
     booking_id: bookingId,
-    reason,
+    error_type: sanitizedErrorType,
+    payment_provider: paymentProvider,
   });
 }
 
@@ -273,3 +359,4 @@ export function trackViewReviews(experienceId: number, experienceName: string) {
 export function trackWhatsAppClick(context: string) {
   ga('event', 'whatsapp_click', { context });
 }
+

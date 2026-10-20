@@ -21,11 +21,11 @@ import { closePaymentTab, goToCheckout, openPaymentTab, paymentStatusPath } from
 import { useNavigate } from 'react-router-dom';
 import {
   trackBeginCheckout,
+  trackSelectDate,
   trackAddToCart,
   trackRemoveFromCart,
   trackCouponApplied,
   trackAddPaymentInfo,
-  trackPurchase,
   trackPaymentError,
   trackPincodeChecked,
   trackViewReviews,
@@ -273,12 +273,15 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const pick = (d: Date | null) => {
     setDate(d);
     setDateError(false);
-    // Step 1 of the booking funnel: guest picked a date.
+    // Track date selection separately from checkout
     if (d) {
-      trackBeginCheckout(
-        { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
-        finalPrice,
-      );
+      trackSelectDate(toISODate(d), {
+        id: e.id,
+        name: e.name,
+        category: e.categoryName,
+        subcategory: e.subCategoryName,
+        price: e.basePrice,
+      });
     }
   };
   
@@ -300,8 +303,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       return;
     }
 
-    // Track add_payment_info: the guest is about to pay.
-    trackAddPaymentInfo(
+    // Customer actually begins checkout
+    trackBeginCheckout(
       { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
       finalPrice,
       appliedCoupon?.code,
@@ -332,14 +335,6 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       const bookingId = String(response.bookingId || response.id || '');
       if (!bookingId) throw new Error('Booking was created but no booking reference came back.');
       setPendingBookingId(bookingId);
-      // Track purchase: booking created successfully.
-      trackPurchase(
-        bookingId,
-        { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
-        finalPrice,
-        appliedCoupon?.code,
-        appliedCoupon?.discountAmount,
-      );
       await goToPayment(bookingId, tab);
     } catch (err: any) {
       closePaymentTab(tab);
@@ -367,11 +362,28 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       if (!url) {
         closePaymentTab(tab);
         setPaymentStage('delayed');
-        trackPaymentError(bookingId, 'payment_link_unavailable');
+        trackPaymentError(bookingId, 'link_unavailable', 'stripe');
         return;
       }
       setPaymentStage('redirecting');
-      savePendingPayment({ bookingId, experienceName: e.name, experiencePath: experiencePath({ id: e.id, slug: e.slug }), checkoutUrl: url });
+      // Payment step reached — payment session handed off to payment gateway.
+      trackAddPaymentInfo(
+        { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
+        finalPrice,
+        appliedCoupon?.code,
+        'stripe',
+      );
+      savePendingPayment({
+        bookingId,
+        experienceId: e.id,
+        experienceName: e.name,
+        experiencePath: experiencePath({ id: e.id, slug: e.slug }),
+        category: e.categoryName,
+        totalPrice: finalPrice,
+        couponCode: appliedCoupon?.code,
+        discountAmount: appliedCoupon?.discountAmount,
+        checkoutUrl: url,
+      });
       // New tab when possible (this tab then waits on /payment/status); otherwise Stripe opens here.
       if (goToCheckout(tab, url) === 'same-tab') return;
       setPaymentStage('idle');
@@ -379,8 +391,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
     } catch (err: unknown) {
       closePaymentTab(tab);
       setPaymentStage('delayed');
-      const reason = err instanceof Error && err.message ? err.message : 'unknown_error';
-      trackPaymentError(bookingId, reason);
+      trackPaymentError(bookingId, 'gateway_error', 'stripe');
       setPaymentError(err instanceof Error && err.message ? err.message : 'We could not open the payment page.');
     } finally {
       setIsBooking(false);

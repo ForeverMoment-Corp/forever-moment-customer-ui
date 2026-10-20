@@ -30,7 +30,7 @@ import { experienceListKey } from '@/features/experiences/store/location';
 import { useSeo } from '@/hooks/useDocumentTitle';
 import { absoluteUrl, breadcrumbJsonLd, toDescription } from '@/lib/seo';
 import { formatRating, useExperienceReviews } from '@/features/reviews/useExperienceReviews';
-import { trackViewItem, trackAddToCart, trackRemoveFromCart, trackViewReviews, trackPincodeChecked } from '@/lib/analytics';
+import { trackViewItem, trackAddToCart, trackRemoveFromCart, trackViewReviews } from '@/lib/analytics';
 
 export interface ExperienceViewProps {
   experience: unknown;

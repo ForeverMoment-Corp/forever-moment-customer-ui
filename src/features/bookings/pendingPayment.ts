@@ -5,8 +5,13 @@
  */
 export interface PendingPayment {
     bookingId: string;
+    experienceId?: number;
     experienceName?: string;
     experiencePath?: string;
+    category?: string;
+    totalPrice?: number;
+    couponCode?: string;
+    discountAmount?: number;
     /** Stripe Checkout URL, so the status page can reopen it from a click (no popup blocker). */
     checkoutUrl?: string;
     /** When checkoutUrl was saved (ms). Stripe Checkout sessions expire after 24 h. */

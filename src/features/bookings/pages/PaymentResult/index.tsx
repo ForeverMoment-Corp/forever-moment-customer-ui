@@ -7,6 +7,7 @@ import { checkBookingStatus, retryPayment as requestNewPaymentLink, waitForPayme
 import { fetchMyBooking, type Booking } from '@/features/bookings/api';
 import { clearPendingPayment, freshCheckoutUrl, readPendingPayment, savePendingPayment } from '@/features/bookings/pendingPayment';
 import { closePaymentTab, goToCheckout, openCheckoutInNewTab, openPaymentTab, paymentStatusPath } from '@/features/bookings/paymentTab';
+import { trackPurchase, trackPaymentError } from '@/lib/analytics';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -124,6 +125,7 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
   useEffect(() => {
     if (mode === 'cancel') {
       setView('cancelled');
+      if (bookingId) trackPaymentError(bookingId, 'payment_cancelled', 'stripe');
       return;
     }
     if (!bookingId || !user) {
@@ -145,6 +147,7 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
             return;
           }
           if (status === 'FAILED') {
+            trackPaymentError(bookingId, 'payment_failed', 'stripe');
             setView('failed');
             return;
           }
@@ -152,7 +155,10 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
           // A failed check is treated like "not confirmed yet"; the deadline still applies.
         }
         if (Date.now() + intervalMs > deadline) {
-          if (alive) setView(mode === 'waiting' ? 'timeout' : 'processing');
+          if (alive) {
+            if (mode === 'waiting') trackPaymentError(bookingId, 'link_timeout', 'stripe');
+            setView(mode === 'waiting' ? 'timeout' : 'processing');
+          }
           return;
         }
         await new Promise((resolve) => setTimeout(resolve, intervalMs));
@@ -162,6 +168,27 @@ export default function PaymentResult({ outcome }: { outcome: Outcome }) {
       alive = false;
     };
   }, [mode, run, bookingId, user]);
+
+  // Track purchase event ONLY once the booking is confirmed and paid according to business rules
+  useEffect(() => {
+    if (view === 'paid' && bookingId) {
+      const expId = booking?.experienceId ?? saved?.experienceId ?? 0;
+      const expName = booking?.experienceName ?? saved?.experienceName ?? 'Experience';
+      const amount = booking?.grandTotal ?? saved?.totalPrice ?? 0;
+      trackPurchase(
+        bookingId,
+        {
+          id: expId,
+          name: expName,
+          category: saved?.category,
+          price: amount,
+        },
+        amount,
+        saved?.couponCode,
+        saved?.discountAmount,
+      );
+    }
+  }, [view, bookingId, booking, saved]);
 
   const startWaiting = () => {
     if (outcome !== 'waiting') navigate(paymentStatusPath(bookingId), { replace: true });
