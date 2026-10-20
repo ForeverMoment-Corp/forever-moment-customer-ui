@@ -19,6 +19,17 @@ import { selectLocationId } from '@/features/experiences/store/location';
 import { savePendingPayment } from '@/features/bookings/pendingPayment';
 import { closePaymentTab, goToCheckout, openPaymentTab, paymentStatusPath } from '@/features/bookings/paymentTab';
 import { useNavigate } from 'react-router-dom';
+import {
+  trackBeginCheckout,
+  trackAddToCart,
+  trackRemoveFromCart,
+  trackCouponApplied,
+  trackAddPaymentInfo,
+  trackPurchase,
+  trackPaymentError,
+  trackPincodeChecked,
+  trackViewReviews,
+} from '@/lib/analytics';
 
 export interface BookingCardProps {
   experience: ExperienceVM;
@@ -262,6 +273,13 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
   const pick = (d: Date | null) => {
     setDate(d);
     setDateError(false);
+    // Step 1 of the booking funnel: guest picked a date.
+    if (d) {
+      trackBeginCheckout(
+        { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
+        finalPrice,
+      );
+    }
   };
   
 
@@ -281,6 +299,13 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       alert("Please check pincode availability before booking.");
       return;
     }
+
+    // Track add_payment_info: the guest is about to pay.
+    trackAddPaymentInfo(
+      { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
+      finalPrice,
+      appliedCoupon?.code,
+    );
 
     // Opened now, while the click still counts, and pointed at Stripe once the link is ready.
     const tab = openPaymentTab();
@@ -307,6 +332,14 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       const bookingId = String(response.bookingId || response.id || '');
       if (!bookingId) throw new Error('Booking was created but no booking reference came back.');
       setPendingBookingId(bookingId);
+      // Track purchase: booking created successfully.
+      trackPurchase(
+        bookingId,
+        { id: e.id, name: e.name, category: e.categoryName, subcategory: e.subCategoryName, price: e.basePrice },
+        finalPrice,
+        appliedCoupon?.code,
+        appliedCoupon?.discountAmount,
+      );
       await goToPayment(bookingId, tab);
     } catch (err: any) {
       closePaymentTab(tab);
@@ -334,6 +367,7 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
       if (!url) {
         closePaymentTab(tab);
         setPaymentStage('delayed');
+        trackPaymentError(bookingId, 'payment_link_unavailable');
         return;
       }
       setPaymentStage('redirecting');
@@ -345,6 +379,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
     } catch (err: unknown) {
       closePaymentTab(tab);
       setPaymentStage('delayed');
+      const reason = err instanceof Error && err.message ? err.message : 'unknown_error';
+      trackPaymentError(bookingId, reason);
       setPaymentError(err instanceof Error && err.message ? err.message : 'We could not open the payment page.');
     } finally {
       setIsBooking(false);
@@ -370,6 +406,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
         });
         setCoupon(code);
         setCouponNote(`Coupon applied successfully!`);
+        // Track coupon applied.
+        trackCouponApplied(code, res.discountAmount || 0, e.id);
       } else {
         setAppliedCoupon(null);
         setCouponNote(res.message || 'Invalid coupon code.');
@@ -629,6 +667,8 @@ export default function BookingCard({ experience: e, addons, toggleAddon, select
                 defaultPincode={savedPincode?.pincode}
                 onResult={(pincode, result, area) => {
                   setVenue({ pincode, result });
+                  // Track serviceability outcome for geo-expansion insights.
+                  trackPincodeChecked(pincode, result ?? 'error', e.id);
                   // A pincode we cover is remembered, so the next experience checks it without asking.
                   if (result === 'available' && pincode !== savedPincode?.pincode) {
                     dispatch(setVenuePincode({ pincode, areaName: area?.areaName ?? null, locationId: area?.locationId ?? null }));

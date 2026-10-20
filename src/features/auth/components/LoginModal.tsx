@@ -12,6 +12,7 @@ import { ensureGoogleInitialized, renderGoogleButton, setGoogleCredentialHandler
 import { emailLogin, googleLogin, registerUser } from '../store/api';
 import { isInAppBrowser } from '@/lib/inAppBrowser';
 import { isValidMobile, withCountryCode } from '@/lib/phone';
+import { trackLoginModalOpen, trackSignUp } from '@/lib/analytics';
 
 const GOOGLE_CLIENT_ID = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '');
 
@@ -89,6 +90,9 @@ const LoginModal: React.FC = () => {
     useEffect(() => {
         if (!isModalOpen) return;
 
+        // Track that the login modal was opened (each time it opens).
+        trackLoginModalOpen();
+
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') dispatch(closeLoginModal());
         };
@@ -134,9 +138,11 @@ const LoginModal: React.FC = () => {
             // Sign up returns no token, so log straight in with the same details.
             if (isSignup) {
                 await registerUser({ fullName, email, password, phoneNumber: withCountryCode(phone) || undefined });
+                trackSignUp('email');
             }
             const result = await emailLogin(email.trim(), password);
-            dispatch(loginSuccess(result));
+            // Tag the payload so authSlice can record the right login method in GA4.
+            dispatch(loginSuccess({ ...result, _analyticsMethod: 'email' }));
             // The login response only carries the email; the profile fills in name / id
             dispatch(fetchProfile());
         } catch (err) {
@@ -373,7 +379,8 @@ const LoginModal: React.FC = () => {
                                                 try {
                                                     setError(null);
                                                     const result = await googleLogin(credentialResponse.credential);
-                                                    dispatch(loginSuccess(result));
+                                                    // Tag so authSlice records the right login method in GA4.
+                                                    dispatch(loginSuccess({ ...result, _analyticsMethod: 'google' }));
                                                     // Fetch full profile info in background
                                                     dispatch(fetchProfile());
                                                 } catch (e) {

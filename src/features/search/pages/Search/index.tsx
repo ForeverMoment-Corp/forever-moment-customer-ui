@@ -11,6 +11,7 @@ import { experienceListKey, selectLocationId, selectLocationReady } from '@/feat
 import type { ExperienceListItem } from '@/features/experiences/store/types';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { searchExperiences, searchPlaces } from '@/features/search/match';
+import { trackSearch } from '@/lib/analytics';
 
 const SANS = "'Jost', sans-serif";
 const SERIF = "'Cormorant Garamond', serif";
@@ -92,6 +93,13 @@ export default function SearchPage() {
   // dataKey is set when the request starts, so "loading" also counts until the list arrives.
   const isCurrentList = dataKey === experienceListKey(locationId, 'all');
   const isLoading = (!isCurrentList || listLoading) && !loadError;
+
+  // Fire a GA4 search event once the results are ready (not on every keystroke).
+  useEffect(() => {
+    if (!query || isLoading) return;
+    trackSearch(query, items.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, isLoading]);
 
   const categories = useMemo(
     () => apiCategories.filter((c) => c && c.isActive !== false).sort((a, b) => a.displayOrder - b.displayOrder),

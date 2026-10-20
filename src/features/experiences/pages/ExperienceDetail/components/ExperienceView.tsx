@@ -30,6 +30,7 @@ import { experienceListKey } from '@/features/experiences/store/location';
 import { useSeo } from '@/hooks/useDocumentTitle';
 import { absoluteUrl, breadcrumbJsonLd, toDescription } from '@/lib/seo';
 import { formatRating, useExperienceReviews } from '@/features/reviews/useExperienceReviews';
+import { trackViewItem, trackAddToCart, trackRemoveFromCart, trackViewReviews, trackPincodeChecked } from '@/lib/analytics';
 
 export interface ExperienceViewProps {
   experience: unknown;
@@ -131,6 +132,20 @@ export default function ExperienceDetails({
     const t = window.setTimeout(() => scrollToId(hash.slice(1)), 300);
     return () => window.clearTimeout(t);
   }, [isCurrent, hash]);
+
+  // Fire view_item once per experience (not on re-renders or navigating back).
+  const trackedIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!isCurrent || !vm || trackedIdRef.current === vm.id) return;
+    trackedIdRef.current = vm.id;
+    trackViewItem({
+      id: vm.id,
+      name: vm.name,
+      category: vm.categoryName,
+      subcategory: vm.subCategoryName,
+      price: vm.basePrice,
+    });
+  }, [isCurrent, vm]);
 
   // Numeric params resolve through /public/experiences/{id}, anything else through /slug/{slug}.
   useEffect(() => {
@@ -316,8 +331,20 @@ export default function ExperienceDetails({
 
   if (loading || !vm || !isCurrent) return <DetailSkeleton />;
 
-  const toggleAddon = (addonId: number) =>
+  const toggleAddon = (addonId: number) => {
+    const allAddons = [...addons, ...extraAddons];
+    const addon = allAddons.find((a) => a.id === addonId);
+    const isAdding = !selectedAddons.includes(addonId);
     setSelectedAddons((prev) => (prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]));
+    // Track add/remove for the GA4 cart funnel.
+    if (addon) {
+      if (isAdding) {
+        trackAddToCart({ id: addon.id, name: addon.name, price: addon.price });
+      } else {
+        trackRemoveFromCart({ id: addon.id, name: addon.name, price: addon.price });
+      }
+    }
+  };
   const addonsTotal = chosenAddons.reduce((sum, a) => sum + a.price, 0);
   const totalPrice = vm.basePrice + addonsTotal;
 
@@ -347,7 +374,10 @@ export default function ExperienceDetails({
               toggleAddon={toggleAddon}
               selectedAddons={chosenAddons}
               totalPrice={totalPrice}
-              onViewReviews={() => scrollToId('reviews')}
+              onViewReviews={() => {
+                scrollToId('reviews');
+                trackViewReviews(vm.id, vm.name);
+              }}
             />
           </aside>
 

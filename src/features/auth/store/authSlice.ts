@@ -4,6 +4,7 @@ import { storage, setLoginSession, removeLoginSession } from '@/utils/storage';
 import axios from '@/utils/Http';
 import { googleSignOut } from '../googleIdentity';
 import { revokeSession, tokenClaims } from '../session';
+import { identifyUser, clearUser, trackLogin, trackLogout } from '@/lib/analytics';
 
 export interface User {
   id: string | number;
@@ -164,6 +165,11 @@ const authSlice = createSlice({
       state.user = newUser;
       state.token = payload.token;
       state.isLoginModalOpen = false; // close modal on success
+
+      // Analytics: identify the user and record login method.
+      // The method is stored on the payload by the dispatching code; fallback to 'email'.
+      if (newUser.id) identifyUser(newUser.id);
+      trackLogin((payload._analyticsMethod as 'email' | 'google' | 'phone') ?? 'email');
     },
     /** A refreshed access token (features/auth/session). */
     tokenRefreshed: (state, action: PayloadAction<string>) => {
@@ -183,6 +189,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isLogoutConfirmOpen = false;
+
+      // Analytics: clear user identity and record the logout.
+      clearUser();
+      trackLogout();
     },
   },
   extraReducers: (builder) => {

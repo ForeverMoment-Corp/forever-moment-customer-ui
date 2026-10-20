@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, ScrollRestoration, useLocation, useNavigation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import Navbar from '@/components/navbar/Navbar';
 import Footer from '@/components/navigation/footer';
 import FloatingBookingCTA from '@/components/FloatingBookingCTA/FloatingBooking';
@@ -8,6 +9,8 @@ import BottomNav from '@/components/layout/BottomNav';
 import LoginModal from '@/features/auth/components/LoginModal';
 import LogoutConfirmModal from '@/features/auth/components/LogoutConfirmModal';
 import { applySeo, type SeoMeta } from '@/lib/seo';
+import { trackPageView, identifyUser } from '@/lib/analytics';
+import type { RootState } from '@/store/store';
 
 /**
  * Metadata for fixed pages. Pages named from data (category, collection, experience), search and
@@ -66,10 +69,23 @@ function NavigationProgress() {
 
 const CustomerLayout = () => {
   const { pathname } = useLocation();
+  const user = useSelector((state: RootState) => state.auth?.user);
+  const isAuthenticated = useSelector((state: RootState) => state.auth?.isAuthenticated);
 
+  // Identify the user to GA4 on first render when a session is already active.
+  const identified = useRef(false);
+  useEffect(() => {
+    if (!identified.current && isAuthenticated && user?.id) {
+      identifyUser(user.id);
+      identified.current = true;
+    }
+  }, [isAuthenticated, user?.id]);
+
+  // Track every SPA route change as a GA4 page_view.
   useEffect(() => {
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
     if (path in PAGE_SEO) applySeo({ path, ...PAGE_SEO[path] });
+    trackPageView(path);
   }, [pathname]);
 
   return (
